@@ -24,4 +24,17 @@ pub mod tests {
         let mut file = File::create(temp_file.path()).expect("Failed to write to temp .env file");
         writeln!(file, "{}", content).expect("Failed to write to temp .env file");
     }
+
+    // Helper function to create a temporary .env file for testing and load it into environment
+    pub fn create_and_load_temp_env_file(content: &[(&str, &str)]) -> NamedTempFile {
+        let temp_file = create_temp_env_file();
+
+        for (key, value) in content {
+            write_to_temp_env_file(&temp_file, &format!("{}={}", key, value));
+        }
+
+        dotenvy::from_path(temp_file.path()).expect("Failed to load temp .env file");
+
+        temp_file
+    }
 }
