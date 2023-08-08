@@ -2,6 +2,7 @@ use dotenvy;
 use std::env;
 use std::path::PathBuf;
 
+mod application;
 mod domain;
 mod infrastructure;
 
