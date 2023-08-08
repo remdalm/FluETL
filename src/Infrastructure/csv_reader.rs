@@ -1,7 +1,23 @@
-use crate::domain::{Order, OrderLine};
 use csv::ReaderBuilder;
+use serde::Deserialize;
 use std::fs::File;
 use std::path::Path;
+
+// DTO Structures
+// CsvOrderDTO struct for deserializing CSV data
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct CsvOrderDTO {
+    pub c_order_id: String,
+    pub c_bpartner_id: String,
+    pub name: String,
+    pub date: String,
+    pub order_ref: String,
+    pub po_ref: String,
+    pub origin: String,
+    pub completion: String,
+    pub order_status: String,
+    pub delivery_status: String,
+}
 
 #[derive(Debug)]
 pub enum CsvReaderError {
@@ -10,53 +26,62 @@ pub enum CsvReaderError {
 }
 
 pub trait CsvReader {
-    fn read_orders(&self) -> Result<Vec<Order>, CsvReaderError>;
-    fn read_order_lines(&self) -> Result<Vec<OrderLine>, CsvReaderError>;
+    fn read_orders(&self) -> Result<Vec<CsvOrderDTO>, CsvReaderError>;
+    // fn read_order_lines(&self) -> Result<Vec<OrderLine>, CsvReaderError>;
 }
 
+#[derive(Debug)]
 pub struct CsvFileReader {
-    orders_file_path: String,
-    order_lines_file_path: String,
+    orders_file_path: Option<String>,
+    order_lines_file_path: Option<String>,
 }
 
 impl CsvFileReader {
     // Private constructor, accessible only through the factory function
     fn new(orders_file_path: &str, order_lines_file_path: &str) -> Self {
         CsvFileReader {
-            orders_file_path: orders_file_path.to_string(),
-            order_lines_file_path: order_lines_file_path.to_string(),
+            orders_file_path: Some(orders_file_path.to_string()),
+            order_lines_file_path: Some(order_lines_file_path.to_string()),
+        }
+    }
+
+    fn only_orders(orders_file_path: &str) -> Self {
+        CsvFileReader {
+            orders_file_path: Some(orders_file_path.to_string()),
+            order_lines_file_path: None,
         }
     }
 }
 
 impl CsvReader for CsvFileReader {
-    fn read_orders(&self) -> Result<Vec<Order>, CsvReaderError> {
-        let mut orders = Vec::new();
+    fn read_orders(&self) -> Result<Vec<CsvOrderDTO>, CsvReaderError> {
+        let mut csv_orders = Vec::new();
 
-        let file = File::open(&self.orders_file_path).map_err(CsvReaderError::IOError)?;
+        let file =
+            File::open(self.orders_file_path.as_ref().unwrap()).map_err(CsvReaderError::IOError)?;
         let mut rdr = ReaderBuilder::new().from_reader(file);
 
-        for result in rdr.deserialize::<Order>() {
-            let order = result.map_err(CsvReaderError::CsvParseError)?;
-            orders.push(order);
+        for result in rdr.deserialize::<CsvOrderDTO>() {
+            let csv_order = result.map_err(CsvReaderError::CsvParseError)?;
+            csv_orders.push(csv_order);
         }
 
-        Ok(orders)
+        Ok(csv_orders)
     }
 
-    fn read_order_lines(&self) -> Result<Vec<OrderLine>, CsvReaderError> {
-        let mut order_lines = Vec::new();
+    // fn read_order_lines(&self) -> Result<Vec<OrderLine>, CsvReaderError> {
+    //     let mut order_lines = Vec::new();
 
-        let file = File::open(&self.order_lines_file_path).map_err(CsvReaderError::IOError)?;
-        let mut rdr = ReaderBuilder::new().from_reader(file);
+    //     let file = File::open(&self.order_lines_file_path).map_err(CsvReaderError::IOError)?;
+    //     let mut rdr = ReaderBuilder::new().from_reader(file);
 
-        for result in rdr.deserialize::<OrderLine>() {
-            let order_line = result.map_err(CsvReaderError::CsvParseError)?;
-            order_lines.push(order_line);
-        }
+    //     // for result in rdr.deserialize::<OrderLine>() {
+    //     //     let order_line = result.map_err(CsvReaderError::CsvParseError)?;
+    //     //     order_lines.push(order_line);
+    //     // }
 
-        Ok(order_lines)
-    }
+    //     Ok(order_lines)
+    // }
 }
 
 // Factory function to create instances of CsvFileReader and validate file paths
@@ -83,4 +108,147 @@ pub fn create_csv_file_reader(
         &orders_file_path,
         &order_lines_file_path,
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    // Helper function to create a temporary CSV file for testing
+    fn create_temp_csv(content: &str) -> NamedTempFile {
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp CSV file");
+        temp_file
+            .write_all(content.as_bytes())
+            .expect("Failed to write to temp CSV file");
+        temp_file
+    }
+
+    #[test]
+    fn test_read_orders_success() {
+        let orders_csv =
+            "c_order_id,c_bpartner_id,name,date,order_ref,po_ref,origin,completion,order_status,delivery_status\n1,1,Order 1,2023-08-01,Ref1,PoRef1,Origin1,30,done,done\n2,2,Order 2,2023-08-02,Ref2,PoRef2,Origin2,20,failed,done\n";
+        let temp_csv = create_temp_csv(orders_csv);
+
+        let csv_file_reader = CsvFileReader::only_orders(temp_csv.path().to_str().unwrap());
+
+        let order1 = CsvOrderDTO {
+            c_order_id: 1.to_string(),
+            c_bpartner_id: 1.to_string(),
+            name: "Order 1".to_string(),
+            date: "2023-08-01".to_string(),
+            order_ref: "Ref1".to_string(),
+            po_ref: "PoRef1".to_string(),
+            origin: "Origin1".to_string(),
+            completion: "30".to_string(),
+            order_status: "done".to_string(),
+            delivery_status: "done".to_string(),
+        };
+
+        let order2 = CsvOrderDTO {
+            c_order_id: 2.to_string(),
+            c_bpartner_id: 2.to_string(),
+            name: "Order 2".to_string(),
+            date: "2023-08-02".to_string(),
+            order_ref: "Ref2".to_string(),
+            po_ref: "PoRef2".to_string(),
+            origin: "Origin2".to_string(),
+            completion: "20".to_string(),
+            order_status: "failed".to_string(),
+            delivery_status: "done".to_string(),
+        };
+
+        // Act
+        let result = csv_file_reader.read_orders();
+
+        //println if result is an Err
+        if result.is_err() {
+            println!("Error: {:?}", result);
+        }
+
+        //Assert
+        assert!(result.is_ok(), "Expected successful read_orders");
+        let orders = result.unwrap();
+        assert_eq!(orders.len(), 2);
+        assert_eq!(orders[0], order1);
+        assert_eq!(orders[1], order2);
+    }
+
+    // #[test]
+    // fn test_read_order_lines_success() {
+    //     // Arrange
+    //     let order_lines_csv = "c_orderline_id,c_order_id,product_ref\n1,1,Product 1\n";
+    //     let temp_csv = create_temp_csv(order_lines_csv);
+    //     let csv_file_reader = CsvFileReader::new("", temp_csv.path().to_str().unwrap());
+
+    //     // Act
+    //     let result = csv_file_reader.read_order_lines();
+
+    //     // Assert
+    //     assert!(result.is_ok(), "Expected successful read_order_lines");
+    //     let order_lines = result.unwrap();
+    //     assert_eq!(order_lines.len(), 1);
+    //     assert_eq!(order_lines[0].c_orderline_id, 1);
+    //     assert_eq!(order_lines[0].c_order_id, 1);
+    //     assert_eq!(order_lines[0].product_ref, "Product 1");
+    //     assert_eq!(order_lines[0].product_name, "");
+    //     assert_eq!(order_lines[0].qty_ordered, 0);
+    //     assert_eq!(order_lines[0].qty_reserved, 0);
+    //     assert_eq!(order_lines[0].qty_delivered, 0);
+    //     assert_eq!(
+    //         order_lines[0].due_date,
+    //         chrono::NaiveDate::from_ymd_opt(2023, 8, 1).expect("Invalid date")
+    //     );
+    // }
+
+    // #[test]
+    // fn test_create_csv_file_reader_success() {
+    //     // Arrange
+    //     let orders_csv =
+    //         "c_order_id,c_bpartner_id,name,date,order_ref\n1,1,Order 1,2023-08-01,Ref1\n";
+    //     let order_lines_csv = "c_orderline_id,c_order_id,product_ref\n1,1,Product 1\n";
+    //     let temp_orders_csv = create_temp_csv(orders_csv);
+    //     let temp_order_lines_csv = create_temp_csv(order_lines_csv);
+
+    //     // Act
+    //     let result = create_csv_file_reader(
+    //         temp_orders_csv.path().to_str().unwrap(),
+    //         temp_order_lines_csv.path().to_str().unwrap(),
+    //     );
+
+    //     // Assert
+    //     assert!(result.is_ok(), "Expected successful create_csv_file_reader");
+    //     let csv_file_reader = result.unwrap();
+    //     assert_eq!(
+    //         csv_file_reader.orders_file_path,
+    //         temp_orders_csv.path().to_str().unwrap()
+    //     );
+    //     assert_eq!(
+    //         csv_file_reader.order_lines_file_path,
+    //         temp_order_lines_csv.path().to_str().unwrap()
+    //     );
+    // }
+
+    // #[test]
+    // fn test_create_csv_file_reader_invalid_paths() {
+    //     // Arrange: Use non-existent paths
+    //     let orders_file_path = "/nonexistent/orders.csv";
+    //     let order_lines_file_path = "/nonexistent/order_lines.csv";
+
+    //     // Act
+    //     let result = create_csv_file_reader(orders_file_path, order_lines_file_path);
+
+    //     // Assert
+    //     assert!(result.is_err(), "Expected error for invalid paths");
+    //     let error_message = result.unwrap_err();
+    //     assert!(
+    //         error_message.contains("Orders file not found"),
+    //         "Error message should mention Orders file not found"
+    //     );
+    //     assert!(
+    //         error_message.contains("Order lines file not found"),
+    //         "Error message should mention Order lines file not found"
+    //     );
+    // }
 }
