@@ -17,6 +17,21 @@ pub struct Order {
     delivery_status: String,
 }
 
+impl PartialEq for Order {
+    fn eq(&self, other: &Self) -> bool {
+        self.c_order_id == other.c_order_id
+            && self.c_bpartner_id == other.c_bpartner_id
+            && self.name == other.name
+            && self.date == other.date
+            && self.order_ref == other.order_ref
+            && self.po_ref == other.po_ref
+            && self.origin == other.origin
+            && self.completion == other.completion
+            && self.order_status == other.order_status
+            && self.delivery_status == other.delivery_status
+    }
+}
+
 impl Order {
     pub fn new(
         c_order_id: u32,

@@ -5,7 +5,7 @@ use std::path::Path;
 
 // DTO Structures
 // CsvOrderDTO struct for deserializing CSV data
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct CsvOrderDTO {
     pub c_order_id: String,
     pub c_bpartner_id: String,
@@ -111,8 +111,10 @@ pub fn create_csv_file_reader(
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
+    use crate::tests::fixtures::csv_order_dto_fixtures;
+    use crate::tests::fixtures::ORDER_CSV;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -127,52 +129,20 @@ mod tests {
 
     #[test]
     fn test_read_orders_success() {
-        let orders_csv =
-            "c_order_id,c_bpartner_id,name,date,order_ref,po_ref,origin,completion,order_status,delivery_status\n1,1,Order 1,2023-08-01,Ref1,PoRef1,Origin1,30,done,done\n2,2,Order 2,2023-08-02,Ref2,PoRef2,Origin2,20,failed,done\n";
-        let temp_csv = create_temp_csv(orders_csv);
-
+        let temp_csv = create_temp_csv(ORDER_CSV);
         let csv_file_reader = CsvFileReader::only_orders(temp_csv.path().to_str().unwrap());
 
-        let order1 = CsvOrderDTO {
-            c_order_id: 1.to_string(),
-            c_bpartner_id: 1.to_string(),
-            name: "Order 1".to_string(),
-            date: "2023-08-01".to_string(),
-            order_ref: "Ref1".to_string(),
-            po_ref: "PoRef1".to_string(),
-            origin: "Origin1".to_string(),
-            completion: "30".to_string(),
-            order_status: "done".to_string(),
-            delivery_status: "done".to_string(),
-        };
-
-        let order2 = CsvOrderDTO {
-            c_order_id: 2.to_string(),
-            c_bpartner_id: 2.to_string(),
-            name: "Order 2".to_string(),
-            date: "2023-08-02".to_string(),
-            order_ref: "Ref2".to_string(),
-            po_ref: "PoRef2".to_string(),
-            origin: "Origin2".to_string(),
-            completion: "20".to_string(),
-            order_status: "failed".to_string(),
-            delivery_status: "done".to_string(),
-        };
+        let order_fixture = csv_order_dto_fixtures();
 
         // Act
         let result = csv_file_reader.read_orders();
-
-        //println if result is an Err
-        if result.is_err() {
-            println!("Error: {:?}", result);
-        }
 
         //Assert
         assert!(result.is_ok(), "Expected successful read_orders");
         let orders = result.unwrap();
         assert_eq!(orders.len(), 2);
-        assert_eq!(orders[0], order1);
-        assert_eq!(orders[1], order2);
+        assert_eq!(orders[0], order_fixture[0]);
+        assert_eq!(orders[1], order_fixture[1]);
     }
 
     // #[test]

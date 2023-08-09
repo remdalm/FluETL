@@ -41,6 +41,7 @@ fn main_with_args(args: Vec<String>, ignore_default_env_file: bool) -> Result<()
 
 #[cfg(test)]
 mod tests {
+    pub mod fixtures;
     use std::env;
 
     use crate::infrastructure::environment::tests::{create_temp_env_file, write_to_temp_env_file};
