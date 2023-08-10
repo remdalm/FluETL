@@ -1,7 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    command (id_order) {
+    mapping_client_contact (idp_id_client) {
+        idp_id_client -> Unsigned<Integer>,
+        ps_id_customer -> Unsigned<Integer>,
+    }
+}
+
+diesel::table! {
+    order (id_order) {
         id_order -> Unsigned<Integer>,
         id_client -> Unsigned<Integer>,
         #[max_length = 32]
@@ -15,7 +22,7 @@ diesel::table! {
 }
 
 diesel::table! {
-    command_line (id_order_line) {
+    order_line (id_order_line) {
         id_order_line -> Unsigned<Integer>,
         id_order -> Unsigned<Integer>,
         #[max_length = 32]
@@ -33,14 +40,7 @@ diesel::table! {
     }
 }
 
-diesel::table! {
-    mapping_client_contact (idp_id_client) {
-        idp_id_client -> Unsigned<Integer>,
-        ps_id_customer -> Unsigned<Integer>,
-    }
-}
+diesel::joinable!(order -> mapping_client_contact (id_client));
+diesel::joinable!(order_line -> order (id_order));
 
-diesel::joinable!(command -> mapping_client_contact (id_client));
-diesel::joinable!(command_line -> command (id_order));
-
-diesel::allow_tables_to_appear_in_same_query!(command, command_line, mapping_client_contact,);
+diesel::allow_tables_to_appear_in_same_query!(mapping_client_contact, order, order_line,);
