@@ -10,6 +10,12 @@
     diesel print-schema > src/infrastructure/database/schema.rs
     ```
 
+## Init first migration
+    ```bash
+    diesel migration generate create_table #done
+    mysqldump -h127.0.0.1 -uroot -P3307 -p --column-statistics=0 --no-data poolweb > migrations/2023-08-10-160702_initial_migration/up.sql
+    ```
+
 ## Testing
     ```bash
     docker pull arm64v8/mariadb

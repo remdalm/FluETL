@@ -43,4 +43,8 @@ diesel::table! {
 diesel::joinable!(order -> mapping_client_contact (id_client));
 diesel::joinable!(order_line -> order (id_order));
 
-diesel::allow_tables_to_appear_in_same_query!(mapping_client_contact, order, order_line,);
+diesel::allow_tables_to_appear_in_same_query!(
+    mapping_client_contact,
+    order,
+    order_line,
+);

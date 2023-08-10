@@ -41,6 +41,7 @@ fn main_with_args(args: Vec<String>, ignore_default_env_file: bool) -> Result<()
 
 #[cfg(test)]
 mod tests {
+    #[cfg(test)]
     pub mod common;
     pub mod fixtures;
     use std::env;

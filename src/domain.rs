@@ -1,6 +1,6 @@
-pub mod order;
+mod order;
 
-pub mod order_line;
+mod order_line;
 
 pub use order::Order;
 pub use order_line::OrderLine;
