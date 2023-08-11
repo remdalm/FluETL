@@ -51,10 +51,7 @@ pub fn setup_test_database(connection: &mut DbConnection) {
 
 // Function to clean up the test database
 pub fn teardown_test_database(connection: &mut DbConnection) {
-    // // TODO: Run migration instead of executing SQL file
-    // let cleanup_sql = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-    //     .join("migrations")
-    //     .join("2020-01-01-000000_initial")
-    //     .join("down.sql");
-    // execute_sql_file(connection, cleanup_sql);
+    connection
+        .revert_all_migrations(MIGRATIONS)
+        .expect("Failed to reverse pending migrations");
 }
