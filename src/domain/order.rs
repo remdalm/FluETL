@@ -100,7 +100,7 @@ impl Order {
     }
 
     fn validate_completion(completion: u32) -> Result<(), DomainError> {
-        if completion < 0 || completion > 100 {
+        if completion > 100 {
             Err(DomainError::ValidationError(
                 "Completion must be an integer between 0 and 100".to_string(),
             ))
