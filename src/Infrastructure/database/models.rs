@@ -9,7 +9,7 @@ use diesel::{AsChangeset, Connection, Insertable, RunQueryDsl, Table};
 mod mapping_client;
 pub mod order;
 
-pub trait ModelInsertOps<T, Conn>: Insertable<T> + Sized
+pub trait SingleRowInsertable<T, Conn>
 where
     T: Table + QueryFragment<Conn::Backend> + QueryId + HasTable + 'static,
     T::FromClause: QueryFragment<Conn::Backend>,
@@ -34,7 +34,7 @@ where
     fn target_client_table(&self) -> T;
 }
 
-pub trait ModelUpdateOps<T, Conn>: AsChangeset<Target = T> + Sized
+pub trait SingleRowUpdatable<T, Conn>
 where
     T: Table + HasTable + IntoUpdateTarget + 'static,
     T::FromClause: QueryFragment<Conn::Backend>,

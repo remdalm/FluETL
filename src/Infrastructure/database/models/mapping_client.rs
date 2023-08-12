@@ -2,7 +2,7 @@ use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
 
-use super::{ModelInsertOps, ModelUpdateOps};
+use super::{SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[table_name = "schema::mapping_client_contact"]
@@ -12,13 +12,17 @@ pub struct MappingClientModel {
     pub ps_id_customer: u32,
 }
 
-impl ModelInsertOps<schema::mapping_client_contact::table, DbConnection> for MappingClientModel {
+impl SingleRowInsertable<schema::mapping_client_contact::table, DbConnection>
+    for MappingClientModel
+{
     fn target_client_table(&self) -> schema::mapping_client_contact::table {
         schema::mapping_client_contact::table
     }
 }
 
-impl ModelUpdateOps<schema::mapping_client_contact::table, DbConnection> for MappingClientModel {
+impl SingleRowUpdatable<schema::mapping_client_contact::table, DbConnection>
+    for MappingClientModel
+{
     fn target_client_table(&self) -> schema::mapping_client_contact::table {
         schema::mapping_client_contact::table
     }

@@ -1,10 +1,8 @@
 use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
-use diesel::result::Error as DieselError;
-use diesel::MysqlConnection;
 
-use super::{ModelInsertOps, ModelUpdateOps};
+use super::{SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[table_name = "schema::order"]
@@ -36,13 +34,13 @@ impl OrderModel {
     }
 }
 
-impl ModelInsertOps<schema::order::table, DbConnection> for OrderModel {
+impl SingleRowInsertable<schema::order::table, DbConnection> for OrderModel {
     fn target_client_table(&self) -> schema::order::table {
         schema::order::table
     }
 }
 
-impl ModelUpdateOps<schema::order::table, DbConnection> for OrderModel {
+impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
     fn target_client_table(&self) -> schema::order::table {
         schema::order::table
     }
@@ -54,6 +52,7 @@ mod tests {
         infrastructure::database::models::mapping_client::insert_mapping_client,
         tests::common::{get_test_pooled_connection, reset_test_database},
     };
+    use diesel::result::Error as DieselError;
 
     fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
         insert_mapping_client(connection)
