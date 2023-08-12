@@ -55,3 +55,8 @@ pub fn teardown_test_database(connection: &mut DbConnection) {
         .revert_all_migrations(MIGRATIONS)
         .expect("Failed to reverse pending migrations");
 }
+
+pub fn reset_test_database(connection: &mut DbConnection) {
+    teardown_test_database(connection);
+    setup_test_database(connection);
+}

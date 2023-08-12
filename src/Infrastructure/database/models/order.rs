@@ -4,6 +4,8 @@ use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 use diesel::MysqlConnection;
 
+use super::{ModelInsertOps, ModelUpdateOps};
+
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[table_name = "schema::order"]
 #[diesel(primary_key(id_order))]
@@ -32,44 +34,45 @@ impl OrderModel {
             delivery_status: None,
         }
     }
+}
 
-    pub fn insert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::order::table)
-            .values(self)
-            .execute(connection)
-            .map(|_| ())
-            .map_err(|e| e.into())
+impl ModelInsertOps<schema::order::table, DbConnection> for OrderModel {
+    fn target_client_table(&self) -> schema::order::table {
+        schema::order::table
     }
+}
 
-    pub fn update_order(
-        &self,
-        connection: &mut DbConnection,
-        new_order: &OrderModel,
-    ) -> Result<(), DieselError> {
-        diesel::update(schema::order::dsl::order.find(self.id_order))
-            .set(new_order)
-            .execute(connection)
-            .map(|_| ())
-            .map_err(|e| e.into())
+impl ModelUpdateOps<schema::order::table, DbConnection> for OrderModel {
+    fn target_client_table(&self) -> schema::order::table {
+        schema::order::table
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::tests::common::{
-        get_test_pooled_connection, setup_test_database, teardown_test_database,
+    use crate::{
+        infrastructure::database::models::mapping_client::insert_mapping_client,
+        tests::common::{get_test_pooled_connection, reset_test_database},
     };
+
+    fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
+        insert_mapping_client(connection)
+    }
+
+    pub fn insert_order(connection: &mut DbConnection) -> Result<(), DieselError> {
+        let new_order = OrderModel::new(1, 1, "Ref1".to_string(), chrono::Utc::now().naive_utc());
+        new_order.insert(connection)
+    }
 
     use super::*;
     #[test]
     fn test_insert_order() {
         let mut connection = get_test_pooled_connection();
-        setup_test_database(&mut connection);
-        // Insert an order
-        let new_order = OrderModel::new(1, 1, "Ref1".to_string(), chrono::Utc::now().naive_utc());
-        new_order
-            .insert(&mut connection)
-            .expect("Failed to insert order");
+        reset_test_database(&mut connection);
+
+        let _ = insert_foreign_keys(&mut connection);
+
+        let new_order = insert_order(&mut connection).expect("Failed to insert order");
 
         let result = schema::order::dsl::order
             .filter(schema::order::id_order.eq(1))
@@ -78,35 +81,34 @@ mod tests {
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id_order, 1);
-
-        // Clean up the test database
-        //teardown_test_database(connection);
     }
 
-    // #[test]
-    // fn test_update_order() {
-    //     // Set up the test database
-    //     let connection = setup_test_database();
+    #[test]
+    fn test_update_order() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
 
-    //     // Insert an order
-    //     let new_order = NewOrderModel::new(1, "12345".to_string(), chrono::Utc::now().naive_utc());
-    //     new_order
-    //         .insert(&connection)
-    //         .expect("Failed to insert order");
+        let _ = insert_foreign_keys(&mut connection);
+        let _ = insert_order(&mut connection).expect("Failed to insert order");
 
-    //     // Update the order
-    //     let order = OrderModel::find_by_order_ref(&connection, "12345".to_string())
-    //         .expect("Failed to find order");
-    //     let updated_order =
-    //         OrderModel::update_order(&connection, &order, Some("67890".to_string()), None, None)
-    //             .expect("Failed to update order");
+        let mut fetched_orders = schema::order::dsl::order
+            .filter(schema::order::id_order.eq(1))
+            .load::<OrderModel>(&mut connection)
+            .expect("Error loading inserted OrderModel");
 
-    //     // Verify the order has been updated
-    //     let retrieved_order = OrderModel::find_by_order_ref(&connection, "67890".to_string())
-    //         .expect("Failed to find updated order");
-    //     assert_eq!(retrieved_order.order_ref, "67890");
+        fetched_orders[0].order_ref = "Updated Ref1".to_string();
 
-    //     // Clean up the test database
-    //     teardown_test_database(&connection);
-    // }
+        fetched_orders[0]
+            .update(&mut connection)
+            .expect("Failed to update order");
+
+        // Verify the order has been updated
+        let retrieved_order = schema::order::dsl::order
+            .filter(schema::order::id_order.eq(1))
+            .load::<OrderModel>(&mut connection)
+            .expect("Error loading inserted OrderModel");
+
+        assert_eq!(retrieved_order.len(), 1);
+        assert_eq!(retrieved_order[0].order_ref, "Updated Ref1".to_string());
+    }
 }

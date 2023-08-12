@@ -2,7 +2,7 @@ use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
 
-use super::ModelOps;
+use super::{ModelInsertOps, ModelUpdateOps};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[table_name = "schema::mapping_client_contact"]
@@ -12,30 +12,13 @@ pub struct MappingClientModel {
     pub ps_id_customer: u32,
 }
 
-impl ModelOps<schema::mapping_client_contact::table, DbConnection> for MappingClientModel {
-    // fn insert(
-    //     &self,
-    //     connection: &mut DbConnection,
-    //     table: Self::TargetTable,
-    // ) -> Result<(), DieselError> {
-    //     diesel::insert_into(table)
-    //         .values(self)
-    //         .execute(connection)
-    //         .map(|_| ())
-    //         .map_err(|e| e.into())
-    // }
+impl ModelInsertOps<schema::mapping_client_contact::table, DbConnection> for MappingClientModel {
+    fn target_client_table(&self) -> schema::mapping_client_contact::table {
+        schema::mapping_client_contact::table
+    }
+}
 
-    // fn update(
-    //     &self,
-    //     connection: &mut DbConnection,
-    //     table: Self::TargetTable,
-    // ) -> Result<(), DieselError> {
-    //     diesel::update(table.find(self.idp_id_client))
-    //         .set(self)
-    //         .execute(connection)
-    //         .map(|_| ())
-    //         .map_err(|e| e.into())
-    // }
+impl ModelUpdateOps<schema::mapping_client_contact::table, DbConnection> for MappingClientModel {
     fn target_client_table(&self) -> schema::mapping_client_contact::table {
         schema::mapping_client_contact::table
     }
@@ -51,6 +34,9 @@ impl MappingClientModel {
 }
 
 #[cfg(test)]
+pub use tests::{insert_mapping_client, update_mapping_client};
+
+#[cfg(test)]
 mod tests {
     use diesel::result::Error as DieselError;
 
@@ -64,52 +50,52 @@ mod tests {
         let new_mapping_client = MappingClientModel::new(1, 1);
         new_mapping_client.insert(connection)
     }
+
+    pub fn update_mapping_client(
+        connection: &mut DbConnection,
+        mapping_client_model: &MappingClientModel,
+    ) -> Result<(), DieselError> {
+        mapping_client_model.update(connection)
+    }
+
     #[test]
     fn test_insert_order() {
         let mut connection = get_test_pooled_connection();
+
+        teardown_test_database(&mut connection);
         setup_test_database(&mut connection);
         // Insert an order
-        let new_order = MappingClientModel::new(1, 1);
-        new_order
-            .insert(&mut connection)
-            .expect("Failed to insert order");
+        let insert_result = insert_mapping_client(&mut connection);
 
-        let result = schema::mapping_client_contact::dsl::mapping_client_contact
+        assert!(insert_result.is_ok());
+
+        let query_result = schema::mapping_client_contact::dsl::mapping_client_contact
             .filter(schema::mapping_client_contact::idp_id_client.eq(1))
             .load::<MappingClientModel>(&mut connection)
-            .expect("Error loading inserted OrderModel");
+            .expect("Error loading inserted MappingClientModel");
 
-        assert_eq!(result.len(), 1);
-        assert_eq!(result[0].idp_id_client, 1);
-
-        //Clean up the test database
-        teardown_test_database(&mut connection);
+        assert_eq!(query_result.len(), 1);
+        assert_eq!(query_result[0].idp_id_client, 1);
     }
 
-    // #[test]
-    // fn test_update_order() {
-    //     // Set up the test database
-    //     let connection = setup_test_database();
+    #[test]
+    fn test_update_order() {
+        let mut connection = get_test_pooled_connection();
 
-    //     // Insert an order
-    //     let new_order = NewOrderModel::new(1, "12345".to_string(), chrono::Utc::now().naive_utc());
-    //     new_order
-    //         .insert(&connection)
-    //         .expect("Failed to insert order");
+        teardown_test_database(&mut connection);
+        setup_test_database(&mut connection);
 
-    //     // Update the order
-    //     let order = OrderModel::find_by_order_ref(&connection, "12345".to_string())
-    //         .expect("Failed to find order");
-    //     let updated_order =
-    //         OrderModel::update_order(&connection, &order, Some("67890".to_string()), None, None)
-    //             .expect("Failed to update order");
+        let _ = insert_mapping_client(&mut connection);
+        let update_result =
+            update_mapping_client(&mut connection, &mut MappingClientModel::new(1, 2));
+        assert!(update_result.is_ok());
 
-    //     // Verify the order has been updated
-    //     let retrieved_order = OrderModel::find_by_order_ref(&connection, "67890".to_string())
-    //         .expect("Failed to find updated order");
-    //     assert_eq!(retrieved_order.order_ref, "67890");
+        let query_result = schema::mapping_client_contact::dsl::mapping_client_contact
+            .load::<MappingClientModel>(&mut connection)
+            .expect("Error loading updated MappingClientModel");
 
-    //     // Clean up the test database
-    //     teardown_test_database(&connection);
-    // }
+        assert_eq!(query_result.len(), 1);
+        assert_eq!(query_result[0].idp_id_client, 1);
+        assert_eq!(query_result[0].ps_id_customer, 2);
+    }
 }
