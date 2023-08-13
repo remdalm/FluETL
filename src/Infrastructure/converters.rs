@@ -1,5 +1,5 @@
-use crate::domain::{DomainError, Order};
-use crate::infrastructure::csv_reader::CsvOrderDTO;
+use crate::domain::{DomainError, MappingClient, Order};
+use crate::infrastructure::csv_reader::{CsvMappingClientDTO, CsvOrderDTO};
 
 impl From<CsvOrderDTO> for Result<Order, DomainError> {
     fn from(dto: CsvOrderDTO) -> Result<Order, DomainError> {
@@ -18,7 +18,16 @@ impl From<CsvOrderDTO> for Result<Order, DomainError> {
     }
 }
 
-pub fn convert_to_orders(dtos: Vec<CsvOrderDTO>) -> Vec<Result<Order, DomainError>> {
+impl From<CsvMappingClientDTO> for Result<MappingClient, DomainError> {
+    fn from(dto: CsvMappingClientDTO) -> Result<MappingClient, DomainError> {
+        MappingClient::new_from_string(dto.c_bpartner_id, dto.ad_user_id)
+    }
+}
+
+pub fn convert<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, DomainError>>
+where
+    CSV: Into<Result<DE, DomainError>>,
+{
     dtos.into_iter().map(|dto| dto.into()).collect()
 }
 
@@ -28,9 +37,9 @@ mod tests {
     use crate::tests::fixtures::{csv_order_dto_fixtures, order_fixtures};
 
     #[test]
-    fn test_convert_to_orders() {
+    fn test_convert_dtos_to_orders() {
         let dto_fixtures = csv_order_dto_fixtures();
-        let results: Vec<Result<Order, DomainError>> = convert_to_orders(dto_fixtures.to_vec());
+        let results: Vec<Result<Order, DomainError>> = convert(dto_fixtures.to_vec());
 
         let order_fixtures = order_fixtures();
 
@@ -47,7 +56,7 @@ mod tests {
         let mut dto_fixtures = csv_order_dto_fixtures();
         dto_fixtures[0].completion = "101".to_string();
 
-        let results: Vec<Result<Order, DomainError>> = convert_to_orders(dto_fixtures.to_vec());
+        let results: Vec<Result<Order, DomainError>> = convert(dto_fixtures.to_vec());
 
         assert!(
             results[0].as_ref().is_err_and(|e| match e {
