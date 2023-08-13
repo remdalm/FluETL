@@ -1,8 +1,14 @@
 // Order
 
-use crate::{domain::Order, infrastructure::csv_reader::CsvOrderDTO};
+use crate::{
+    domain::Order,
+    infrastructure::csv_reader::{CsvMappingClientDTO, CsvOrderDTO},
+};
 
-pub const ORDER_CSV: &str= "c_order_id,c_bpartner_id,name,date,order_ref,po_ref,origin,completion,order_status,delivery_status\n1,1,Order 1,2023-08-01,Ref1,PoRef1,Origin1,30,done,done\n2,2,Order 2,2023-08-02,Ref2,PoRef2,Origin2,20,failed,done\n";
+pub const ORDER_CSV: &str= 
+    "c_order_id;c_bpartner_id;name;date;order_ref;po_ref;origin;completion;order_status;delivery_status\n1;1;Order 1;2023-08-01;Ref1;PoRef1;Origin1;30;done;done\n2;2;Order 2;2023-08-02;Ref2;PoRef2;Origin2;20;failed;done\n";
+pub const MAPPING_CLIENT_CSV: &str =
+    "c_bpartner_id;ad_user_id;name;company\n1;1;Order 1;2023-08-01\n1;2;Order 2;2023-08-02\n";
 
 pub fn csv_order_dto_fixtures() -> [CsvOrderDTO; 2] {
     [
@@ -61,5 +67,18 @@ pub fn order_fixtures() -> [Order; 2] {
             "done".to_string(),
         )
         .unwrap(),
+    ]
+}
+
+pub fn mapping_client_fixtures() -> [CsvMappingClientDTO; 2] {
+    [
+        CsvMappingClientDTO {
+            c_bpartner_id: 1.to_string(),
+            ad_user_id: 1.to_string(),
+        },
+        CsvMappingClientDTO {
+            c_bpartner_id: 1.to_string(),
+            ad_user_id: 2.to_string(),
+        },
     ]
 }
