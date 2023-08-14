@@ -457,6 +457,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "idempiere-data-extractor"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "criterion",
+ "csv",
+ "diesel",
+ "diesel_migrations",
+ "dotenvy",
+ "lazy_static",
+ "serde",
+ "tempfile",
+]
+
+[[package]]
 name = "idna"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -683,22 +699,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "38f6d39893cca0701371e3c27294f09797214b86f1fb951b89ade8ec04e2abab"
 dependencies = [
  "plotters-backend",
-]
-
-[[package]]
-name = "poolweb-csv-extractor"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "criterion",
- "csv",
- "diesel",
- "diesel_migrations",
- "dotenvy",
- "lazy_static",
- "serde",
- "tempfile",
 ]
 
 [[package]]

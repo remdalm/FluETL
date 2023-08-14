@@ -1,13 +1,7 @@
-// Import necessary crates
-extern crate criterion;
-extern crate diesel_migrations;
-extern crate dotenvy;
-extern crate poolweb_csv_extractor;
-
 use std::env;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use poolweb_csv_extractor::{
+use idempiere_data_extractor::{
     benches::database_connection::{establish_connection_pool, DbConnection},
     benches::SingleRowInsertable,
     fixtures::{mapping_client_model_fixture, order_model_fixture},
