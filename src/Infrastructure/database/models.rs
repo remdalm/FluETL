@@ -6,12 +6,14 @@ use diesel::query_dsl::methods::ExecuteDsl;
 use diesel::result::Error as DieselError;
 use diesel::{AsChangeset, Connection, Insertable, RunQueryDsl, Table};
 
-use crate::domain::DomainEntity;
+use super::connection::DbConnection;
 
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 
-pub trait Model {}
+pub trait Model {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError>;
+}
 pub trait SingleRowInsertable<T, Conn>
 where
     T: Table + QueryFragment<Conn::Backend> + QueryId + HasTable + 'static,
