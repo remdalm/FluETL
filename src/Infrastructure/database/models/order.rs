@@ -1,6 +1,7 @@
 use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
 use super::{SingleRowInsertable, SingleRowUpdatable};
 
@@ -46,21 +47,54 @@ impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
     }
 }
 
+impl OrderModel {
+    pub fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        diesel::insert_into(schema::order::table)
+            .values(self)
+            .on_conflict(diesel::dsl::DuplicatedKeys)
+            .do_update()
+            .set(self)
+            .execute(connection)
+            .map(|_| ())
+            .map_err(|e| e.into())
+    }
+
+    // Used by benchmarks
+    // Just to be convinced that the recommended way is far more optimised and should be used throughout the codebase
+    pub fn homemade_upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        let insert_result = self.insert(connection);
+        if let Err(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) =
+            insert_result
+        {
+            self.update(connection)
+        } else {
+            insert_result
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         infrastructure::database::models::mapping_client::insert_mapping_client,
         tests::common::{get_test_pooled_connection, reset_test_database},
     };
-    use diesel::result::Error as DieselError;
+    use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
     fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
         insert_mapping_client(connection)
     }
 
-    pub fn insert_order(connection: &mut DbConnection) -> Result<(), DieselError> {
+    pub fn insert_order(
+        connection: &mut DbConnection,
+        use_upsert: bool,
+    ) -> Result<(), DieselError> {
         let new_order = OrderModel::new(1, 1, "Ref1".to_string(), chrono::Utc::now().naive_utc());
-        new_order.insert(connection)
+        if use_upsert {
+            new_order.upsert(connection)
+        } else {
+            new_order.insert(connection)
+        }
     }
 
     use super::*;
@@ -71,7 +105,7 @@ mod tests {
 
         let _ = insert_foreign_keys(&mut connection);
 
-        let new_order = insert_order(&mut connection).expect("Failed to insert order");
+        let new_order = insert_order(&mut connection, false).expect("Failed to insert order");
 
         let result = schema::order::dsl::order
             .filter(schema::order::id_order.eq(1))
@@ -87,8 +121,8 @@ mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        let _ = insert_foreign_keys(&mut connection);
-        let _ = insert_order(&mut connection).expect("Failed to insert order");
+        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        insert_order(&mut connection, false).expect("Failed to insert order");
 
         let mut fetched_orders = schema::order::dsl::order
             .filter(schema::order::id_order.eq(1))
@@ -109,5 +143,60 @@ mod tests {
 
         assert_eq!(retrieved_order.len(), 1);
         assert_eq!(retrieved_order[0].order_ref, "Updated Ref1".to_string());
+    }
+
+    #[test]
+    fn test_insert_duplicated_key() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        insert_order(&mut connection, false).expect("Failed to insert order");
+
+        let duplicate = insert_order(&mut connection, false);
+
+        if let Err(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) = duplicate {
+            // Expected
+        } else {
+            panic!(
+                "{}",
+                format!("Expected duplicate key error, got {:?}", duplicate)
+            );
+        }
+    }
+
+    #[test]
+    fn test_upsert_order_when_no_conflit() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        insert_order(&mut connection, true).expect("Failed to insert order by upsert function");
+
+        let result = schema::order::dsl::order
+            .filter(schema::order::id_order.eq(1))
+            .load::<OrderModel>(&mut connection)
+            .expect("Error loading inserted OrderModel");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id_order, 1);
+    }
+
+    #[test]
+    fn test_upsert_order_when_conflit() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        insert_order(&mut connection, false).expect("Failed to insert order");
+        insert_order(&mut connection, true).expect("Failed to upsert order");
+
+        let result = schema::order::dsl::order
+            .filter(schema::order::id_order.eq(1))
+            .load::<OrderModel>(&mut connection)
+            .expect("Error loading inserted OrderModel");
+
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id_order, 1);
     }
 }
