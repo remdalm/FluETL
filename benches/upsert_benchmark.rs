@@ -1,9 +1,10 @@
 use std::env;
 
 use criterion::{criterion_group, criterion_main, Criterion};
+use diesel::result::DatabaseErrorKind;
 use idempiere_data_extractor::{
     benches::database_connection::{establish_connection_pool, DbConnection},
-    benches::SingleRowInsertable,
+    benches::{Model, OrderModel, SingleRowInsertable, SingleRowUpdatable},
     fixtures::{mapping_client_model_fixture, order_model_fixtures},
 };
 
@@ -46,9 +47,24 @@ pub fn benchmark_upsert(c: &mut Criterion) {
 
     c.bench_function("homemade_upsert", |b| {
         b.iter(|| {
-            order.homemade_upsert(&mut connection).unwrap();
+            homemade_upsert(&order, &mut connection).unwrap();
         })
     });
+}
+
+// Just to be convinced that the recommended way is far more optimised and should be used throughout the codebase
+pub fn homemade_upsert(
+    order_model: &OrderModel,
+    connection: &mut DbConnection,
+) -> Result<(), diesel::result::Error> {
+    let insert_result = order_model.insert(connection);
+    if let Err(diesel::result::Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) =
+        insert_result
+    {
+        order_model.update(connection)
+    } else {
+        insert_result
+    }
 }
 
 fn setup_database_connection() -> DbConnection {

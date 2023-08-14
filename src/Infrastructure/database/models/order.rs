@@ -1,7 +1,7 @@
 use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
-use diesel::result::{DatabaseErrorKind, Error as DieselError};
+use diesel::result::Error as DieselError;
 
 use super::{Model, SingleRowInsertable, SingleRowUpdatable};
 
@@ -17,7 +17,18 @@ pub struct OrderModel {
     pub delivery_status: Option<String>,
 }
 
-impl Model for OrderModel {}
+impl Model for OrderModel {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        diesel::insert_into(schema::order::table)
+            .values(self)
+            .on_conflict(diesel::dsl::DuplicatedKeys)
+            .do_update()
+            .set(self)
+            .execute(connection)
+            .map(|_| ())
+            .map_err(|e| e.into())
+    }
+}
 
 impl OrderModel {
     pub fn new(
@@ -48,32 +59,6 @@ impl SingleRowInsertable<schema::order::table, DbConnection> for OrderModel {
 impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
     fn target_client_table(&self) -> schema::order::table {
         schema::order::table
-    }
-}
-
-impl OrderModel {
-    pub fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::order::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
-            .map_err(|e| e.into())
-    }
-
-    // Used by benchmarks
-    // Just to be convinced that the recommended way is far more optimised and should be used throughout the codebase
-    pub fn homemade_upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        let insert_result = self.insert(connection);
-        if let Err(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) =
-            insert_result
-        {
-            self.update(connection)
-        } else {
-            insert_result
-        }
     }
 }
 
