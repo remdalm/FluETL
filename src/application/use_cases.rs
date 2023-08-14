@@ -3,19 +3,19 @@ use serde::Deserialize;
 use crate::{
     domain::{DomainEntity, DomainError},
     infrastructure::{
-        converters::convert,
+        converters::convert_csv_dto_to_domain_entity,
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         InfrastructureError,
     },
 };
 
-mod import_mapping_client;
+mod import_orders;
 
 pub trait UseCase {
     fn execute(&self) -> Result<(), UseCaseError>;
 }
 
-trait CsvReadableUseCase<T, D>
+trait CanReadCsvUseCase<T, D>
 where
     T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<D, DomainError>>,
     D: DomainEntity,
@@ -29,9 +29,16 @@ where
         Ok(csv_data)
     }
     fn parse_csv_data(&self, csv_data: Vec<T>) -> Vec<Result<D, DomainError>> {
-        convert(csv_data)
+        convert_csv_dto_to_domain_entity(csv_data)
     }
 }
+
+// trait CanPersistIntoDatabaseUseCase<D>
+// where
+//     D: DomainEntity,
+// {
+//     fn persist(entity: D) -> Result<(), UseCaseError> {}
+// }
 
 pub enum UseCaseError {
     DomainError(DomainError),

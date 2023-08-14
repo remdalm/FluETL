@@ -3,7 +3,7 @@ use chrono::NaiveDate;
 use super::{DomainEntity, DomainError};
 
 // Order entity
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Order {
     c_order_id: u32,
     c_bpartner_id: u32,
@@ -13,8 +13,8 @@ pub struct Order {
     po_ref: String,
     origin: String,
     completion: u32,
-    order_status: String,
-    delivery_status: String,
+    order_status: Option<String>,
+    delivery_status: Option<String>,
 }
 
 impl PartialEq for Order {
@@ -42,8 +42,8 @@ impl Order {
         po_ref: String,
         origin: String,
         completion: u32,
-        order_status: String,
-        delivery_status: String,
+        order_status: Option<String>,
+        delivery_status: Option<String>,
     ) -> Result<Self, DomainError> {
         Self::validate_completion(completion)?;
 
@@ -84,6 +84,18 @@ impl Order {
         let completion = completion
             .parse::<u32>()
             .map_err(|err| DomainError::ParsingError(err.to_string()))?;
+
+        let order_status = if order_status.is_empty() {
+            None
+        } else {
+            Some(order_status)
+        };
+
+        let delivery_status = if delivery_status.is_empty() {
+            None
+        } else {
+            Some(delivery_status)
+        };
 
         Self::new(
             c_order_id,
@@ -142,12 +154,12 @@ impl Order {
         self.completion
     }
 
-    pub fn order_status(&self) -> &str {
-        self.order_status.as_str()
+    pub fn order_status(&self) -> Option<&str> {
+        self.order_status.as_deref()
     }
 
-    pub fn delivery_status(&self) -> &str {
-        self.delivery_status.as_str()
+    pub fn delivery_status(&self) -> Option<&str> {
+        self.delivery_status.as_deref()
     }
 }
 
