@@ -34,7 +34,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::fixtures::{csv_order_dto_fixtures, order_fixtures};
+    use crate::fixtures::{csv_order_dto_fixtures, order_fixtures};
 
     #[test]
     fn test_convert_dtos_to_orders() {

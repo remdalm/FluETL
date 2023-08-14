@@ -120,8 +120,8 @@ pub fn make_csv_file_reader(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::tests::fixtures::{csv_order_dto_fixtures, mapping_client_fixtures};
-    use crate::tests::fixtures::{MAPPING_CLIENT_CSV, ORDER_CSV};
+    use crate::fixtures::{csv_order_dto_fixtures, mapping_client_fixtures};
+    use crate::fixtures::{MAPPING_CLIENT_CSV, ORDER_CSV};
     use std::io::Write;
     use tempfile::NamedTempFile;
 

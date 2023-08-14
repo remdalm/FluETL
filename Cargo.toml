@@ -15,5 +15,10 @@ lazy_static = "1.4.0"
 serde = { version = "1.0.183", features = ["derive"] }
 
 [dev-dependencies]
+criterion = "0.5.1"
 diesel_migrations = { version = "2.1.0", features = ["mysql"] }
 tempfile = "3.7.1"
+
+[[bench]]
+name = "upsert_benchmark"
+harness = false

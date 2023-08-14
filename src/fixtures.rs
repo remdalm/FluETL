@@ -2,7 +2,7 @@
 
 use crate::{
     domain::Order,
-    infrastructure::csv_reader::{CsvMappingClientDTO, CsvOrderDTO},
+    infrastructure::{csv_reader::{CsvMappingClientDTO, CsvOrderDTO}, database::models::{order::OrderModel, mapping_client::MappingClientModel}},
 };
 
 pub const ORDER_CSV: &str= 
@@ -70,6 +70,10 @@ pub fn order_fixtures() -> [Order; 2] {
     ]
 }
 
+pub fn order_model_fixture() -> OrderModel {
+    OrderModel::new(1, 1, "Ref1".to_string(), chrono::Utc::now().naive_utc())
+}
+
 pub fn mapping_client_fixtures() -> [CsvMappingClientDTO; 2] {
     [
         CsvMappingClientDTO {
@@ -81,4 +85,8 @@ pub fn mapping_client_fixtures() -> [CsvMappingClientDTO; 2] {
             ad_user_id: 2.to_string(),
         },
     ]
+}
+
+pub fn mapping_client_model_fixture() -> MappingClientModel {
+    MappingClientModel::new(1, 1)
 }
