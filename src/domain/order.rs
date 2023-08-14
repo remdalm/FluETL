@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 
-use super::DomainError;
+use super::{DomainEntity, DomainError};
 
 // Order entity
 #[derive(Debug)]
@@ -150,3 +150,5 @@ impl Order {
         self.delivery_status.as_str()
     }
 }
+
+impl DomainEntity for Order {}

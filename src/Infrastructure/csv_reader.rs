@@ -26,12 +26,12 @@ impl CsvType {
 }
 
 #[derive(Debug)]
-pub enum CsvReaderError {
+pub enum CsvError {
     IOError(std::io::Error),
     CsvParseError(csv::Error),
 }
 
-trait CsvDTO {}
+pub trait CsvDTO {}
 
 #[derive(Debug)]
 pub struct CsvFileReader {
@@ -82,19 +82,19 @@ impl CsvFileReader {
         }
     }
 
-    fn read<T>(&self) -> Result<Vec<T>, CsvReaderError>
+    pub fn read<T>(&self) -> Result<Vec<T>, CsvError>
     where
-        T: CsvDTO + for<'a> Deserialize<'a> + PartialEq + Clone,
+        T: CsvDTO + for<'a> Deserialize<'a>,
     {
         let mut csv_dtos = Vec::new();
 
-        let file = File::open(self.file_path.as_path()).map_err(CsvReaderError::IOError)?;
+        let file = File::open(self.file_path.as_path()).map_err(CsvError::IOError)?;
         let mut rdr = ReaderBuilder::new()
             .delimiter(self.delimiter)
             .from_reader(file);
 
         for result in rdr.deserialize::<T>() {
-            let csv_dto = result.map_err(CsvReaderError::CsvParseError)?;
+            let csv_dto = result.map_err(CsvError::CsvParseError)?;
             csv_dtos.push(csv_dto);
         }
 
@@ -108,10 +108,10 @@ pub fn make_csv_file_reader(
 ) -> Result<CsvFileReader, InfrastructureError> {
     let file_path = csv_type
         .get_path()
-        .map_err(|err| InfrastructureError::VarError(err))?;
+        .map_err(|err| InfrastructureError::EnvVarError(err))?;
 
     if !Path::new(&file_path).exists() {
-        return Err(InfrastructureError::FileNotFound(file_path));
+        return Err(InfrastructureError::CSVFileNotFound(file_path));
     }
 
     Ok(CsvFileReader::new(PathBuf::from(file_path), delimiter))
@@ -145,7 +145,7 @@ mod tests {
         let order_fixture = csv_order_dto_fixtures();
 
         // Act
-        let result: Result<Vec<CsvOrderDTO>, CsvReaderError> = csv_reader.read();
+        let result: Result<Vec<CsvOrderDTO>, CsvError> = csv_reader.read();
 
         //Assert
         assert!(result.is_ok(), "Expected successful read_orders");
@@ -164,7 +164,7 @@ mod tests {
         let mapping_client_fixtures = mapping_client_fixtures();
 
         // Act
-        let result: Result<Vec<CsvMappingClientDTO>, CsvReaderError> = csv_reader.read();
+        let result: Result<Vec<CsvMappingClientDTO>, CsvError> = csv_reader.read();
 
         //Assert
         assert!(result.is_ok(), "Expected successful read_orders");
@@ -185,7 +185,7 @@ mod tests {
 
         // Assert
         let error_variant = result.unwrap_err();
-        if let InfrastructureError::FileNotFound(file) = error_variant {
+        if let InfrastructureError::CSVFileNotFound(file) = error_variant {
             assert_eq!(file, invalid_file_path);
         } else {
             assert!(false, "Expected InfrastructureError::FileNotFound");

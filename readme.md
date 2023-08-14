@@ -27,3 +27,7 @@
         cargo test -- --test-threads=1
         ```
 
+# Benchmark
+    ```bash
+    cargo bench
+    ```

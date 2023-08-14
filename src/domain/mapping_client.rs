@@ -1,4 +1,4 @@
-use super::DomainError;
+use super::{DomainEntity, DomainError};
 
 #[derive(Debug, PartialEq)]
 pub struct MappingClient {
@@ -27,3 +27,5 @@ impl MappingClient {
         Self::new(idp_id_client, ps_id_customer)
     }
 }
+
+impl DomainEntity for MappingClient {}

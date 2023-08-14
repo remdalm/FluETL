@@ -1,4 +1,4 @@
-use crate::domain::{DomainError, MappingClient, Order};
+use crate::domain::{DomainEntity, DomainError, MappingClient, Order};
 use crate::infrastructure::csv_reader::{CsvMappingClientDTO, CsvOrderDTO};
 
 impl From<CsvOrderDTO> for Result<Order, DomainError> {
@@ -27,6 +27,7 @@ impl From<CsvMappingClientDTO> for Result<MappingClient, DomainError> {
 pub fn convert<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, DomainError>>
 where
     CSV: Into<Result<DE, DomainError>>,
+    DE: DomainEntity,
 {
     dtos.into_iter().map(|dto| dto.into()).collect()
 }

@@ -1,11 +1,12 @@
-mod converters;
-pub mod csv_reader;
-pub mod database;
-mod db_writer;
-pub mod environment;
+pub(crate) mod converters;
+pub(crate) mod csv_reader;
+pub(crate) mod database;
+pub(crate) mod environment;
 
 #[derive(Debug)]
 pub enum InfrastructureError {
-    FileNotFound(String),
-    VarError(std::env::VarError),
+    CsvError(csv_reader::CsvError),
+    CSVFileNotFound(String),
+    EnvVarError(std::env::VarError),
+    DatabaseError(diesel::result::Error),
 }
