@@ -66,8 +66,10 @@ impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
 mod tests {
     use crate::{
         fixtures::order_model_fixtures,
+        infrastructure::database::connection::tests::{
+            get_test_pooled_connection, reset_test_database,
+        },
         infrastructure::database::models::mapping_client::insert_mapping_client,
-        tests::common::{get_test_pooled_connection, reset_test_database},
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
 

@@ -44,7 +44,7 @@ pub use tests::{insert_mapping_client, update_mapping_client};
 mod tests {
     use diesel::result::Error as DieselError;
 
-    use crate::tests::common::{
+    use crate::infrastructure::database::connection::tests::{
         get_test_pooled_connection, setup_test_database, teardown_test_database,
     };
 
