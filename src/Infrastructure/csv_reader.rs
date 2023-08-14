@@ -120,8 +120,9 @@ pub fn make_csv_file_reader(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fixtures::{csv_order_dto_fixtures, mapping_client_fixtures};
-    use crate::fixtures::{MAPPING_CLIENT_CSV, ORDER_CSV};
+    use crate::fixtures::{
+        csv_order_dto_fixtures, FLAWLESS_CSV, WITH_EMPTY_FIELD_CSV, WITH_MISSING_DATA_CSV,
+    };
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -138,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_read_csv_with_same_nb_of_field_that_struct() {
-        let temp_csv = create_temp_csv(ORDER_CSV);
+        let temp_csv = create_temp_csv(FLAWLESS_CSV);
         let csv_reader =
             make_csv_file_reader(CsvType::Test(temp_csv.path().to_path_buf()), DELIMITER)
                 .expect("Failed to create csv_reader");
@@ -157,21 +158,56 @@ mod tests {
 
     #[test]
     fn test_read_csv_with_different_nb_of_field_that_struct() {
-        let temp_csv = create_temp_csv(MAPPING_CLIENT_CSV);
+        let temp_csv = create_temp_csv(WITH_MISSING_DATA_CSV);
         let csv_reader =
             make_csv_file_reader(CsvType::Test(temp_csv.path().to_path_buf()), DELIMITER)
                 .expect("Failed to create csv_reader");
-        let mapping_client_fixtures = mapping_client_fixtures();
 
         // Act
-        let result: Result<Vec<CsvMappingClientDTO>, CsvError> = csv_reader.read();
+        let result: Result<Vec<CsvOrderDTO>, CsvError> = csv_reader.read();
+
+        //Assert
+        assert!(
+            result.is_err_and(|err| match err {
+                CsvError::CsvParseError(err) => {
+                    match err.kind() {
+                        csv::ErrorKind::UnequalLengths {
+                            pos: _,
+                            expected_len,
+                            len,
+                        } => {
+                            let csv_lengh: u64 = 8;
+                            let csv_expexted_lengh: u64 = 10;
+
+                            assert_eq!(expected_len, &csv_expexted_lengh);
+                            assert_eq!(len, &csv_lengh);
+                            true
+                        }
+                        _ => false,
+                    }
+                }
+                _ => false,
+            }),
+            "Expected Error of type csv::ErrorKind::UnequalLengths"
+        );
+    }
+
+    #[test]
+    fn test_read_csv_with_empty_field() {
+        let temp_csv = create_temp_csv(WITH_EMPTY_FIELD_CSV);
+        let csv_reader =
+            make_csv_file_reader(CsvType::Test(temp_csv.path().to_path_buf()), DELIMITER)
+                .expect("Failed to create csv_reader");
+        let order_fixture = csv_order_dto_fixtures();
+
+        // Act
+        let result: Result<Vec<CsvOrderDTO>, CsvError> = csv_reader.read();
 
         //Assert
         assert!(result.is_ok(), "Expected successful read_orders");
-        let mapping_client_dtos = result.unwrap();
-        assert_eq!(mapping_client_dtos.len(), 2);
-        assert_eq!(mapping_client_dtos[0], mapping_client_fixtures[0]);
-        assert_eq!(mapping_client_dtos[1], mapping_client_fixtures[1]);
+        let order_dtos = result.unwrap();
+        assert_eq!(order_dtos.len(), 2);
+        assert_eq!(order_dtos[1], order_fixture[2]);
     }
 
     #[test]

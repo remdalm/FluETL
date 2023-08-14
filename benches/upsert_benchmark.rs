@@ -4,7 +4,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use idempiere_data_extractor::{
     benches::database_connection::{establish_connection_pool, DbConnection},
     benches::SingleRowInsertable,
-    fixtures::{mapping_client_model_fixture, order_model_fixture},
+    fixtures::{mapping_client_model_fixture, order_model_fixtures},
 };
 
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -19,7 +19,7 @@ pub fn benchmark_upsert_recommended(c: &mut Criterion) {
     mapping_client
         .insert(&mut connection)
         .expect("Failed to insert mapping client");
-    let order = order_model_fixture();
+    let order = &order_model_fixtures()[0];
     order
         .insert(&mut connection)
         .expect("Failed to insert order");
@@ -39,7 +39,7 @@ pub fn benchmark_upsert(c: &mut Criterion) {
     mapping_client
         .insert(&mut connection)
         .expect("Failed to insert mapping client");
-    let order = order_model_fixture();
+    let order = &order_model_fixtures()[0];
     order
         .insert(&mut connection)
         .expect("Failed to insert order");
