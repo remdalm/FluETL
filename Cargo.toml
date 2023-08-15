@@ -2,12 +2,14 @@
 name = "idempiere-data-extractor"
 version = "0.1.0"
 edition = "2021"
+authors = ["Remi d'Almeida<remi@geta.dev>"]
+description = "A command-line interface (CLI) for extracting CSV data from Idempiere entities and persisting it in another location."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = "0.4.26"
-clap = "4.3.21"
+clap = { version = "4.3.21", features = ["derive"] }
 csv = "1.2.2"
 diesel = { version = "2.1.0", features = ["mysql","chrono","r2d2"] }
 dotenvy = "0.15.7"

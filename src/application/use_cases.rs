@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-mod import_orders;
+pub(crate) mod import_orders;
 
 pub trait UseCase<T, DE, M>
 where

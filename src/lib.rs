@@ -1,4 +1,4 @@
-mod application;
+pub mod application;
 mod domain;
 mod infrastructure;
 
