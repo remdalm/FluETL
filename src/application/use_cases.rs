@@ -14,6 +14,7 @@ use crate::{
 };
 
 pub(crate) mod import_orders;
+pub use import_orders::ImportOrderUseCase;
 
 pub trait UseCase<T, DE, M>
 where

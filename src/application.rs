@@ -1,8 +1,13 @@
 mod use_cases;
 
 use clap::{Args, CommandFactory, Parser, Subcommand};
+use log::{info, warn};
 use std::path::PathBuf;
 use use_cases::UseCase;
+
+use use_cases::UseCaseError;
+
+use crate::infrastructure::logger;
 
 // https://docs.rs/clap/latest/clap/_derive/_tutorial
 #[derive(Parser, Debug)]
@@ -66,12 +71,16 @@ pub fn main_using_clap() {
         }
     }
 
+    // Init Logger when env file is loaded
+    logger::init();
+
     if let Some(action_command) = cli.action_command {
         match action_command {
             ActionCommands::Import(entity_command) => match entity_command.entity {
                 EntitySubCommand::Order => {
-                    println!("Importing orders...");
-                    use_cases::import_orders::ImportOrderUseCase.execute();
+                    info!("Importing orders...");
+                    error_logger(use_cases::ImportOrderUseCase.execute());
+                    info!("Done");
                 }
                 other => {
                     exit(
@@ -87,4 +96,12 @@ pub fn main_using_clap() {
 fn exit(kind: clap::error::ErrorKind, message: &str) {
     let mut cmd = Cli::command();
     cmd.error(kind, message).exit();
+}
+
+fn error_logger(errors: Option<Vec<UseCaseError>>) {
+    if let Some(errors) = errors {
+        for error in errors {
+            warn!("{:?}", error);
+        }
+    }
 }

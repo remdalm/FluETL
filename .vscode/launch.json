@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'poolweb-csv-extractor'",
+            "name": "Debug executable 'idempiere-data-extractor'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=poolweb-csv-extractor",
-                    "--package=poolweb-csv-extractor"
+                    "--bin=idempiere-data-extractor",
+                    "--package=idempiere-data-extractor"
                 ],
                 "filter": {
-                    "name": "poolweb-csv-extractor",
+                    "name": "idempiere-data-extractor",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'poolweb-csv-extractor'",
+            "name": "Debug unit tests in executable 'idempiere-data-extractor'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=poolweb-csv-extractor",
-                    "--package=poolweb-csv-extractor"
+                    "--bin=idempiere-data-extractor",
+                    "--package=idempiere-data-extractor"
                 ],
                 "filter": {
-                    "name": "poolweb-csv-extractor",
+                    "name": "idempiere-data-extractor",
                     "kind": "bin"
                 }
             },
