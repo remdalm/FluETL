@@ -1,5 +1,21 @@
-use crate::infrastructure::csv_reader::{make_csv_file_reader, CsvType};
+use crate::{benches::OrderModel, domain::Order, infrastructure::csv_reader::CsvOrderDTO};
 
-use super::UseCase;
+use super::*;
 
-pub struct ImportMappingOrder;
+pub struct ImportOrderUseCase;
+
+pub struct OrderManager;
+
+impl UseCaseManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
+impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManager {}
+impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
+
+impl UseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
+    type ManagerImpl = OrderManager;
+}
+
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn
+// }
