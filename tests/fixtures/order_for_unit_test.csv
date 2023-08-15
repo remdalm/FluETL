@@ -1,0 +1,3 @@
+c_order_id;c_bpartner_id;name;date;order_ref;po_ref;origin;completion;order_status;delivery_status
+1;1;Order 1;2023-08-01;Ref1;PoRef1;Origin1;30;done;done
+2;2;Order 2;2023-08-02;Ref2;PoRef2;Origin2;20;failed;done

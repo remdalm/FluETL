@@ -16,7 +16,7 @@ pub fn benchmark_upsert_recommended(c: &mut Criterion) {
     let mut connection = setup_database_connection();
     reset_test_database(&mut connection);
 
-    let mapping_client = mapping_client_model_fixture();
+    let mapping_client = &mapping_client_model_fixture()[0];
     mapping_client
         .insert(&mut connection)
         .expect("Failed to insert mapping client");
@@ -36,7 +36,7 @@ pub fn benchmark_upsert(c: &mut Criterion) {
     let mut connection = setup_database_connection();
     reset_test_database(&mut connection);
 
-    let mapping_client = mapping_client_model_fixture();
+    let mapping_client = &mapping_client_model_fixture()[0];
     mapping_client
         .insert(&mut connection)
         .expect("Failed to insert mapping client");

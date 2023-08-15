@@ -44,15 +44,20 @@ pub use tests::{insert_mapping_client, update_mapping_client};
 mod tests {
     use diesel::result::Error as DieselError;
 
-    use crate::infrastructure::database::connection::tests::{
-        get_test_pooled_connection, setup_test_database, teardown_test_database,
+    use crate::{
+        fixtures::mapping_client_model_fixture,
+        infrastructure::database::connection::tests::{
+            get_test_pooled_connection, setup_test_database, teardown_test_database,
+        },
     };
 
     use super::*;
 
     pub fn insert_mapping_client(connection: &mut DbConnection) -> Result<(), DieselError> {
-        let new_mapping_client = MappingClientModel::new(1, 1);
-        new_mapping_client.insert(connection)
+        for mapping_client in mapping_client_model_fixture() {
+            mapping_client.insert(connection)?;
+        }
+        Ok(())
     }
 
     pub fn update_mapping_client(
@@ -98,7 +103,7 @@ mod tests {
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading updated MappingClientModel");
 
-        assert_eq!(query_result.len(), 1);
+        assert_eq!(query_result.len(), mapping_client_model_fixture().len());
         assert_eq!(query_result[0].idp_id_client, 1);
         assert_eq!(query_result[0].ps_id_customer, 2);
     }

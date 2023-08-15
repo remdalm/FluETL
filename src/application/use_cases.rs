@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use serde::Deserialize;
 
 use crate::{
+    benches::database_connection::DbConnection,
     domain::{DomainEntity, DomainError},
     infrastructure::{
         converters::{convert_csv_dto_to_domain_entity, convert_domain_entity_to_model},
@@ -22,11 +23,12 @@ where
 {
     type ManagerImpl: UseCaseManager<T, DE, M>;
     fn execute(&self) -> Option<Vec<UseCaseError>> {
-        let data = Self::ManagerImpl::read(CsvType::Orders);
+        let manager = self.concrete_manager();
+        let data = manager.read(self.get_csv_type());
         if data.is_err() {
             return Some(vec![data.unwrap_err()]);
         }
-        let dirty_entities = Self::ManagerImpl::parse(data.unwrap());
+        let dirty_entities = manager.parse(data.unwrap());
 
         let mut domain_errors = vec![];
         let entities: Vec<DE> = dirty_entities
@@ -34,7 +36,7 @@ where
             .filter_map(|entity| entity.map_err(|e| domain_errors.push(e)).ok())
             .collect();
 
-        let database_errors = Self::ManagerImpl::persist(entities);
+        let database_errors = manager.persist(entities);
 
         let mut errors: Vec<UseCaseError> = domain_errors.into_iter().map(|e| e.into()).collect();
         errors.append(
@@ -51,7 +53,8 @@ where
             Some(errors)
         }
     }
-    // fn concrete_manager() -> Self::ManagerImpl;
+    fn get_csv_type(&self) -> CsvType;
+    fn concrete_manager(&self) -> Self::ManagerImpl;
 }
 
 pub trait UseCaseManager<T, DE, M>:
@@ -68,7 +71,7 @@ where
     T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>>,
     DE: DomainEntity,
 {
-    fn read(csv_type: CsvType) -> Result<Vec<T>, UseCaseError> {
+    fn read(&self, csv_type: CsvType) -> Result<Vec<T>, UseCaseError> {
         let csv_reader = make_csv_file_reader(csv_type, b';')?;
 
         let csv_data: Vec<T> = csv_reader
@@ -76,7 +79,7 @@ where
             .map_err(|err| UseCaseError::InfrastructureError(InfrastructureError::CsvError(err)))?;
         Ok(csv_data)
     }
-    fn parse(csv_data: Vec<T>) -> Vec<Result<DE, DomainError>> {
+    fn parse(&self, csv_data: Vec<T>) -> Vec<Result<DE, DomainError>> {
         convert_csv_dto_to_domain_entity(csv_data)
     }
 }
@@ -86,9 +89,9 @@ where
     DE: DomainEntity + Into<M>,
     M: Model,
 {
-    fn persist(entities: Vec<DE>) -> Option<Vec<InfrastructureError>> {
+    fn persist(&self, entities: Vec<DE>) -> Option<Vec<InfrastructureError>> {
         let mut errors: Vec<InfrastructureError> = Vec::new();
-        let mut connection = get_pooled_connection();
+        let mut connection = self.get_pooled_connection();
         let models: Vec<M> = convert_domain_entity_to_model(entities);
 
         for model in models {
@@ -101,6 +104,10 @@ where
         } else {
             Some(errors)
         }
+    }
+
+    fn get_pooled_connection(&self) -> DbConnection {
+        get_pooled_connection()
     }
 }
 

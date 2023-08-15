@@ -63,7 +63,7 @@ impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use crate::{
         fixtures::order_model_fixtures,
         infrastructure::database::connection::tests::{
@@ -73,7 +73,7 @@ mod tests {
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
-    fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
+    pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
         insert_mapping_client(connection)
     }
 
@@ -87,6 +87,12 @@ mod tests {
         } else {
             new_order.insert(connection)
         }
+    }
+
+    pub fn read_orders(connection: &mut DbConnection) -> Vec<OrderModel> {
+        schema::order::dsl::order
+            .load::<OrderModel>(connection)
+            .expect("Error loading updated OrderModel")
     }
 
     use super::*;
