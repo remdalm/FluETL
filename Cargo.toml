@@ -15,7 +15,7 @@ diesel = { version = "2.1.0", features = ["mysql","chrono","r2d2"] }
 dotenvy = "0.15.7"
 lazy_static = "1.4.0"
 log = "0.4.20"
-log4rs = "1.2.0"
+log4rs = { version = "1.2.0", features = ["gzip", "background_rotation"] }
 serde = { version = "1.0.183", features = ["derive"] }
 
 [dev-dependencies]

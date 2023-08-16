@@ -1,7 +1,7 @@
 mod use_cases;
 
 use clap::{Args, CommandFactory, Parser, Subcommand};
-use log::{info, warn};
+use log::{error, info, warn};
 use std::path::PathBuf;
 use use_cases::UseCase;
 
@@ -48,7 +48,7 @@ pub enum EntitySubCommand {
 
 pub fn main_using_clap() {
     let cli = Cli::parse();
-
+    println!("{:?}", cli);
     // If --env--file argument is not provided, try to get .env file from the root of the crate
     if let Some(env_file_path) = cli.env_file {
         if !env_file_path.exists() {
@@ -59,6 +59,7 @@ pub fn main_using_clap() {
         }
         dotenvy::from_path(env_file_path).expect("Unable to load env file");
     } else {
+        println!("No --env-file argument provided, trying to load default .env file");
         let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         let default_env_file = root_path.join(".env");
         if default_env_file.exists() {
@@ -101,7 +102,14 @@ fn exit(kind: clap::error::ErrorKind, message: &str) {
 fn error_logger(errors: Option<Vec<UseCaseError>>) {
     if let Some(errors) = errors {
         for error in errors {
-            warn!("{:?}", error);
+            match error {
+                UseCaseError::DomainError(e) => {
+                    warn!("DomainError: {:?}", e);
+                }
+                UseCaseError::InfrastructureError(e) => {
+                    error!("InfrastructureError: {:?}", e);
+                }
+            }
         }
     }
 }
