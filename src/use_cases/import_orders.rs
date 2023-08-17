@@ -9,11 +9,10 @@ pub struct ImportOrderUseCase;
 
 pub struct OrderManager;
 
-impl UseCaseManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
+impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
 impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManager {}
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
-
-impl UseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
+impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
     type ManagerImpl = OrderManager;
 
     fn get_csv_type(&self) -> CsvType {
@@ -42,7 +41,7 @@ mod tests {
     pub struct ImportOrderUseCaseTest;
     pub struct OrderManagerTest;
 
-    impl UseCaseManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
+    impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
     impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManagerTest {}
     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {
         fn get_pooled_connection(&self) -> DbConnection {
@@ -50,7 +49,7 @@ mod tests {
         }
     }
 
-    impl UseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCaseTest {
+    impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCaseTest {
         type ManagerImpl = OrderManagerTest;
 
         fn get_csv_type(&self) -> CsvType {

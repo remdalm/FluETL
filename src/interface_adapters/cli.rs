@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::{
     infrastructure::logger,
-    use_cases::{ImportOrderUseCase, UseCase, UseCaseError},
+    use_cases::{ImportCsvUseCase, ImportOrderUseCase, UseCaseError},
 };
 
 // https://docs.rs/clap/latest/clap/_derive/_tutorial

@@ -15,16 +15,21 @@ use crate::{
     },
 };
 
+pub(crate) mod import_mapping_client;
 pub(crate) mod import_orders;
+
 pub use import_orders::ImportOrderUseCase;
 
-pub trait UseCase<T, DE, M>
+pub trait ImportCsvUseCase<CSV, DE, M>
 where
-    T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>> + Debug,
+    CSV: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>> + Debug,
     DE: DomainEntity + Into<M>,
     M: Model,
 {
-    type ManagerImpl: UseCaseManager<T, DE, M>;
+    type ManagerImpl: UseCaseImportManager<CSV, DE, M>
+        + CanReadCsvUseCase<CSV, DE>
+        + CanPersistIntoDatabaseUseCase<DE, M>;
+
     fn execute(&self) -> Option<Vec<UseCaseError>> {
         let manager = self.concrete_manager();
         let data = manager.read(self.get_csv_type());
@@ -60,14 +65,22 @@ where
     fn concrete_manager(&self) -> Self::ManagerImpl;
 }
 
-pub trait UseCaseManager<T, DE, M>:
-    CanReadCsvUseCase<T, DE> + CanPersistIntoDatabaseUseCase<DE, M>
+pub trait UseCaseImportManager<T, DE, M>
 where
-    T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>>,
+    T: for<'a> Deserialize<'a> + Into<Result<DE, DomainError>>,
     DE: DomainEntity + Into<M>,
     M: Model,
 {
 }
+
+// pub trait UseCaseCsvImportManager<T, DE, M>:
+//     UseCaseImportManager<T, DE, M> + CanReadCsvUseCase<T, DE> + CanPersistIntoDatabaseUseCase<DE, M>
+// where
+//     T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>>,
+//     DE: DomainEntity + Into<M>,
+//     M: Model,
+// {
+// }
 
 pub trait CanReadCsvUseCase<T, DE>
 where
@@ -86,6 +99,22 @@ where
         convert_csv_dto_to_domain_entity(csv_data)
     }
 }
+
+// pub trait CanReadModelUseCase<M, DE>
+// where
+//     M: Model + for<'a> Deserialize<'a>,
+//     DE: DomainEntity,
+// {
+//     fn read(&self, csv_type: CsvType) -> Result<Vec<T>, UseCaseError> {
+//         let csv_data: Vec<T> = csv_reader
+//             .read()
+//             .map_err(|err| UseCaseError::InfrastructureError(InfrastructureError::CsvError(err)))?;
+//         Ok(csv_data)
+//     }
+//     fn parse(&self, csv_data: Vec<T>) -> Vec<Result<DE, DomainError>> {
+//         convert_csv_dto_to_domain_entity(csv_data)
+//     }
+// }
 
 pub trait CanPersistIntoDatabaseUseCase<DE, M>
 where
