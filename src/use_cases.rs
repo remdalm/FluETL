@@ -3,13 +3,15 @@ use std::fmt::Debug;
 use serde::Deserialize;
 
 use crate::{
-    adapters::mappers::{convert_csv_dto_to_domain_entity, convert_domain_entity_to_model},
     benches::database_connection::DbConnection,
     domain::{DomainEntity, DomainError},
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         database::{connection::get_pooled_connection, models::Model},
         InfrastructureError,
+    },
+    interface_adapters::mappers::{
+        convert_csv_dto_to_domain_entity, convert_domain_entity_to_model,
     },
 };
 

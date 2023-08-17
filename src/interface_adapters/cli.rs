@@ -1,13 +1,11 @@
-mod use_cases;
-
 use clap::{Args, CommandFactory, Parser, Subcommand};
 use log::{error, info, warn};
 use std::path::PathBuf;
-use use_cases::UseCase;
 
-use use_cases::UseCaseError;
-
-use crate::infrastructure::logger;
+use crate::{
+    infrastructure::logger,
+    use_cases::{ImportOrderUseCase, UseCase, UseCaseError},
+};
 
 // https://docs.rs/clap/latest/clap/_derive/_tutorial
 #[derive(Parser, Debug)]
@@ -80,7 +78,7 @@ pub fn main_using_clap() {
             ActionCommands::Import(entity_command) => match entity_command.entity {
                 EntitySubCommand::Order => {
                     info!("Importing orders...");
-                    error_logger(use_cases::ImportOrderUseCase.execute());
+                    error_logger(ImportOrderUseCase.execute());
                     info!("Done");
                 }
                 other => {

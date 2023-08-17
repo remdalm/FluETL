@@ -1,3 +1,3 @@
 fn main() {
-    fluetl::application::main_using_clap();
+    fluetl::interface_adapters::cli::main_using_clap();
 }

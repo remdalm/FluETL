@@ -1,7 +1,7 @@
-mod adapters;
-pub mod application;
 mod domain;
 mod infrastructure;
+pub mod interface_adapters;
+mod use_cases;
 
 pub mod fixtures;
 
