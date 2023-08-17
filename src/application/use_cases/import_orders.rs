@@ -1,4 +1,7 @@
-use crate::{benches::OrderModel, domain::Order, infrastructure::csv_reader::CsvOrderDTO};
+use crate::{
+    domain::Order,
+    infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel},
+};
 
 use super::*;
 
