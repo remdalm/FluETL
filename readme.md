@@ -5,9 +5,9 @@
     ```
 
 ## Make schema.rs
-    
     ```bash
-    diesel print-schema > src/infrastructure/database/schema.rs
+    diesel print-schema > src/infrastructure/database/schema.rs #use DATABASE_URL env var
+    diesel print-schema --database-url [MY_DATABASE_URL] > src/infrastructure/database/schema/[MY_DATABASE_NAME].rs
     ```
 
 ## Init first migration

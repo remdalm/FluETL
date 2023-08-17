@@ -6,7 +6,7 @@ use diesel::result::Error as DieselError;
 use super::{Model, SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug)]
-#[table_name = "schema::order"]
+#[table_name = "schema::target::order"]
 #[diesel(primary_key(id_order))]
 pub struct OrderModel {
     pub id_order: u32,
@@ -19,7 +19,7 @@ pub struct OrderModel {
 
 impl Model for OrderModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::order::table)
+        diesel::insert_into(schema::target::order::table)
             .values(self)
             .on_conflict(diesel::dsl::DuplicatedKeys)
             .do_update()
@@ -50,15 +50,15 @@ impl OrderModel {
     }
 }
 
-impl SingleRowInsertable<schema::order::table, DbConnection> for OrderModel {
-    fn target_client_table(&self) -> schema::order::table {
-        schema::order::table
+impl SingleRowInsertable<schema::target::order::table, DbConnection> for OrderModel {
+    fn target_client_table(&self) -> schema::target::order::table {
+        schema::target::order::table
     }
 }
 
-impl SingleRowUpdatable<schema::order::table, DbConnection> for OrderModel {
-    fn target_client_table(&self) -> schema::order::table {
-        schema::order::table
+impl SingleRowUpdatable<schema::target::order::table, DbConnection> for OrderModel {
+    fn target_client_table(&self) -> schema::target::order::table {
+        schema::target::order::table
     }
 }
 
@@ -90,7 +90,7 @@ pub mod tests {
     }
 
     pub fn read_orders(connection: &mut DbConnection) -> Vec<OrderModel> {
-        schema::order::dsl::order
+        schema::target::order::dsl::order
             .load::<OrderModel>(connection)
             .expect("Error loading updated OrderModel")
     }
@@ -106,8 +106,8 @@ pub mod tests {
         let new_order = insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
 
-        let result = schema::order::dsl::order
-            .filter(schema::order::id_order.eq(1))
+        let result = schema::target::order::dsl::order
+            .filter(schema::target::order::id_order.eq(1))
             .load::<OrderModel>(&mut connection)
             .expect("Error loading inserted OrderModel");
 
@@ -124,8 +124,8 @@ pub mod tests {
         insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
 
-        let mut fetched_orders = schema::order::dsl::order
-            .filter(schema::order::id_order.eq(1))
+        let mut fetched_orders = schema::target::order::dsl::order
+            .filter(schema::target::order::id_order.eq(1))
             .load::<OrderModel>(&mut connection)
             .expect("Error loading inserted OrderModel");
 
@@ -136,8 +136,8 @@ pub mod tests {
             .expect("Failed to update order");
 
         // Verify the order has been updated
-        let retrieved_order = schema::order::dsl::order
-            .filter(schema::order::id_order.eq(1))
+        let retrieved_order = schema::target::order::dsl::order
+            .filter(schema::target::order::id_order.eq(1))
             .load::<OrderModel>(&mut connection)
             .expect("Error loading inserted OrderModel");
 
@@ -175,8 +175,8 @@ pub mod tests {
         insert_order(&mut connection, true, &order_model_fixtures()[0])
             .expect("Failed to insert order by upsert function");
 
-        let result = schema::order::dsl::order
-            .filter(schema::order::id_order.eq(1))
+        let result = schema::target::order::dsl::order
+            .filter(schema::target::order::id_order.eq(1))
             .load::<OrderModel>(&mut connection)
             .expect("Error loading inserted OrderModel");
 
@@ -195,8 +195,8 @@ pub mod tests {
         insert_order(&mut connection, true, &order_model_fixtures()[0])
             .expect("Failed to upsert order");
 
-        let result = schema::order::dsl::order
-            .filter(schema::order::id_order.eq(1))
+        let result = schema::target::order::dsl::order
+            .filter(schema::target::order::id_order.eq(1))
             .load::<OrderModel>(&mut connection)
             .expect("Error loading inserted OrderModel");
 

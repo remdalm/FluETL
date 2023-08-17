@@ -70,10 +70,12 @@ pub fn homemade_upsert(
 fn setup_database_connection() -> DbConnection {
     dotenvy::dotenv().ok();
     println!("benchmark_upsert_recommended");
-    let database_url =
-        env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set in the .env file");
+    let TARGET_DATABASE_URL = env::var("TEST_TARGET_DATABASE_URL")
+        .expect("TEST_TARGET_DATABASE_URL must be set in the .env file");
 
-    establish_connection_pool(&database_url).get().unwrap()
+    establish_connection_pool(&TARGET_DATABASE_URL)
+        .get()
+        .unwrap()
 }
 
 // Function to set up the test database using the initial migration's up.sql

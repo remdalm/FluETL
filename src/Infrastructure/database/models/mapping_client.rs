@@ -5,26 +5,26 @@ use diesel::prelude::*;
 use super::{SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
-#[table_name = "schema::mapping_client_contact"]
+#[table_name = "schema::target::mapping_client_contact"]
 #[diesel(primary_key(idp_id_client))]
 pub struct MappingClientModel {
     pub idp_id_client: u32,
     pub ps_id_customer: u32,
 }
 
-impl SingleRowInsertable<schema::mapping_client_contact::table, DbConnection>
+impl SingleRowInsertable<schema::target::mapping_client_contact::table, DbConnection>
     for MappingClientModel
 {
-    fn target_client_table(&self) -> schema::mapping_client_contact::table {
-        schema::mapping_client_contact::table
+    fn target_client_table(&self) -> schema::target::mapping_client_contact::table {
+        schema::target::mapping_client_contact::table
     }
 }
 
-impl SingleRowUpdatable<schema::mapping_client_contact::table, DbConnection>
+impl SingleRowUpdatable<schema::target::mapping_client_contact::table, DbConnection>
     for MappingClientModel
 {
-    fn target_client_table(&self) -> schema::mapping_client_contact::table {
-        schema::mapping_client_contact::table
+    fn target_client_table(&self) -> schema::target::mapping_client_contact::table {
+        schema::target::mapping_client_contact::table
     }
 }
 
@@ -78,8 +78,8 @@ mod tests {
 
         assert!(insert_result.is_ok());
 
-        let query_result = schema::mapping_client_contact::dsl::mapping_client_contact
-            .filter(schema::mapping_client_contact::idp_id_client.eq(1))
+        let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
+            .filter(schema::target::mapping_client_contact::idp_id_client.eq(1))
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading inserted MappingClientModel");
 
@@ -99,7 +99,7 @@ mod tests {
             update_mapping_client(&mut connection, &mut MappingClientModel::new(1, 2));
         assert!(update_result.is_ok());
 
-        let query_result = schema::mapping_client_contact::dsl::mapping_client_contact
+        let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading updated MappingClientModel");
 
