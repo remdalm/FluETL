@@ -11,7 +11,7 @@ use log4rs::append::rolling_file::RollingFileAppender;
 
 use log4rs::encode::pattern::PatternEncoder;
 
-use log4rs::config::{Appender, Logger, Root};
+use log4rs::config::{Appender, Root};
 use log4rs::Config;
 
 use super::InfrastructureError;

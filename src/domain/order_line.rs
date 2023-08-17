@@ -1,7 +1,5 @@
 use chrono::NaiveDate;
 
-use super::DomainError;
-
 // OrderLine entity
 #[derive(Debug)]
 pub struct OrderLine {

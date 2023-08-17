@@ -6,8 +6,6 @@ use chrono::NaiveDateTime;
 
 use crate::infrastructure::csv_reader::CsvOrderDTO;
 
-use super::*;
-
 impl From<CsvOrderDTO> for Result<Order, DomainError> {
     fn from(dto: CsvOrderDTO) -> Result<Order, DomainError> {
         Order::new_from_string(
@@ -45,17 +43,20 @@ impl From<Order> for OrderModel {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::{
         domain::{DomainError, Order},
         fixtures::{csv_order_dto_fixtures, order_fixtures, order_model_fixtures},
+        infrastructure::database::models::order::OrderModel,
+        interface_adapters::mappers::{
+            convert_csv_dto_to_domain_entity, convert_domain_entity_to_model,
+        },
     };
 
     #[test]
     fn test_convert_dtos_to_orders() {
         let dto_fixtures = csv_order_dto_fixtures();
         let results: Vec<Result<Order, DomainError>> =
-            super::convert_csv_dto_to_domain_entity(dto_fixtures.to_vec());
+            convert_csv_dto_to_domain_entity(dto_fixtures.to_vec());
 
         let order_fixtures = order_fixtures();
 

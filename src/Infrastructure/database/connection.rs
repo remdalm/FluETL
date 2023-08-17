@@ -15,16 +15,16 @@ lazy_static! {
         // TODO: Must be done in main.rs
         dotenvy::dotenv().ok();
 
-        let TARGET_DATABASE_URL = env::var("TARGET_DATABASE_URL")
+        let target_database_url = env::var("TARGET_DATABASE_URL")
             .expect("TARGET_DATABASE_URL must be set in the .env file");
 
-        establish_connection_pool(&TARGET_DATABASE_URL)
+        establish_connection_pool(&target_database_url)
     };
 }
 
 // Set up a connection pool for the specified database URL
-pub fn establish_connection_pool(TARGET_DATABASE_URL: &str) -> DbPool {
-    let manager = ConnectionManager::<MysqlConnection>::new(TARGET_DATABASE_URL);
+pub fn establish_connection_pool(target_database_url: &str) -> DbPool {
+    let manager = ConnectionManager::<MysqlConnection>::new(target_database_url);
     Pool::builder()
         .build(manager)
         .expect("Failed to create connection pool")
@@ -53,10 +53,10 @@ pub(crate) mod tests {
             dotenvy::dotenv().ok();
 
             // Get the value of TEST_TARGET_DATABASE_URL from the environment
-            let TARGET_DATABASE_URL = env::var("TEST_TARGET_DATABASE_URL")
+            let target_database_url = env::var("TEST_TARGET_DATABASE_URL")
                 .expect("TEST_TARGET_DATABASE_URL must be set in the .env file");
 
-            establish_connection_pool(&TARGET_DATABASE_URL)
+            establish_connection_pool(&target_database_url)
         };
     }
 

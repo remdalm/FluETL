@@ -103,7 +103,7 @@ pub mod tests {
 
         let _ = insert_foreign_keys(&mut connection);
 
-        let new_order = insert_order(&mut connection, false, &order_model_fixtures()[0])
+        insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
 
         let result = schema::target::order::dsl::order
