@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use super::{SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
-#[table_name = "schema::target::mapping_client_contact"]
+#[diesel(table_name = schema::target::mapping_client_contact)]
 #[diesel(primary_key(idp_id_client))]
 pub struct MappingClientModel {
     pub idp_id_client: u32,

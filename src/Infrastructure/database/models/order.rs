@@ -6,7 +6,7 @@ use diesel::result::Error as DieselError;
 use super::{Model, SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug)]
-#[table_name = "schema::target::order"]
+#[diesel(table_name = schema::target::order)]
 #[diesel(primary_key(id_order))]
 pub struct OrderModel {
     pub id_order: u32,
