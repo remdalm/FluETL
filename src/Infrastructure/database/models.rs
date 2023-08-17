@@ -11,9 +11,12 @@ use super::connection::DbConnection;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 
-pub trait Model {
+pub trait Model {}
+
+pub trait CanUpsertModel: Model {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError>;
 }
+
 pub trait SingleRowInsertable<T, Conn>
 where
     T: Table + QueryFragment<Conn::Backend> + QueryId + HasTable + 'static,

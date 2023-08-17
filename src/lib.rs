@@ -10,6 +10,6 @@ pub mod fixtures;
 pub mod benches {
     pub use super::infrastructure::database::connection as database_connection;
     pub use super::infrastructure::database::models::{
-        order::OrderModel, Model, SingleRowInsertable, SingleRowUpdatable,
+        order::OrderModel, CanUpsertModel, SingleRowInsertable, SingleRowUpdatable,
     };
 }

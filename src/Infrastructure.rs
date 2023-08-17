@@ -9,4 +9,5 @@ pub enum InfrastructureError {
     CSVFileNotFound(String),
     EnvVarError(std::env::VarError),
     DatabaseError(diesel::result::Error),
+    InconsistentDataError(String),
 }

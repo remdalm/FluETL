@@ -2,29 +2,31 @@ use super::{DomainEntity, DomainError};
 
 #[derive(Debug, PartialEq)]
 pub struct MappingClient {
+    id_customer: u32,
     idp_id_client: u32,
-    ps_id_customer: u32,
 }
 
 impl MappingClient {
-    pub fn new(idp_id_client: u32, ps_id_customer: u32) -> Result<Self, DomainError> {
+    pub fn new(id_customer: u32, idp_id_client: u32) -> Result<Self, DomainError> {
         Ok(Self {
+            id_customer,
             idp_id_client,
-            ps_id_customer,
         })
     }
-    pub fn new_from_string(
-        idp_id_client: String,
-        ps_id_customer: String,
-    ) -> Result<Self, DomainError> {
-        let idp_id_client = idp_id_client
-            .parse::<u32>()
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
-        let ps_id_customer = ps_id_customer
-            .parse::<u32>()
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
 
-        Self::new(idp_id_client, ps_id_customer)
+    pub fn from_i32(id_customer: i32, idp_id_client: i32) -> Result<Self, DomainError> {
+        Ok(Self {
+            id_customer: id_customer as u32,
+            idp_id_client: idp_id_client as u32,
+        })
+    }
+
+    pub fn id_customer(&self) -> u32 {
+        self.id_customer
+    }
+
+    pub fn idp_id_client(&self) -> u32 {
+        self.idp_id_client
     }
 }
 

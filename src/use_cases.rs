@@ -7,7 +7,10 @@ use crate::{
     domain::{DomainEntity, DomainError},
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
-        database::{connection::get_pooled_connection, models::Model},
+        database::{
+            connection::get_pooled_connection,
+            models::{CanUpsertModel, Model},
+        },
         InfrastructureError,
     },
     interface_adapters::mappers::{
@@ -24,7 +27,7 @@ pub trait ImportCsvUseCase<CSV, DE, M>
 where
     CSV: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>> + Debug,
     DE: DomainEntity + Into<M>,
-    M: Model,
+    M: CanUpsertModel,
 {
     type ManagerImpl: UseCaseImportManager<CSV, DE, M>
         + CanReadCsvUseCase<CSV, DE>
@@ -119,7 +122,7 @@ where
 pub trait CanPersistIntoDatabaseUseCase<DE, M>
 where
     DE: DomainEntity + Into<M>,
-    M: Model,
+    M: CanUpsertModel,
 {
     fn persist(&self, entities: Vec<DE>) -> Option<Vec<InfrastructureError>> {
         let mut errors: Vec<InfrastructureError> = Vec::new();

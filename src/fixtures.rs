@@ -1,8 +1,8 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::{
-    domain::Order,
-    infrastructure::{csv_reader::CsvOrderDTO, database::models::{order::OrderModel, mapping_client::MappingClientModel}},
+    domain::{Order, MappingClient},
+    infrastructure::{csv_reader::CsvOrderDTO, database::models::{order::OrderModel, mapping_client::{MappingClientModel, MappingClientSource}}},
 };
 
 pub const ORDER_FLAWLESS_CSV: &str= 
@@ -112,6 +112,14 @@ pub fn order_model_fixtures() -> [OrderModel;3] {
     ]
 }
 
+pub fn mapping_client_fixture() -> [MappingClient;2] {
+    [MappingClient::new(1, 1).unwrap(), MappingClient::new(2, 2).unwrap()]
+}
+
 pub fn mapping_client_model_fixture() -> [MappingClientModel;2] {
     [MappingClientModel::new(1, 1), MappingClientModel::new(2, 2)]
+}
+
+pub fn mapping_client_source_model_fixture() -> [MappingClientSource;2] {
+    [MappingClientSource{ id_source_client: 1, id_source_contact: 1, id: Some(1) }, MappingClientSource{ id_source_client: 2, id_source_contact: 2, id: Some(2) }]
 }
