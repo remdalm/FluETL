@@ -13,13 +13,13 @@ diesel::table! {
         company -> Nullable<Varchar>,
         #[max_length = 128]
         email -> Varchar,
-        active -> Bit,
-        is_xxa_centrale -> Bit,
+        active -> Bool,
+        is_xxa_centrale -> Bool,
         free_shipping_amount -> Integer,
         update_client -> Datetime,
         update_contact -> Datetime,
-        is_synchronised -> Bit,
-        has_error -> Bit,
-        force_update -> Bit,
+        is_synchronised -> Bool,
+        has_error -> Bool,
+        force_update -> Bool,
     }
 }

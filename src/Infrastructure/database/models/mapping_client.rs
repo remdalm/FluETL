@@ -36,6 +36,16 @@ impl MappingClientModel {
             ps_id_customer,
         }
     }
+    pub fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        diesel::insert_into(schema::target::mapping_client_contact::table)
+            .values(self)
+            .on_conflict(diesel::dsl::DuplicatedKeys)
+            .do_update()
+            .set(self)
+            .execute(connection)
+            .map(|_| ())
+            .map_err(|e| e.into())
+    }
 }
 
 #[derive(Queryable, Identifiable, Selectable)]
@@ -72,7 +82,7 @@ impl MappingClientSource {
 }
 
 #[cfg(test)]
-pub use tests::{insert_mapping_client, update_mapping_client};
+pub use tests::insert_mapping_client;
 
 #[cfg(test)]
 mod tests {
@@ -81,7 +91,7 @@ mod tests {
     use crate::{
         fixtures::mapping_client_model_fixture,
         infrastructure::database::connection::tests::{
-            get_test_pooled_connection, setup_test_database, teardown_test_database,
+            get_test_pooled_connection, reset_test_database,
         },
     };
 
@@ -94,51 +104,140 @@ mod tests {
         Ok(())
     }
 
-    pub fn update_mapping_client(
+    fn insert_batch_to_mapping_client_source_db(
         connection: &mut DbConnection,
-        mapping_client_model: &MappingClientModel,
     ) -> Result<(), DieselError> {
-        mapping_client_model.update(connection)
+        use self::schema::legacy_staging::staging_customer::dsl::*;
+        let data = &vec![
+            (
+                id_source_client.eq(1),
+                id_source_contact.eq(1),
+                Some(id.eq(1)),
+                id_shop.eq(1),
+                m_pricelist_id.eq(1),
+                name.eq("Test 1"),
+                email.eq("test1@atest.com"),
+                active.eq(true),
+                is_xxa_centrale.eq(false),
+                free_shipping_amount.eq(0),
+                update_client.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                update_contact.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                is_synchronised.eq(true),
+                has_error.eq(true),
+                force_update.eq(false),
+            ),
+            (
+                id_source_client.eq(2),
+                id_source_contact.eq(2),
+                Some(id.eq(2)),
+                id_shop.eq(2),
+                m_pricelist_id.eq(2),
+                name.eq("Test 2"),
+                email.eq("test2@atest.com"),
+                active.eq(true),
+                is_xxa_centrale.eq(false),
+                free_shipping_amount.eq(0),
+                update_client.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                update_contact.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                is_synchronised.eq(true),
+                has_error.eq(true),
+                force_update.eq(false),
+            ),
+            (
+                id_source_client.eq(1),
+                id_source_contact.eq(3),
+                None,
+                id_shop.eq(2),
+                m_pricelist_id.eq(2),
+                name.eq("Test 3"),
+                email.eq("test3@atest.com"),
+                active.eq(true),
+                is_xxa_centrale.eq(false),
+                free_shipping_amount.eq(0),
+                update_client.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                update_contact.eq(chrono::NaiveDateTime::from_timestamp_opt(0, 0).unwrap()),
+                is_synchronised.eq(true),
+                has_error.eq(true),
+                force_update.eq(false),
+            ),
+        ];
+
+        diesel::insert_into(staging_customer)
+            .values(data)
+            .execute(connection)
+            .map(|_| ())
+            .map_err(|e| e.into())
     }
 
     #[test]
-    fn test_insert_order() {
+    fn test_upsert_to_insert() {
         let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
 
-        teardown_test_database(&mut connection);
-        setup_test_database(&mut connection);
-        // Insert an order
-        let insert_result = insert_mapping_client(&mut connection);
-
-        assert!(insert_result.is_ok());
+        mapping_client_model_fixture()[0]
+            .upsert(&mut connection)
+            .expect("Error upserting MappingClientModel");
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
-            .filter(schema::target::mapping_client_contact::idp_id_client.eq(1))
+            .filter(
+                schema::target::mapping_client_contact::idp_id_client
+                    .eq(mapping_client_model_fixture()[0].idp_id_client),
+            )
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading inserted MappingClientModel");
 
         assert_eq!(query_result.len(), 1);
-        assert_eq!(query_result[0].idp_id_client, 1);
+        assert_eq!(
+            query_result[0].idp_id_client,
+            mapping_client_model_fixture()[0].idp_id_client
+        );
+        assert_eq!(
+            query_result[0].ps_id_customer,
+            mapping_client_model_fixture()[0].ps_id_customer
+        );
     }
 
     #[test]
-    fn test_update_order() {
+    fn test_upsert_to_update() {
         let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
 
-        teardown_test_database(&mut connection);
-        setup_test_database(&mut connection);
+        mapping_client_model_fixture()[0]
+            .upsert(&mut connection)
+            .expect("Error upserting first MappingClientModel");
 
-        let _ = insert_mapping_client(&mut connection);
-        let update_result =
-            update_mapping_client(&mut connection, &mut MappingClientModel::new(1, 2));
-        assert!(update_result.is_ok());
+        MappingClientModel::new(mapping_client_model_fixture()[0].idp_id_client, 2)
+            .upsert(&mut connection)
+            .expect("Error upserting second MappingClientModel");
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
+            .filter(
+                schema::target::mapping_client_contact::idp_id_client
+                    .eq(mapping_client_model_fixture()[0].idp_id_client),
+            )
             .load::<MappingClientModel>(&mut connection)
-            .expect("Error loading updated MappingClientModel");
+            .expect("Error loading upserted MappingClientModel");
 
-        assert_eq!(query_result.len(), mapping_client_model_fixture().len());
-        assert_eq!(query_result[0].idp_id_client, 1);
+        assert_eq!(query_result.len(), 1);
+        assert_eq!(
+            query_result[0].idp_id_client,
+            mapping_client_model_fixture()[0].idp_id_client
+        );
         assert_eq!(query_result[0].ps_id_customer, 2);
+    }
+
+    #[test]
+    fn test_read_source() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_batch_to_mapping_client_source_db(&mut connection)
+            .expect("Error inserting batch to mapping client source db");
+
+        let result = MappingClientSource::read(&mut connection).expect("Error reading source");
+
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].id_source_contact, 1);
+        assert_eq!(result[1].id_source_contact, 2);
     }
 }
