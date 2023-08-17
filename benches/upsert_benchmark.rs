@@ -2,7 +2,7 @@ use std::env;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use diesel::result::DatabaseErrorKind;
-use idempiere_data_extractor::{
+use fluetl::{
     benches::database_connection::{establish_connection_pool, DbConnection},
     benches::{Model, OrderModel, SingleRowInsertable, SingleRowUpdatable},
     fixtures::{mapping_client_model_fixture, order_model_fixtures},

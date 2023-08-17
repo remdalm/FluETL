@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'idempiere-data-extractor'",
+            "name": "Debug executable 'fluetl'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=idempiere-data-extractor",
-                    "--package=idempiere-data-extractor"
+                    "--bin=fluetl",
+                    "--package=fluetl"
                 ],
                 "filter": {
-                    "name": "idempiere-data-extractor",
+                    "name": "fluetl",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'idempiere-data-extractor'",
+            "name": "Debug unit tests in executable 'fluetl'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=idempiere-data-extractor",
-                    "--package=idempiere-data-extractor"
+                    "--bin=fluetl",
+                    "--package=fluetl"
                 ],
                 "filter": {
-                    "name": "idempiere-data-extractor",
+                    "name": "fluetl",
                     "kind": "bin"
                 }
             },

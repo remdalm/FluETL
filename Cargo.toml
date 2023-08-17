@@ -1,5 +1,5 @@
 [package]
-name = "idempiere-data-extractor"
+name = "fluetl"
 version = "0.1.0"
 edition = "2021"
 authors = ["Remi d'Almeida<remi@geta.dev>"]
