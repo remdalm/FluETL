@@ -1,16 +1,16 @@
-use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
+use crate::infrastructure::{database::connection::DbConnection, InfrastructureError};
 use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 
-use super::{SingleRowInsertable, SingleRowUpdatable};
+use super::{Model, SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[diesel(table_name = schema::target::mapping_client_contact)]
-#[diesel(primary_key(idp_id_client))]
+#[diesel(primary_key(id_customer))]
 pub struct MappingClientModel {
+    pub id_customer: u32,
     pub idp_id_client: u32,
-    pub ps_id_customer: u32,
 }
 
 impl SingleRowInsertable<schema::target::mapping_client_contact::table, DbConnection>
@@ -30,10 +30,10 @@ impl SingleRowUpdatable<schema::target::mapping_client_contact::table, DbConnect
 }
 
 impl MappingClientModel {
-    pub fn new(idp_id_client: u32, ps_id_customer: u32) -> Self {
+    pub fn new(id_customer: u32, idp_id_client: u32) -> Self {
         MappingClientModel {
+            id_customer,
             idp_id_client,
-            ps_id_customer,
         }
     }
     pub fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
@@ -48,7 +48,7 @@ impl MappingClientModel {
     }
 }
 
-#[derive(Queryable, Identifiable, Selectable)]
+#[derive(Queryable, Identifiable, Selectable, Clone, Debug)]
 #[diesel(table_name = schema::legacy_staging::staging_customer)]
 #[diesel(primary_key(id_source_contact))]
 pub struct MappingClientSource {
@@ -69,6 +69,8 @@ pub struct MappingClientSource {
     // pub has_error: bool,
     // pub force_update: bool,
 }
+
+impl Model for MappingClientSource {}
 
 impl MappingClientSource {
     pub fn read(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError> {
@@ -180,20 +182,20 @@ mod tests {
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
             .filter(
-                schema::target::mapping_client_contact::idp_id_client
-                    .eq(mapping_client_model_fixture()[0].idp_id_client),
+                schema::target::mapping_client_contact::id_customer
+                    .eq(mapping_client_model_fixture()[0].id_customer),
             )
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading inserted MappingClientModel");
 
         assert_eq!(query_result.len(), 1);
         assert_eq!(
-            query_result[0].idp_id_client,
-            mapping_client_model_fixture()[0].idp_id_client
+            query_result[0].id_customer,
+            mapping_client_model_fixture()[0].id_customer
         );
         assert_eq!(
-            query_result[0].ps_id_customer,
-            mapping_client_model_fixture()[0].ps_id_customer
+            query_result[0].idp_id_client,
+            mapping_client_model_fixture()[0].idp_id_client
         );
     }
 
@@ -206,24 +208,24 @@ mod tests {
             .upsert(&mut connection)
             .expect("Error upserting first MappingClientModel");
 
-        MappingClientModel::new(mapping_client_model_fixture()[0].idp_id_client, 2)
+        MappingClientModel::new(mapping_client_model_fixture()[0].id_customer, 2)
             .upsert(&mut connection)
             .expect("Error upserting second MappingClientModel");
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
             .filter(
-                schema::target::mapping_client_contact::idp_id_client
-                    .eq(mapping_client_model_fixture()[0].idp_id_client),
+                schema::target::mapping_client_contact::id_customer
+                    .eq(mapping_client_model_fixture()[0].id_customer),
             )
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading upserted MappingClientModel");
 
         assert_eq!(query_result.len(), 1);
         assert_eq!(
-            query_result[0].idp_id_client,
-            mapping_client_model_fixture()[0].idp_id_client
+            query_result[0].id_customer,
+            mapping_client_model_fixture()[0].id_customer
         );
-        assert_eq!(query_result[0].ps_id_customer, 2);
+        assert_eq!(query_result[0].idp_id_client, 2);
     }
 
     #[test]

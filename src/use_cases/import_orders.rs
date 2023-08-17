@@ -32,10 +32,7 @@ mod tests {
     use crate::{
         benches::database_connection::tests::{get_test_pooled_connection, reset_test_database},
         fixtures::order_model_fixtures,
-        infrastructure::{
-            csv_reader::CsvType,
-            database::models::order::tests::{insert_foreign_keys, read_orders},
-        },
+        infrastructure::{csv_reader::CsvType, database::models::order::tests::read_orders},
     };
 
     pub struct ImportOrderUseCaseTest;
@@ -75,7 +72,7 @@ mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
 
         // Result
         let use_case = ImportOrderUseCaseTest;

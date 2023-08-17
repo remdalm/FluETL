@@ -1,9 +1,9 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    mapping_client_contact (idp_id_client) {
+    mapping_client_contact (id_customer) {
+        id_customer -> Unsigned<Integer>,
         idp_id_client -> Unsigned<Integer>,
-        ps_id_customer -> Unsigned<Integer>,
     }
 }
 
@@ -40,7 +40,6 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(order -> mapping_client_contact (id_client));
 diesel::joinable!(order_line -> order (id_order));
 
 diesel::allow_tables_to_appear_in_same_query!(

@@ -3,7 +3,7 @@ use crate::infrastructure::database::schema;
 use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 
-use super::{Model, SingleRowInsertable, SingleRowUpdatable};
+use super::{CanUpsertModel, Model, SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug)]
 #[diesel(table_name = schema::target::order)]
@@ -17,7 +17,8 @@ pub struct OrderModel {
     pub delivery_status: Option<String>,
 }
 
-impl Model for OrderModel {
+impl Model for OrderModel {}
+impl CanUpsertModel for OrderModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
         diesel::insert_into(schema::target::order::table)
             .values(self)
@@ -69,13 +70,13 @@ pub mod tests {
         infrastructure::database::connection::tests::{
             get_test_pooled_connection, reset_test_database,
         },
-        infrastructure::database::models::mapping_client::insert_mapping_client,
+        // infrastructure::database::models::mapping_client::insert_mapping_client,
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
-    pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
-        insert_mapping_client(connection)
-    }
+    // pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
+    //     insert_mapping_client(connection)
+    // }
 
     pub fn insert_order(
         connection: &mut DbConnection,
@@ -101,7 +102,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        let _ = insert_foreign_keys(&mut connection);
+        // let _ = insert_foreign_keys(&mut connection);
 
         insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
@@ -120,7 +121,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
         insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
 
@@ -150,7 +151,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
         insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
 
@@ -171,7 +172,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
         insert_order(&mut connection, true, &order_model_fixtures()[0])
             .expect("Failed to insert order by upsert function");
 
@@ -189,7 +190,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
         insert_order(&mut connection, false, &order_model_fixtures()[0])
             .expect("Failed to insert order");
         insert_order(&mut connection, true, &order_model_fixtures()[0])

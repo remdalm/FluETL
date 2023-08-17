@@ -19,13 +19,14 @@
 -- Table structure for table `mapping_client_contact`
 --
 
+DROP TABLE IF EXISTS `mapping_client_contact`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `mapping_client_contact` (
+  `id_customer` int(10) unsigned NOT NULL,
   `idp_id_client` int(10) unsigned NOT NULL,
-  `ps_id_customer` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`idp_id_client`),
-  KEY `IDX_AF893667C860CCC5` (`ps_id_customer`)
+  PRIMARY KEY (`id_customer`),
+  KEY `IDX_AF8936671C01EB63` (`idp_id_client`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -33,6 +34,7 @@ CREATE TABLE `mapping_client_contact` (
 -- Table structure for table `order`
 --
 
+DROP TABLE IF EXISTS `order`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `order` (
@@ -43,9 +45,7 @@ CREATE TABLE `order` (
   `order_status` varchar(128) DEFAULT NULL,
   `delivery_status` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id_order`),
-  UNIQUE KEY `UNIQ_F5299398573471C3` (`order_ref`),
-  KEY `IDX_F5299398E173B1B8` (`id_client`),
-  CONSTRAINT `FK_F5299398E173B1B8` FOREIGN KEY (`id_client`) REFERENCES `mapping_client_contact` (`idp_id_client`)
+  UNIQUE KEY `UNIQ_F5299398573471C3` (`order_ref`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -53,6 +53,7 @@ CREATE TABLE `order` (
 -- Table structure for table `order_line`
 --
 
+DROP TABLE IF EXISTS `order_line`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `order_line` (
@@ -81,26 +82,4 @@ CREATE TABLE `order_line` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-10 19:40:52
-
-CREATE TABLE `staging_customer` (
-  `id_source_client` int(11) NOT NULL,
-  `id_source_contact` int(11) NOT NULL,
-  `id` int(11) DEFAULT NULL,
-  `id_shop` int(11) NOT NULL,
-  `m_pricelist_id` int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `company` varchar(255) DEFAULT NULL,
-  `email` varchar(128) NOT NULL,
-  `active` bit(1) NOT NULL,
-  `is_xxa_centrale` bit(1) NOT NULL,
-  `free_shipping_amount` int(11) NOT NULL,
-  `update_client` datetime NOT NULL,
-  `update_contact` datetime NOT NULL,
-  `is_synchronised` bit(1) NOT NULL,
-  `has_error` bit(1) NOT NULL,
-  `force_update` bit(1) NOT NULL DEFAULT b'0',
-  PRIMARY KEY (`id_source_contact`),
-  UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `id_source_contact` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Dump completed on 2023-08-18  0:47:34
