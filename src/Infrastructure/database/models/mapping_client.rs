@@ -1,6 +1,7 @@
 use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
+use diesel::result::Error as DieselError;
 
 use super::{SingleRowInsertable, SingleRowUpdatable};
 
@@ -34,6 +35,39 @@ impl MappingClientModel {
             idp_id_client,
             ps_id_customer,
         }
+    }
+}
+
+#[derive(Queryable, Identifiable, Selectable)]
+#[diesel(table_name = schema::legacy_staging::staging_customer)]
+#[diesel(primary_key(id_source_contact))]
+pub struct MappingClientSource {
+    pub id_source_client: i32,
+    pub id_source_contact: i32,
+    pub id: Option<i32>,
+    // pub id_shop: u32,
+    // pub m_pricelist_id: u32,
+    // pub name: String,
+    // pub company: Option<String>,
+    // pub email: String,
+    // pub active: bool,
+    // pub is_xxa_centrale: bool,
+    // pub free_shipping_amount: u32,
+    // pub update_client: chrono::NaiveDateTime,
+    // pub update_contact: chrono::NaiveDateTime,
+    // pub is_synchronised: bool,
+    // pub has_error: bool,
+    // pub force_update: bool,
+}
+
+impl MappingClientSource {
+    pub fn read(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError> {
+        use self::schema::legacy_staging::staging_customer::dsl::*;
+        staging_customer
+            .filter(id.is_not_null())
+            .select(MappingClientSource::as_select())
+            .load(connection)
+            .map_err(|e| e.into())
     }
 }
 
