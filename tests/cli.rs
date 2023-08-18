@@ -12,7 +12,7 @@ use std::ops::Range;
 use std::path::Path;
 use std::process::Command;
 
-use fluetl::benches::database_connection::{establish_connection_pool, DbConnection};
+use fluetl::infrastructure::database::connection::{establish_connection_pool, DbConnection};
 
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
@@ -56,17 +56,17 @@ fn import_mapping_client(repeat: Range<i32>) {
     }
 
     //Assert
-    let query_results = sql_query("SELECT * From mapping_client_contact")
+    let query_results = sql_query("SELECT * From `mapping_client_contact`")
         .load::<MappingClientPlaceholder>(&mut connection)
         .expect("Failed to query mapping_client_contact table");
 
     let query_result_sample_1 =
-        sql_query("SELECT * From mapping_client_contact WHERE idp_id_client = 1009681")
+        sql_query("SELECT * From `mapping_client_contact` WHERE idp_id_client = 1009681")
             .load::<MappingClientPlaceholder>(&mut connection)
             .expect("Failed to query mapping_client_contact table");
 
     let query_result_sample_2 =
-        sql_query("SELECT * From mapping_client_contact WHERE idp_id_client = 1010265")
+        sql_query("SELECT * From `mapping_client_contact` WHERE idp_id_client = 1010265")
             .load::<MappingClientPlaceholder>(&mut connection)
             .expect("Failed to query mapping_client_contact table");
 
@@ -89,9 +89,9 @@ fn import_mapping_client(repeat: Range<i32>) {
 
 #[derive(QueryableByName, Debug, PartialEq)]
 struct MappingClientPlaceholder {
-    #[sql_type = "diesel::sql_types::Integer"]
+    #[diesel(sql_type = diesel::sql_types::Integer)]
     pub id_customer: i32,
-    #[sql_type = "diesel::sql_types::Integer"]
+    #[diesel(sql_type = diesel::sql_types::Integer)]
     pub idp_id_client: i32,
 }
 
@@ -100,44 +100,55 @@ struct MappingClientPlaceholder {
 // ****************** //
 #[test]
 fn import_order_once() {
+    import_order(0..1);
+}
+
+#[test]
+fn import_order_10_times() {
+    import_order(0..10);
+}
+
+fn import_order(repeat: Range<i32>) {
     // Arrange
     let mut connection = setup_database_connection();
     reset_test_database(&mut connection);
 
     // Result
-    let output = Command::new("target/debug/fluetl")
-        .args(&["--env-file=.env.test", "import", "order"])
-        .output()
-        .expect("Failed to execute command");
+    for _ in repeat {
+        let output = Command::new("target/debug/fluetl")
+            .args(&["--env-file=.env.test", "import", "order"])
+            .output()
+            .expect("Failed to execute command");
 
-    if output.status.success() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        println!("Command executed successfully:\n{}", stdout);
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        eprintln!("Command failed:\n{}", stderr);
+        if output.status.success() {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            println!("Command executed successfully:\n{}", stdout);
+        } else {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            eprintln!("Command failed:\n{}", stderr);
+        }
     }
 
     // Assert
-    let query_results = sql_query("SELECT * From order")
+    let query_results = sql_query("SELECT * FROM `order`")
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
 
-    let query_result_sample_1 = sql_query("SELECT * From order WHERE id_order = 1113194")
+    let query_result_sample_1 = sql_query("SELECT * FROM `order` WHERE id_order = 1113194")
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
 
-    let query_result_sample_2 = sql_query("SELECT * From order WHERE id_order = 1118643")
+    let query_result_sample_2 = sql_query("SELECT * FROM `order` WHERE id_order = 1118643")
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
 
-    assert_eq!(query_results.len(), 5); // mapping_client_source.sql has 5 rows but one is ignored because of null id_customer
+    assert_eq!(query_results.len(), 5);
     assert_eq!(
         query_result_sample_1[0],
         OrderPlaceholder {
-            id_order: 1009681,
-            id_client: 1113194,
-            order_ref: "WEB73714".to_string(),
+            id_order: 1113194,
+            id_client: 1009681,
+            order_ref: "OV426946".to_string(),
             date: chrono::NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(2023, 6, 7).unwrap(),
                 NaiveTime::MIN
@@ -164,17 +175,17 @@ fn import_order_once() {
 
 #[derive(QueryableByName, Debug, PartialEq)]
 struct OrderPlaceholder {
-    #[sql_type = "diesel::sql_types::Integer"]
+    #[diesel(sql_type = diesel::sql_types::Integer)]
     pub id_order: i32,
-    #[sql_type = "diesel::sql_types::Integer"]
+    #[diesel(sql_type = diesel::sql_types::Integer)]
     pub id_client: i32,
-    #[sql_type = "diesel::sql_types::Varchar"]
+    #[diesel(sql_type = diesel::sql_types::Varchar)]
     pub order_ref: String,
-    #[sql_type = "diesel::sql_types::Timestamp"]
+    #[diesel(sql_type = diesel::sql_types::Timestamp)]
     pub date: chrono::NaiveDateTime,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::VarChar>"]
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
     pub order_status: Option<String>,
-    #[sql_type = "diesel::sql_types::Nullable<diesel::sql_types::VarChar>"]
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
     pub delivery_status: Option<String>,
 }
 
