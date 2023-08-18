@@ -11,6 +11,8 @@ use super::connection::DbConnection;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 
+pub use order::OrderModel;
+
 pub trait Model {}
 
 pub trait CanUpsertModel: Model {

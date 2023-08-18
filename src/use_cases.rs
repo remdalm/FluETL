@@ -25,7 +25,7 @@ pub(crate) mod import_orders;
 pub use import_mapping_client::ImportMappingClientUseCase;
 pub use import_orders::ImportOrderUseCase;
 
-pub trait ImportModelUseCase<M1, DE, M2>:
+pub(crate) trait ImportModelUseCase<M1, DE, M2>:
     CanReadAllModelUseCase<ModelImpl = M1>
     + CanPersistIntoDatabaseUseCase<DE, M2>
     + ModelToEntityParser<M1, DE>
@@ -66,7 +66,7 @@ where
     }
 }
 
-pub trait ImportCsvUseCase<CSV, DE, M>
+pub(crate) trait ImportCsvUseCase<CSV, DE, M>
 where
     CSV: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, MappingError>> + Debug,
     DE: DomainEntity + Into<M>,
@@ -148,7 +148,7 @@ where
     }
 }
 
-pub trait CanReadAllModelUseCase: HasLegacyStagingConnection {
+pub(crate) trait CanReadAllModelUseCase: HasLegacyStagingConnection {
     type ModelImpl: CanSelectAllModel + Model + Debug;
     fn read_all(&self) -> Result<Vec<Self::ModelImpl>, UseCaseError> {
         let mut connection = self.get_pooled_connection();
@@ -160,7 +160,7 @@ pub trait CanReadAllModelUseCase: HasLegacyStagingConnection {
     }
 }
 
-pub trait CanPersistIntoDatabaseUseCase<DE, M>: HasTargetConnection
+pub(crate) trait CanPersistIntoDatabaseUseCase<DE, M>: HasTargetConnection
 where
     DE: DomainEntity + Into<M>,
     M: CanUpsertModel,
