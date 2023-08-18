@@ -87,9 +87,6 @@ impl CanSelectAllModel for MappingClientSource {
 }
 
 #[cfg(test)]
-pub use tests::insert_mapping_client;
-
-#[cfg(test)]
 pub mod tests {
     use diesel::result::Error as DieselError;
 
@@ -101,13 +98,6 @@ pub mod tests {
     };
 
     use super::*;
-
-    pub fn insert_mapping_client(connection: &mut DbConnection) -> Result<(), DieselError> {
-        for mapping_client in mapping_client_model_fixture() {
-            mapping_client.insert(connection)?;
-        }
-        Ok(())
-    }
 
     pub fn insert_batch_to_mapping_client_source_db(
         connection: &mut DbConnection,

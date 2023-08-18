@@ -7,7 +7,7 @@ use crate::{
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         database::{
-            connection::{get_pooled_connection, HasLegacyStagingConnection, HasTargetConnection},
+            connection::{HasLegacyStagingConnection, HasTargetConnection},
             models::{CanSelectAllModel, CanUpsertModel, Model},
         },
         InfrastructureError,
@@ -21,6 +21,7 @@ use crate::{
 pub(crate) mod import_mapping_client;
 pub(crate) mod import_orders;
 
+pub use import_mapping_client::ImportMappingClientUseCase;
 pub use import_orders::ImportOrderUseCase;
 
 pub trait ImportModelUseCase<M1, DE, M2>:

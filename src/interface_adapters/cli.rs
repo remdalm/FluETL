@@ -4,7 +4,10 @@ use std::path::PathBuf;
 
 use crate::{
     infrastructure::logger,
-    use_cases::{ImportCsvUseCase, ImportOrderUseCase, UseCaseError},
+    use_cases::{
+        ImportCsvUseCase, ImportMappingClientUseCase, ImportModelUseCase, ImportOrderUseCase,
+        UseCaseError,
+    },
 };
 
 // https://docs.rs/clap/latest/clap/_derive/_tutorial
@@ -34,7 +37,7 @@ struct EntityCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum EntitySubCommand {
-    /// Import MappingClient from CSV file defined in env file argument
+    /// Import MappingClient from Legacy Staging Database
     MappingClient,
 
     /// Import Order from CSV file defined in env file argument
@@ -46,7 +49,6 @@ pub enum EntitySubCommand {
 
 pub fn main_using_clap() {
     let cli = Cli::parse();
-    println!("{:?}", cli);
     // If --env--file argument is not provided, try to get .env file from the root of the crate
     if let Some(env_file_path) = cli.env_file {
         if !env_file_path.exists() {
@@ -79,6 +81,11 @@ pub fn main_using_clap() {
                 EntitySubCommand::Order => {
                     info!("Importing orders...");
                     error_logger(ImportOrderUseCase.execute());
+                    info!("Done");
+                }
+                EntitySubCommand::MappingClient => {
+                    info!("Importing mapping clients...");
+                    error_logger(ImportMappingClientUseCase.execute());
                     info!("Done");
                 }
                 other => {
