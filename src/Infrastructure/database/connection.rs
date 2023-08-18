@@ -9,7 +9,7 @@ pub type DbConnection = PooledConnection<ConnectionManager<MysqlConnection>>;
 
 pub type DbPool = Pool<ConnectionManager<MysqlConnection>>;
 
-pub enum Database {
+pub(crate) enum Database {
     Target,
     LegacyStaging,
 }
@@ -57,7 +57,7 @@ fn get_legacy_staging_pooled_connection() -> &'static DbPool {
     &*LEGACT_STAGING_CONNECTION_POOL
 }
 
-pub fn get_pooled_connection(db: Database) -> DbConnection {
+pub(crate) fn get_pooled_connection(db: Database) -> DbConnection {
     let result = match db {
         Database::Target => get_target_pooled_connection(),
         Database::LegacyStaging => get_legacy_staging_pooled_connection(),
@@ -65,13 +65,13 @@ pub fn get_pooled_connection(db: Database) -> DbConnection {
     result.get().expect("Failed to get connection")
 }
 
-pub trait HasTargetConnection {
+pub(crate) trait HasTargetConnection {
     fn get_pooled_connection(&self) -> DbConnection {
         get_pooled_connection(Database::Target)
     }
 }
 
-pub trait HasLegacyStagingConnection {
+pub(crate) trait HasLegacyStagingConnection {
     fn get_pooled_connection(&self) -> DbConnection {
         get_pooled_connection(Database::LegacyStaging)
     }
@@ -86,7 +86,7 @@ pub(crate) mod tests {
         // Define a static connection pool
         static ref TEST_CONNECTION_POOL: DbPool = {
             // Load environment variables from .env file
-            dotenvy::dotenv().ok();
+            dotenvy::from_path(".env.unit.test").ok();
 
             // Get the value of TEST_TARGET_DATABASE_URL from the environment
             let target_database_url = env::var("TEST_TARGET_DATABASE_URL")

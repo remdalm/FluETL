@@ -55,10 +55,12 @@ mod tests {
         interface_adapters::mappers::{
             convert_csv_dto_to_domain_entity, convert_domain_entity_to_model, MappingError,
         },
+        tests::load_unit_test_env,
     };
 
     #[test]
     fn test_convert_dtos_to_orders() {
+        load_unit_test_env();
         let dto_fixtures = csv_order_dto_fixtures();
         let results: Vec<Result<Order, MappingError>> =
             convert_csv_dto_to_domain_entity(dto_fixtures.to_vec());
@@ -75,6 +77,8 @@ mod tests {
     #[test]
     fn test_convert_to_orders_with_errors() {
         // Simulate a CsvOrderDTO with invalid data for testing validation error
+
+        load_unit_test_env();
         let mut dto_fixtures = csv_order_dto_fixtures();
         dto_fixtures[0].completion = "101".to_string();
 
