@@ -17,6 +17,13 @@ pub trait CanUpsertModel: Model {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError>;
 }
 
+pub trait CanSelectAllModel: Model
+where
+    Self: Sized,
+{
+    fn select_all(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError>;
+}
+
 pub trait SingleRowInsertable<T, Conn>
 where
     T: Table + QueryFragment<Conn::Backend> + QueryId + HasTable + 'static,

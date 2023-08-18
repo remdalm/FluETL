@@ -1,9 +1,9 @@
+use crate::infrastructure::database::connection::DbConnection;
 use crate::infrastructure::database::schema;
-use crate::infrastructure::{database::connection::DbConnection, InfrastructureError};
 use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 
-use super::{Model, SingleRowInsertable, SingleRowUpdatable};
+use super::{CanSelectAllModel, CanUpsertModel, Model, SingleRowInsertable, SingleRowUpdatable};
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq)]
 #[diesel(table_name = schema::target::mapping_client_contact)]
@@ -11,6 +11,20 @@ use super::{Model, SingleRowInsertable, SingleRowUpdatable};
 pub struct MappingClientModel {
     pub id_customer: u32,
     pub idp_id_client: u32,
+}
+
+impl Model for MappingClientModel {}
+impl CanUpsertModel for MappingClientModel {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        diesel::insert_into(schema::target::mapping_client_contact::table)
+            .values(self)
+            .on_conflict(diesel::dsl::DuplicatedKeys)
+            .do_update()
+            .set(self)
+            .execute(connection)
+            .map(|_| ())
+            .map_err(|e| e.into())
+    }
 }
 
 impl SingleRowInsertable<schema::target::mapping_client_contact::table, DbConnection>
@@ -36,19 +50,9 @@ impl MappingClientModel {
             idp_id_client,
         }
     }
-    pub fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::mapping_client_contact::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
-            .map_err(|e| e.into())
-    }
 }
 
-#[derive(Queryable, Identifiable, Selectable, Clone, Debug)]
+#[derive(Queryable, Identifiable, Selectable, Default, Clone, Debug)]
 #[diesel(table_name = schema::legacy_staging::staging_customer)]
 #[diesel(primary_key(id_source_contact))]
 pub struct MappingClientSource {
@@ -71,9 +75,8 @@ pub struct MappingClientSource {
 }
 
 impl Model for MappingClientSource {}
-
-impl MappingClientSource {
-    pub fn read(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError> {
+impl CanSelectAllModel for MappingClientSource {
+    fn select_all(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError> {
         use self::schema::legacy_staging::staging_customer::dsl::*;
         staging_customer
             .filter(id.is_not_null())
@@ -87,7 +90,7 @@ impl MappingClientSource {
 pub use tests::insert_mapping_client;
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use diesel::result::Error as DieselError;
 
     use crate::{
@@ -106,7 +109,7 @@ mod tests {
         Ok(())
     }
 
-    fn insert_batch_to_mapping_client_source_db(
+    pub fn insert_batch_to_mapping_client_source_db(
         connection: &mut DbConnection,
     ) -> Result<(), DieselError> {
         use self::schema::legacy_staging::staging_customer::dsl::*;
@@ -169,6 +172,12 @@ mod tests {
             .execute(connection)
             .map(|_| ())
             .map_err(|e| e.into())
+    }
+
+    pub fn read_mapping_client(connection: &mut DbConnection) -> Vec<MappingClientModel> {
+        schema::target::mapping_client_contact::dsl::mapping_client_contact
+            .load::<MappingClientModel>(connection)
+            .expect("Error loading updated OrderModel")
     }
 
     #[test]
@@ -236,7 +245,8 @@ mod tests {
         insert_batch_to_mapping_client_source_db(&mut connection)
             .expect("Error inserting batch to mapping client source db");
 
-        let result = MappingClientSource::read(&mut connection).expect("Error reading source");
+        let result =
+            MappingClientSource::select_all(&mut connection).expect("Error reading source");
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].id_source_contact, 1);

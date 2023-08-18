@@ -1,5 +1,7 @@
 use crate::domain::MappingClient;
-use crate::infrastructure::database::models::mapping_client::MappingClientSource;
+use crate::infrastructure::database::models::mapping_client::{
+    MappingClientModel, MappingClientSource,
+};
 use crate::infrastructure::InfrastructureError;
 
 use super::MapperError;
@@ -37,19 +39,30 @@ impl TryFrom<MappingClientSource> for MappingClientSourceDTO {
     }
 }
 
+impl From<MappingClient> for MappingClientModel {
+    fn from(entity: MappingClient) -> Self {
+        Self {
+            id_customer: entity.id_customer(),
+            idp_id_client: entity.idp_id_client(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         fixtures::{mapping_client_fixture, mapping_client_source_model_fixture},
-        interface_adapters::mappers::convert_model_to_domain_entity,
+        interface_adapters::mappers::ModelToEntityParser,
     };
+
+    struct Parser;
+    impl ModelToEntityParser<MappingClientSource, MappingClient> for Parser {}
 
     use super::*;
     #[test]
     fn test_convert_source_to_entity() {
         let source_fixtures = mapping_client_source_model_fixture();
-        let results: Vec<Result<MappingClient, MapperError>> =
-            convert_model_to_domain_entity(source_fixtures.to_vec());
+        let results = Parser.parse_all(source_fixtures.to_vec());
 
         let mapping_client_fixtures = mapping_client_fixture();
 

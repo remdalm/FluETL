@@ -1,90 +1,94 @@
-// use crate::infrastructure::database::models::mapping_client::MappingClientSource;
+use crate::{
+    domain::MappingClient,
+    infrastructure::database::models::mapping_client::{MappingClientModel, MappingClientSource},
+};
 
-// use super::*;
+use super::*;
 
-// pub struct ImportMappingClientUseCase;
+pub struct ImportMappingClientUseCase;
+impl HasLegacyStagingConnection for ImportMappingClientUseCase {}
+impl HasTargetConnection for ImportMappingClientUseCase {}
 
-// pub struct MappingClientManager;
+impl CanReadAllModelUseCase for ImportMappingClientUseCase {
+    type ModelImpl = MappingClientSource;
+    // fn concrete_model(&self) -> Self::ModelImpl {
+    //     MappingClientSource::default()
+    // }
+}
 
-// impl UseCaseManager<MappingClientSource, MappingClient, MappingClientModel> for OrderManager {}
-// impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
+impl CanPersistIntoDatabaseUseCase<MappingClient, MappingClientModel>
+    for ImportMappingClientUseCase
+{
+}
 
-// impl ImportUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
-//     type ManagerImpl = OrderManager;
+impl ModelToEntityParser<MappingClientSource, MappingClient> for ImportMappingClientUseCase {}
 
-//     fn get_csv_type(&self) -> CsvType {
-//         CsvType::Orders
-//     }
+impl ImportModelUseCase<MappingClientSource, MappingClient, MappingClientModel>
+    for ImportMappingClientUseCase
+{
+}
 
-//     fn concrete_manager(&self) -> Self::ManagerImpl {
-//         OrderManager
-//     }
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        infrastructure::database::connection::tests::{
+            get_test_pooled_connection, reset_test_database,
+        },
+        infrastructure::database::connection::DbConnection,
+        infrastructure::database::models::mapping_client::tests::{
+            insert_batch_to_mapping_client_source_db, read_mapping_client,
+        },
+    };
 
-// #[cfg(test)]
-// mod tests {
-//     use std::path::PathBuf;
+    struct ImportMappingClientUseCaseTest;
 
-//     use super::*;
-//     use crate::{
-//         benches::database_connection::tests::{get_test_pooled_connection, reset_test_database},
-//         fixtures::order_model_fixtures,
-//         infrastructure::{
-//             csv_reader::CsvType,
-//             database::models::order::tests::{insert_foreign_keys, read_orders},
-//         },
-//     };
+    impl HasTargetConnection for ImportMappingClientUseCaseTest {
+        fn get_pooled_connection(&self) -> DbConnection {
+            get_test_pooled_connection()
+        }
+    }
 
-//     pub struct ImportOrderUseCaseTest;
-//     pub struct OrderManagerTest;
+    impl HasLegacyStagingConnection for ImportMappingClientUseCaseTest {
+        fn get_pooled_connection(&self) -> DbConnection {
+            get_test_pooled_connection()
+        }
+    }
 
-//     impl UseCaseManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
-//     impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManagerTest {}
-//     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {
-//         fn get_pooled_connection(&self) -> DbConnection {
-//             get_test_pooled_connection()
-//         }
-//     }
+    impl CanReadAllModelUseCase for ImportMappingClientUseCaseTest {
+        type ModelImpl = MappingClientSource;
+    }
 
-//     impl UseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCaseTest {
-//         type ManagerImpl = OrderManagerTest;
+    impl CanPersistIntoDatabaseUseCase<MappingClient, MappingClientModel>
+        for ImportMappingClientUseCaseTest
+    {
+    }
 
-//         fn get_csv_type(&self) -> CsvType {
-//             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
+    impl ModelToEntityParser<MappingClientSource, MappingClient> for ImportMappingClientUseCaseTest {}
 
-//             let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-//             let csv_path = root_path
-//                 .join("tests")
-//                 .join("fixtures")
-//                 .join("order_for_unit_test.csv");
+    impl ImportModelUseCase<MappingClientSource, MappingClient, MappingClientModel>
+        for ImportMappingClientUseCaseTest
+    {
+    }
 
-//             CsvType::Test(csv_path)
-//         }
+    #[test]
+    fn test_order_use_case() {
+        // Arrange
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+        insert_batch_to_mapping_client_source_db(&mut connection).expect("Failed to insert data");
 
-//         fn concrete_manager(&self) -> Self::ManagerImpl {
-//             OrderManagerTest
-//         }
-//     }
+        // Result
+        let use_case = ImportMappingClientUseCaseTest;
+        let errors = use_case.execute();
 
-//     #[test]
-//     fn test_order_use_case() {
-//         // Arrange
-//         let mut connection = get_test_pooled_connection();
-//         reset_test_database(&mut connection);
+        // Assert
+        assert!(errors.is_none(), "Failed to execute use case");
+        let persisted_mapping_client = read_mapping_client(&mut connection);
+        assert_eq!(persisted_mapping_client.len(), 2);
+        assert_eq!(persisted_mapping_client[0].id_customer, 1);
+        assert_eq!(persisted_mapping_client[1].id_customer, 2);
+    }
 
-//         insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
-
-//         // Result
-//         let use_case = ImportOrderUseCaseTest;
-//         let errors = use_case.execute();
-
-//         // Assert
-//         assert!(errors.is_none(), "Failed to execute use case");
-//         let persisted_orders = read_orders(&mut connection);
-//         assert_eq!(persisted_orders.len(), 2);
-//         assert_eq!(persisted_orders[0], order_model_fixtures()[0]);
-//         assert_eq!(persisted_orders[1], order_model_fixtures()[1]);
-//     }
-
-//     // TODO: Test with failure
-// }
+    // TODO: Test with failure
+}

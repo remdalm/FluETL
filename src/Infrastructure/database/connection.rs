@@ -9,8 +9,13 @@ pub type DbConnection = PooledConnection<ConnectionManager<MysqlConnection>>;
 
 pub type DbPool = Pool<ConnectionManager<MysqlConnection>>;
 
+pub enum Database {
+    Target,
+    LegacyStaging,
+}
+
 lazy_static! {
-    static ref CONNECTION_POOL: DbPool = {
+    static ref TARGET_CONNECTION_POOL: DbPool = {
         // Load environment variables from .env file
         // TODO: Must be done in main.rs
         dotenvy::dotenv().ok();
@@ -19,6 +24,19 @@ lazy_static! {
             .expect("TARGET_DATABASE_URL must be set in the .env file");
 
         establish_connection_pool(&target_database_url)
+    };
+}
+
+lazy_static! {
+    static ref LEGACT_STAGING_CONNECTION_POOL: DbPool = {
+        // Load environment variables from .env file
+        // TODO: Must be done in main.rs
+        dotenvy::dotenv().ok();
+
+        let legacy_staging_database_url = env::var("LEGACY_STAGING_DATABASE_URL")
+            .expect("LEGACY_STAGING_DATABASE_URL must be set in the .env file");
+
+        establish_connection_pool(&legacy_staging_database_url)
     };
 }
 
@@ -31,14 +49,32 @@ pub fn establish_connection_pool(target_database_url: &str) -> DbPool {
 }
 
 // Function to get a reference to the connection pool
-pub fn get_connection_pool() -> &'static DbPool {
-    &*CONNECTION_POOL
+fn get_target_pooled_connection() -> &'static DbPool {
+    &*TARGET_CONNECTION_POOL
 }
 
-pub fn get_pooled_connection() -> DbConnection {
-    get_connection_pool()
-        .get()
-        .expect("Failed to get connection")
+fn get_legacy_staging_pooled_connection() -> &'static DbPool {
+    &*LEGACT_STAGING_CONNECTION_POOL
+}
+
+pub fn get_pooled_connection(db: Database) -> DbConnection {
+    let result = match db {
+        Database::Target => get_target_pooled_connection(),
+        Database::LegacyStaging => get_legacy_staging_pooled_connection(),
+    };
+    result.get().expect("Failed to get connection")
+}
+
+pub trait HasTargetConnection {
+    fn get_pooled_connection(&self) -> DbConnection {
+        get_pooled_connection(Database::Target)
+    }
+}
+
+pub trait HasLegacyStagingConnection {
+    fn get_pooled_connection(&self) -> DbConnection {
+        get_pooled_connection(Database::LegacyStaging)
+    }
 }
 
 #[cfg(test)]

@@ -12,6 +12,7 @@ pub struct OrderManager;
 impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
 impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManager {}
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
+impl HasTargetConnection for OrderManager {}
 impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
     type ManagerImpl = OrderManager;
 
@@ -30,8 +31,11 @@ mod tests {
 
     use super::*;
     use crate::{
-        benches::database_connection::tests::{get_test_pooled_connection, reset_test_database},
         fixtures::order_model_fixtures,
+        infrastructure::database::connection::tests::{
+            get_test_pooled_connection, reset_test_database,
+        },
+        infrastructure::database::connection::DbConnection,
         infrastructure::{csv_reader::CsvType, database::models::order::tests::read_orders},
     };
 
@@ -40,7 +44,8 @@ mod tests {
 
     impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
     impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManagerTest {}
-    impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {
+    impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {}
+    impl HasTargetConnection for OrderManagerTest {
         fn get_pooled_connection(&self) -> DbConnection {
             get_test_pooled_connection()
         }

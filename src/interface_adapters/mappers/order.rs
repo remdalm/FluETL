@@ -1,13 +1,12 @@
-use crate::{
-    benches::OrderModel,
-    domain::{DomainError, Order},
-};
+use crate::domain::Order;
 use chrono::NaiveDateTime;
 
-use crate::infrastructure::csv_reader::CsvOrderDTO;
+use crate::infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel};
 
-impl From<CsvOrderDTO> for Result<Order, DomainError> {
-    fn from(dto: CsvOrderDTO) -> Result<Order, DomainError> {
+use super::MapperError;
+
+impl From<CsvOrderDTO> for Result<Order, MapperError> {
+    fn from(dto: CsvOrderDTO) -> Result<Order, MapperError> {
         Order::new_from_string(
             dto.c_order_id,
             dto.c_bpartner_id,
@@ -20,6 +19,7 @@ impl From<CsvOrderDTO> for Result<Order, DomainError> {
             dto.order_status,
             dto.delivery_status,
         )
+        .map_err(|e| e.into())
     }
 }
 
@@ -48,14 +48,14 @@ mod tests {
         fixtures::{csv_order_dto_fixtures, order_fixtures, order_model_fixtures},
         infrastructure::database::models::order::OrderModel,
         interface_adapters::mappers::{
-            convert_csv_dto_to_domain_entity, convert_domain_entity_to_model,
+            convert_csv_dto_to_domain_entity, convert_domain_entity_to_model, MapperError,
         },
     };
 
     #[test]
     fn test_convert_dtos_to_orders() {
         let dto_fixtures = csv_order_dto_fixtures();
-        let results: Vec<Result<Order, DomainError>> =
+        let results: Vec<Result<Order, MapperError>> =
             convert_csv_dto_to_domain_entity(dto_fixtures.to_vec());
 
         let order_fixtures = order_fixtures();
@@ -73,12 +73,12 @@ mod tests {
         let mut dto_fixtures = csv_order_dto_fixtures();
         dto_fixtures[0].completion = "101".to_string();
 
-        let results: Vec<Result<Order, DomainError>> =
+        let results: Vec<Result<Order, MapperError>> =
             convert_csv_dto_to_domain_entity(dto_fixtures.to_vec());
 
         assert!(
             results[0].as_ref().is_err_and(|e| match e {
-                DomainError::ValidationError(_) => true,
+                MapperError::DomainError(DomainError::ValidationError(_)) => true,
                 _ => false,
             }),
             "Expected Domain Validation Error"

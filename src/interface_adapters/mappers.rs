@@ -23,9 +23,9 @@ impl From<DomainError> for MapperError {
     }
 }
 
-pub fn convert_csv_dto_to_domain_entity<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, DomainError>>
+pub fn convert_csv_dto_to_domain_entity<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, MapperError>>
 where
-    CSV: Into<Result<DE, DomainError>>,
+    CSV: Into<Result<DE, MapperError>>,
     DE: DomainEntity,
 {
     dtos.into_iter().map(|dto| dto.into()).collect()
@@ -39,10 +39,20 @@ where
     d.into_iter().map(|de| de.into()).collect()
 }
 
-pub fn convert_model_to_domain_entity<M, DE>(model_dtos: Vec<M>) -> Vec<Result<DE, MapperError>>
+pub trait ModelToEntityParser<M, DE>
 where
     M: Model + Into<Result<DE, MapperError>>,
     DE: DomainEntity,
 {
-    model_dtos.into_iter().map(|de| de.into()).collect()
+    fn parse_all(&self, models: Vec<M>) -> Vec<Result<DE, MapperError>> {
+        models.into_iter().map(|de| de.into()).collect()
+    }
 }
+
+// fn convert_model_to_domain_entity<M, DE>(model_dtos: Vec<M>) -> Vec<Result<DE, MapperError>>
+// where
+//     M: Model + Into<Result<DE, MapperError>>,
+//     DE: DomainEntity,
+// {
+//     model_dtos.into_iter().map(|de| de.into()).collect()
+// }
