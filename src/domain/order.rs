@@ -72,18 +72,26 @@ impl Order {
         completion: String,
         order_status: String,
         delivery_status: String,
+        date_format: &str,
     ) -> Result<Self, DomainError> {
-        let c_order_id = c_order_id
-            .parse::<u32>()
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
-        let c_bpartner_id = c_bpartner_id
-            .parse::<u32>()
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
-        let date = NaiveDate::parse_from_str(date.as_str(), "%Y-%m-%d")
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
-        let completion = completion
-            .parse::<u32>()
-            .map_err(|err| DomainError::ParsingError(err.to_string()))?;
+        let c_order_id = c_order_id.parse::<u32>().map_err(|err| {
+            DomainError::ParsingError(
+                err.to_string() + format!(": c_order_id => {}", c_order_id).as_str(),
+            )
+        })?;
+        let c_bpartner_id = c_bpartner_id.parse::<u32>().map_err(|err| {
+            DomainError::ParsingError(
+                err.to_string() + format!(": c_bpartner_id => {}", c_bpartner_id).as_str(),
+            )
+        })?;
+        let date = NaiveDate::parse_from_str(date.as_str(), date_format).map_err(|err| {
+            DomainError::ParsingError(err.to_string() + format!(": date => {}", date).as_str())
+        })?;
+        let completion = completion.replace("%", "").parse::<u32>().map_err(|err| {
+            DomainError::ParsingError(
+                err.to_string() + format!(": completion => {}", completion).as_str(),
+            )
+        })?;
 
         let order_status = if order_status.is_empty() {
             None

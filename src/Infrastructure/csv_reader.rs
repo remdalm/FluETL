@@ -15,7 +15,7 @@ pub enum CsvType {
 impl CsvType {
     fn get_path(&self) -> Result<String, VarError> {
         match self {
-            CsvType::Orders => env::var("ORDERS_FILE_PATH"),
+            CsvType::Orders => env::var("ORDERS_CSV_PATH"),
             CsvType::Test(path) => Ok(path
                 .to_str()
                 .expect("CsvType::Test cannot be cast into &str")

@@ -6,26 +6,26 @@ use crate::infrastructure::database::models::Model;
 use crate::infrastructure::InfrastructureError;
 
 #[derive(Debug)]
-pub enum MapperError {
+pub enum MappingError {
     InfrastructureError(InfrastructureError),
     DomainError(DomainError),
 }
 
-impl From<InfrastructureError> for MapperError {
+impl From<InfrastructureError> for MappingError {
     fn from(e: InfrastructureError) -> Self {
-        MapperError::InfrastructureError(e)
+        MappingError::InfrastructureError(e)
     }
 }
 
-impl From<DomainError> for MapperError {
+impl From<DomainError> for MappingError {
     fn from(e: DomainError) -> Self {
-        MapperError::DomainError(e)
+        MappingError::DomainError(e)
     }
 }
 
-pub fn convert_csv_dto_to_domain_entity<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, MapperError>>
+pub fn convert_csv_dto_to_domain_entity<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, MappingError>>
 where
-    CSV: Into<Result<DE, MapperError>>,
+    CSV: Into<Result<DE, MappingError>>,
     DE: DomainEntity,
 {
     dtos.into_iter().map(|dto| dto.into()).collect()
@@ -41,17 +41,17 @@ where
 
 pub trait ModelToEntityParser<M, DE>
 where
-    M: Model + Into<Result<DE, MapperError>>,
+    M: Model + Into<Result<DE, MappingError>>,
     DE: DomainEntity,
 {
-    fn parse_all(&self, models: Vec<M>) -> Vec<Result<DE, MapperError>> {
+    fn parse_all(&self, models: Vec<M>) -> Vec<Result<DE, MappingError>> {
         models.into_iter().map(|de| de.into()).collect()
     }
 }
 
-// fn convert_model_to_domain_entity<M, DE>(model_dtos: Vec<M>) -> Vec<Result<DE, MapperError>>
+// fn convert_model_to_domain_entity<M, DE>(model_dtos: Vec<M>) -> Vec<Result<DE, MappingError>>
 // where
-//     M: Model + Into<Result<DE, MapperError>>,
+//     M: Model + Into<Result<DE, MappingError>>,
 //     DE: DomainEntity,
 // {
 //     model_dtos.into_iter().map(|de| de.into()).collect()

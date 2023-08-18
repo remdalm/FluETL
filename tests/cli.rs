@@ -1,6 +1,8 @@
 extern crate diesel;
 extern crate fluetl;
 
+use chrono::NaiveDate;
+use chrono::NaiveTime;
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
 use std::env;
 use std::fs::File;
@@ -104,7 +106,7 @@ fn import_order_once() {
 
     // Result
     let output = Command::new("target/debug/fluetl")
-        .args(&["--env-file=.env.test", "import", "mapping-client"])
+        .args(&["--env-file=.env.test", "import", "order"])
         .output()
         .expect("Failed to execute command");
 
@@ -120,6 +122,44 @@ fn import_order_once() {
     let query_results = sql_query("SELECT * From order")
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
+
+    let query_result_sample_1 = sql_query("SELECT * From order WHERE id_order = 1113194")
+        .load::<OrderPlaceholder>(&mut connection)
+        .expect("Failed to query order table");
+
+    let query_result_sample_2 = sql_query("SELECT * From order WHERE id_order = 1118643")
+        .load::<OrderPlaceholder>(&mut connection)
+        .expect("Failed to query order table");
+
+    assert_eq!(query_results.len(), 5); // mapping_client_source.sql has 5 rows but one is ignored because of null id_customer
+    assert_eq!(
+        query_result_sample_1[0],
+        OrderPlaceholder {
+            id_order: 1009681,
+            id_client: 1113194,
+            order_ref: "WEB73714".to_string(),
+            date: chrono::NaiveDateTime::new(
+                NaiveDate::from_ymd_opt(2023, 6, 7).unwrap(),
+                NaiveTime::MIN
+            ),
+            order_status: Some("Commande en attente de confirmation".to_string()),
+            delivery_status: Some("En attente".to_string())
+        }
+    );
+    assert_eq!(
+        query_result_sample_2[0],
+        OrderPlaceholder {
+            id_order: 1118643,
+            id_client: 1010265,
+            order_ref: "OV427619".to_string(),
+            date: chrono::NaiveDateTime::new(
+                NaiveDate::from_ymd_opt(2023, 3, 17).unwrap(),
+                NaiveTime::MIN
+            ),
+            order_status: None,
+            delivery_status: Some("Livré en intégralité".to_string())
+        }
+    );
 }
 
 #[derive(QueryableByName, Debug, PartialEq)]

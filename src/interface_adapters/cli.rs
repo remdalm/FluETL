@@ -114,8 +114,8 @@ fn error_logger(errors: Option<Vec<UseCaseError>>) {
                 UseCaseError::InfrastructureError(e) => {
                     error!("InfrastructureError: {:?}", e);
                 }
-                UseCaseError::MapperError(e) => {
-                    error!("MapperError: {:?}", e);
+                UseCaseError::MappingError(e) => {
+                    error!("MappingError: {:?}", e);
                 }
             }
         }

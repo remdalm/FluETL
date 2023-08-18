@@ -4,12 +4,12 @@ use crate::infrastructure::database::models::mapping_client::{
 };
 use crate::infrastructure::InfrastructureError;
 
-use super::MapperError;
+use super::MappingError;
 
-impl From<MappingClientSource> for Result<MappingClient, MapperError> {
-    fn from(source: MappingClientSource) -> Result<MappingClient, MapperError> {
+impl From<MappingClientSource> for Result<MappingClient, MappingError> {
+    fn from(source: MappingClientSource) -> Result<MappingClient, MappingError> {
         let dto_result: Result<MappingClientSourceDTO, InfrastructureError> = source.try_into();
-        let dto = dto_result.map_err(|e| MapperError::InfrastructureError(e))?;
+        let dto = dto_result.map_err(|e| MappingError::InfrastructureError(e))?;
 
         MappingClient::from_i32(dto.id, dto.id_source_client).map_err(|e| e.into())
     }

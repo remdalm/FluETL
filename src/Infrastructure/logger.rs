@@ -20,6 +20,8 @@ fn make() -> Result<Config, InfrastructureError> {
     let log_directory =
         env::var("LOG_DIRECTORY").map_err(|e| InfrastructureError::EnvVarError(e))?;
 
+    let log_level = env::var("LOG_LEVEL").unwrap_or("INFO".to_string());
+
     let log_line_pattern = "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}";
 
     let trigger_size = 2000000 as u64; //2MB
@@ -52,7 +54,7 @@ fn make() -> Result<Config, InfrastructureError> {
             Root::builder()
                 .appender("stdout")
                 .appender("file_logger")
-                .build(LevelFilter::Info),
+                .build(log_level_from_string(log_level)),
         )
         .unwrap();
     Ok(config)
@@ -65,4 +67,15 @@ pub fn init() {
         return;
     }
     log4rs::init_config(make_result.unwrap()).unwrap();
+}
+
+fn log_level_from_string(level: String) -> LevelFilter {
+    match level.as_str() {
+        "TRACE" => LevelFilter::Trace,
+        "DEBUG" => LevelFilter::Debug,
+        "INFO" => LevelFilter::Info,
+        "WARN" => LevelFilter::Warn,
+        "ERROR" => LevelFilter::Error,
+        _ => LevelFilter::Info,
+    }
 }
