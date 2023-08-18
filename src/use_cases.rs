@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use log::info;
 use serde::Deserialize;
 
 use crate::{
@@ -152,10 +153,9 @@ pub trait CanReadAllModelUseCase: HasLegacyStagingConnection {
         let data = Self::ModelImpl::select_all(&mut connection).map_err(|err| {
             UseCaseError::InfrastructureError(InfrastructureError::DatabaseError(err))
         })?;
+        info!("Found {} Entities", data.len());
         Ok(data)
     }
-
-    // fn concrete_model(&self) -> Self::ModelImpl;
 }
 
 pub trait CanPersistIntoDatabaseUseCase<DE, M>: HasTargetConnection

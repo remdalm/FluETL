@@ -69,7 +69,6 @@ pub fn homemade_upsert(
 
 fn setup_database_connection() -> DbConnection {
     dotenvy::dotenv().ok();
-    println!("benchmark_upsert_recommended");
     let test_target_database_url = env::var("TEST_TARGET_DATABASE_URL")
         .expect("TEST_TARGET_DATABASE_URL must be set in the .env file");
 
