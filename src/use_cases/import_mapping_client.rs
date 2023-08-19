@@ -1,5 +1,5 @@
 use crate::{
-    domain::MappingClient,
+    domain::mapping_client::MappingClient,
     infrastructure::database::models::mapping_client::{MappingClientModel, MappingClientSource},
 };
 

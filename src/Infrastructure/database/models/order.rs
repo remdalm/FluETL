@@ -11,9 +11,11 @@ use super::{CanUpsertModel, Model, SingleRowInsertable, SingleRowUpdatable};
 pub struct OrderModel {
     pub id_order: u32,
     pub id_client: u32,
+    pub client_name: Option<String>,
     pub order_ref: String,
     pub date: chrono::NaiveDateTime,
     pub po_ref: Option<String>,
+    pub origin: Option<String>,
     pub completion: Option<u32>,
     pub order_status: Option<String>,
     pub delivery_status: Option<String>,

@@ -61,7 +61,7 @@ pub struct MappingClientSource {
     pub id: Option<i32>,
     // pub id_shop: u32,
     // pub m_pricelist_id: u32,
-    // pub name: String,
+    // pub client_name: String,
     // pub company: Option<String>,
     // pub email: String,
     // pub active: bool,

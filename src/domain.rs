@@ -1,10 +1,6 @@
-mod mapping_client;
-mod order;
-mod order_line;
-
-pub use mapping_client::MappingClient;
-pub use order::Order;
-pub use order_line::OrderLine;
+pub(crate) mod mapping_client;
+pub(crate) mod order;
+pub(crate) mod order_line;
 
 pub trait DomainEntity {}
 

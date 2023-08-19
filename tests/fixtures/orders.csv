@@ -1,6 +1,6 @@
-c_bpartner_id;name;date;order_ref;c_order_id;po_ref;origin;completion;order_status;delivery_status
-1009681;CLIENT 1;07/06/2023;OV426946;1113194;P23HA01525;;0%;Commande en attente de confirmation;En attente
-1012489;CLIENT 2;12/04/2023;OV426905;1112737;230000535;;100%;Commande confirmée;Livré en intégralité
-1010591;CLIENT 3;17/03/2023;WEB82760;1118684;;Commandes Web;100%;Commande confirmée;Livré en intégralité
-1012519;CLIENT 4;17/03/2023;WEB82655;1118561;CF653;Commandes Web;100%;Commande confirmée;Livré en intégralité
-1010265;CLIENT 5;17/03/2023;OV427619;1118643;WEB73714;;100%;;Livré en intégralité
+c_bpartner_id;client_name;date;order_ref;c_order_id;po_ref;origin;completion;order_status;delivery_status
+1009681;Client 1;07/06/2023;OV426946;1113194;P23HA01525;Web;0.9%;Commande en attente de confirmation;En attente
+1012489;;12/04/2023;OV426905;1112737;230000535;;100%;Commande confirmée;
+1010591;Client 3;17/03/2023;WEB82760;1118684;;Web;50;Commande confirmée;Livré en intégralité
+1012519;Client 4;17/03/2023;WEB82655;1118561;CF653;Web;101%;Commande confirmée;Livré en intégralité
+1010265;Client 5;17/03/2023;OV427619;1118643;WEB73714;;100%;;Livré en intégralité

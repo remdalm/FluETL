@@ -2,16 +2,33 @@ use chrono::NaiveDate;
 
 use super::{convert_string_to_option_string, DomainEntity, DomainError};
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Origin {
+    Web,
+    EDI,
+    Unknown,
+}
+
+impl ToString for Origin {
+    fn to_string(&self) -> String {
+        match self {
+            Origin::Web => "Web".to_string(),
+            Origin::EDI => "EDI".to_string(),
+            Origin::Unknown => "Unknown".to_string(),
+        }
+    }
+}
+
 // Order entity
 #[derive(Debug, Clone)]
 pub struct Order {
     c_order_id: u32,
     c_bpartner_id: u32,
-    name: String,
+    client_name: Option<String>,
     date: NaiveDate,
     order_ref: String,
     po_ref: Option<String>,
-    origin: String,
+    origin: Origin,
     completion: Option<u32>,
     order_status: Option<String>,
     delivery_status: Option<String>,
@@ -21,7 +38,7 @@ impl PartialEq for Order {
     fn eq(&self, other: &Self) -> bool {
         self.c_order_id == other.c_order_id
             && self.c_bpartner_id == other.c_bpartner_id
-            && self.name == other.name
+            && self.client_name == other.client_name
             && self.date == other.date
             && self.order_ref == other.order_ref
             && self.po_ref == other.po_ref
@@ -36,15 +53,16 @@ impl Order {
     pub fn new(
         c_order_id: u32,
         c_bpartner_id: u32,
-        name: String,
+        client_name: Option<String>,
         date: NaiveDate,
         order_ref: String,
         po_ref: Option<String>,
-        origin: String,
+        origin: Origin,
         completion: Option<u32>,
         order_status: Option<String>,
         delivery_status: Option<String>,
     ) -> Result<Self, DomainError> {
+        // Validation is performed here
         if completion.is_some() {
             Self::validate_completion(completion.unwrap())?;
         }
@@ -52,7 +70,7 @@ impl Order {
         Ok(Self {
             c_order_id,
             c_bpartner_id,
-            name,
+            client_name,
             date,
             order_ref,
             po_ref,
@@ -63,53 +81,55 @@ impl Order {
         })
     }
 
-    pub fn new_from_string(
-        c_order_id: String,
-        c_bpartner_id: String,
-        name: String,
-        date: String,
-        order_ref: String,
-        po_ref: String,
-        origin: String,
-        completion: String,
-        order_status: String,
-        delivery_status: String,
+    pub fn new_from_sting_dto(
+        dto: OrderEntityFromStringDTO,
         date_format: &str,
     ) -> Result<Self, DomainError> {
-        let c_order_id = c_order_id.parse::<u32>().map_err(|err| {
+        let c_order_id = dto.c_order_id.parse::<u32>().map_err(|err| {
             DomainError::ParsingError(
-                err.to_string() + format!(": c_order_id => {}", c_order_id).as_str(),
+                err.to_string() + format!(": c_order_id => {}", dto.c_order_id).as_str(),
             )
         })?;
-        let c_bpartner_id = c_bpartner_id.parse::<u32>().map_err(|err| {
+        let c_bpartner_id = dto.c_bpartner_id.parse::<u32>().map_err(|err| {
             DomainError::ParsingError(
-                err.to_string() + format!(": c_bpartner_id => {}", c_bpartner_id).as_str(),
+                err.to_string() + format!(": c_bpartner_id => {}", dto.c_bpartner_id).as_str(),
             )
         })?;
-        let date = NaiveDate::parse_from_str(date.as_str(), date_format).map_err(|err| {
-            DomainError::ParsingError(err.to_string() + format!(": date => {}", date).as_str())
+        let date = NaiveDate::parse_from_str(dto.date.as_str(), date_format).map_err(|err| {
+            DomainError::ParsingError(err.to_string() + format!(": date => {}", dto.date).as_str())
         })?;
 
-        let completion = convert_string_to_option_string(completion)
+        let completion = convert_string_to_option_string(dto.completion)
             .and_then(|s| {
-                Some(s.replace("%", "").parse::<u32>().map_err(|err| {
-                    DomainError::ParsingError(
-                        err.to_string() + format!(": completion => {}", s).as_str(),
-                    )
-                }))
+                Some(
+                    s.replace("%", "")
+                        .parse::<f32>()
+                        .map_err(|err| {
+                            DomainError::ParsingError(
+                                err.to_string() + format!(": completion => {}", s).as_str(),
+                            )
+                        })
+                        .and_then(|number| Ok(number.round() as u32)),
+                )
             })
             .transpose()?;
+        let client_name = convert_string_to_option_string(dto.client_name);
+        let po_ref = convert_string_to_option_string(dto.po_ref);
+        let order_status = convert_string_to_option_string(dto.order_status);
+        let delivery_status = convert_string_to_option_string(dto.delivery_status);
 
-        let po_ref = convert_string_to_option_string(po_ref);
-        let order_status = convert_string_to_option_string(order_status);
-        let delivery_status = convert_string_to_option_string(delivery_status);
+        let origin = match dto.origin.as_str() {
+            "Web" => Origin::Web,
+            "EDI" => Origin::EDI,
+            _ => Origin::Unknown,
+        };
 
         Self::new(
             c_order_id,
             c_bpartner_id,
-            name,
+            client_name,
             date,
-            order_ref,
+            dto.order_ref,
             po_ref,
             origin,
             completion,
@@ -137,8 +157,8 @@ impl Order {
         self.c_bpartner_id
     }
 
-    pub fn name(&self) -> &str {
-        self.name.as_str()
+    pub fn client_name(&self) -> Option<&str> {
+        self.client_name.as_deref()
     }
 
     pub fn date(&self) -> NaiveDate {
@@ -153,8 +173,8 @@ impl Order {
         self.po_ref.as_deref()
     }
 
-    pub fn origin(&self) -> &str {
-        self.origin.as_str()
+    pub fn origin(&self) -> &Origin {
+        &self.origin
     }
 
     pub fn completion(&self) -> Option<u32> {
@@ -171,3 +191,16 @@ impl Order {
 }
 
 impl DomainEntity for Order {}
+
+pub struct OrderEntityFromStringDTO {
+    pub c_order_id: String,
+    pub c_bpartner_id: String,
+    pub client_name: String,
+    pub date: String,
+    pub order_ref: String,
+    pub po_ref: String,
+    pub origin: String,
+    pub completion: String,
+    pub order_status: String,
+    pub delivery_status: String,
+}

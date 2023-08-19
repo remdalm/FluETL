@@ -53,7 +53,7 @@ impl Default for CsvFileReader {
 pub struct CsvOrderDTO {
     pub c_order_id: String,
     pub c_bpartner_id: String,
-    pub name: String,
+    pub client_name: String,
     pub date: String,
     pub order_ref: String,
     pub po_ref: String,

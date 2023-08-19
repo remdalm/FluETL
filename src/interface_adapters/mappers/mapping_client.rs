@@ -1,4 +1,4 @@
-use crate::domain::MappingClient;
+use crate::domain::mapping_client::MappingClient;
 use crate::infrastructure::database::models::mapping_client::{
     MappingClientModel, MappingClientSource,
 };

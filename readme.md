@@ -12,7 +12,7 @@
 ## Init first migration
     ```bash
     diesel migration generate create_table #done
-    mysqldump -h127.0.0.1 -uroot -P3307 -p --column-statistics=0 --no-data poolweb > migrations/2023-08-10-160702_initial_migration/up.sql
+    mysqldump -h127.0.0.1 -uroot -P3307 -p --column-statistics=0 --no-data [MY_DATABASE] > migrations/2023-08-10-164933_create_table/up.sql
     ```
 
 ## Testing

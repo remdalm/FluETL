@@ -1,5 +1,5 @@
 use crate::{
-    domain::Order,
+    domain::order::Order,
     infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel},
 };
 

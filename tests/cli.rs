@@ -142,33 +142,37 @@ fn import_order(repeat: Range<i32>) {
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
 
-    assert_eq!(query_results.len(), 5);
+    assert_eq!(query_results.len(), 4); // order_source.sql has 5 rows but one has a domain validation error
     assert_eq!(
-        query_result_sample_1[0],
+        query_result_sample_1[0], // 1st row in order_source.sql
         OrderPlaceholder {
             id_order: 1113194,
             id_client: 1009681,
+            client_name: Some("Client 1".to_string()),
             order_ref: "OV426946".to_string(),
             date: chrono::NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(2023, 6, 7).unwrap(),
                 NaiveTime::MIN
             ),
+            origin: Some("Web".to_string()),
             order_status: Some("Commande en attente de confirmation".to_string()),
             delivery_status: Some("En attente".to_string()),
-            completion: Some(0),
+            completion: Some(1), // 0.9% rounded up to 1
             po_ref: Some("P23HA01525".to_string())
         }
     );
     assert_eq!(
-        query_result_sample_2[0],
+        query_result_sample_2[0], // 5th row in order_source.sql
         OrderPlaceholder {
             id_order: 1118643,
             id_client: 1010265,
+            client_name: Some("Client 5".to_string()),
             order_ref: "OV427619".to_string(),
             date: chrono::NaiveDateTime::new(
                 NaiveDate::from_ymd_opt(2023, 3, 17).unwrap(),
                 NaiveTime::MIN
             ),
+            origin: None,
             order_status: None,
             delivery_status: Some("Livré en intégralité".to_string()),
             completion: Some(100),
@@ -183,12 +187,16 @@ struct OrderPlaceholder {
     pub id_order: u32,
     #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
     pub id_client: u32,
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
+    pub client_name: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
     pub order_ref: String,
     #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Unsigned<diesel::sql_types::Integer>>)]
     pub completion: Option<u32>,
     #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
     pub po_ref: Option<String>,
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
+    pub origin: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Timestamp)]
     pub date: chrono::NaiveDateTime,
     #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]

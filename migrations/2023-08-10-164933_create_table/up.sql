@@ -40,8 +40,12 @@ DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order` (
   `id_order` int(10) unsigned NOT NULL,
   `id_client` int(10) unsigned NOT NULL,
+  `client_name` varchar(255) DEFAULT NULL,
   `order_ref` varchar(32) NOT NULL,
   `date` datetime NOT NULL,
+  `po_ref` varchar(255) DEFAULT NULL,
+  `origin` varchar(255) DEFAULT NULL,
+  `completion` int(10) unsigned DEFAULT NULL,
   `order_status` varchar(128) DEFAULT NULL,
   `delivery_status` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id_order`),
@@ -59,8 +63,6 @@ DROP TABLE IF EXISTS `order_line`;
 CREATE TABLE `order_line` (
   `id_order_line` int(10) unsigned NOT NULL,
   `id_order` int(10) unsigned NOT NULL,
-  `order_ref` varchar(32) NOT NULL,
-  `po_ref` varchar(32) NOT NULL,
   `product_ref` varchar(32) NOT NULL,
   `product_name` varchar(32) DEFAULT NULL,
   `qty_ordered` int(10) unsigned NOT NULL,
@@ -82,4 +84,4 @@ CREATE TABLE `order_line` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-08-18  0:47:34
+-- Dump completed on 2023-08-19 23:26:48

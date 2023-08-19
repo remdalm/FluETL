@@ -1,6 +1,9 @@
 use std::env;
 
-use crate::{domain::Order, infrastructure::InfrastructureError};
+use crate::{
+    domain::order::{Order, OrderEntityFromStringDTO, Origin},
+    infrastructure::InfrastructureError,
+};
 use chrono::NaiveDateTime;
 
 use crate::infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel};
@@ -11,17 +14,19 @@ impl From<CsvOrderDTO> for Result<Order, MappingError> {
     fn from(dto: CsvOrderDTO) -> Result<Order, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
             .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
-        Order::new_from_string(
-            dto.c_order_id,
-            dto.c_bpartner_id,
-            dto.name,
-            dto.date,
-            dto.order_ref,
-            dto.po_ref,
-            dto.origin,
-            dto.completion,
-            dto.order_status,
-            dto.delivery_status,
+        Order::new_from_sting_dto(
+            OrderEntityFromStringDTO {
+                c_order_id: dto.c_order_id,
+                c_bpartner_id: dto.c_bpartner_id,
+                client_name: dto.client_name,
+                date: dto.date,
+                order_ref: dto.order_ref,
+                po_ref: dto.po_ref,
+                origin: dto.origin,
+                completion: dto.completion,
+                order_status: dto.order_status,
+                delivery_status: dto.delivery_status,
+            },
             date_format.as_str(),
         )
         .map_err(|e| e.into())
@@ -33,6 +38,7 @@ impl From<Order> for OrderModel {
         Self {
             id_order: order.c_order_id(),
             id_client: order.c_bpartner_id(),
+            client_name: order.client_name().and_then(|s| Some(s.to_string())),
             order_ref: order.order_ref().to_string(),
             po_ref: order.po_ref().and_then(|s| Some(s.to_string())),
             completion: order.completion(),
@@ -40,6 +46,11 @@ impl From<Order> for OrderModel {
                 order.date(),
                 chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             ),
+            origin: if let Origin::Unknown = order.origin() {
+                None
+            } else {
+                Some(order.origin().to_string())
+            },
             order_status: order.order_status().and_then(|s| Some(s.to_string())),
             delivery_status: order.delivery_status().and_then(|s| Some(s.to_string())),
         }
@@ -49,7 +60,7 @@ impl From<Order> for OrderModel {
 #[cfg(test)]
 mod tests {
     use crate::{
-        domain::{DomainError, Order},
+        domain::{order::Order, DomainError},
         fixtures::{csv_order_dto_fixtures, order_fixtures, order_model_fixtures},
         infrastructure::database::models::order::OrderModel,
         interface_adapters::mappers::{
