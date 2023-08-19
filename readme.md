@@ -6,7 +6,6 @@
 
 ## Make schema.rs
     ```bash
-    diesel print-schema > src/infrastructure/database/schema.rs #use DATABASE_URL env var
     diesel print-schema --database-url [MY_DATABASE_URL] > src/infrastructure/database/schema/[MY_DATABASE_NAME].rs
     ```
 
@@ -17,12 +16,12 @@
     ```
 
 ## Testing
-    ### Set up test database
-        ```bash
-        docker pull arm64v8/mariadb
-        docker run -p 3399:3306 --name fluetl-mariadb --env MARIADB_USER=test --env MARIADB_PASSWORD=test --env MARIADB_ROOT_PASSWORD=test  --env MARIADB_DATABASE=test arm64v8/mariadb:latest
-        ```
-    ### Run test
+### Set up test database
+    ```bash
+    docker pull arm64v8/mariadb
+    docker run -p 3399:3306 --name fluetl-mariadb --env MARIADB_USER=test --env MARIADB_PASSWORD=test --env MARIADB_ROOT_PASSWORD=test  --env MARIADB_DATABASE=test arm64v8/mariadb:latest
+    ```
+ ### Run test
         ```bash
         cargo test -- --test-threads=1
         ```

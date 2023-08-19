@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 
-use super::{DomainEntity, DomainError};
+use super::{convert_string_to_option_string, DomainEntity, DomainError};
 
 // Order entity
 #[derive(Debug, Clone)]
@@ -10,9 +10,9 @@ pub struct Order {
     name: String,
     date: NaiveDate,
     order_ref: String,
-    po_ref: String,
+    po_ref: Option<String>,
     origin: String,
-    completion: u32,
+    completion: Option<u32>,
     order_status: Option<String>,
     delivery_status: Option<String>,
 }
@@ -39,13 +39,15 @@ impl Order {
         name: String,
         date: NaiveDate,
         order_ref: String,
-        po_ref: String,
+        po_ref: Option<String>,
         origin: String,
-        completion: u32,
+        completion: Option<u32>,
         order_status: Option<String>,
         delivery_status: Option<String>,
     ) -> Result<Self, DomainError> {
-        Self::validate_completion(completion)?;
+        if completion.is_some() {
+            Self::validate_completion(completion.unwrap())?;
+        }
 
         Ok(Self {
             c_order_id,
@@ -87,23 +89,20 @@ impl Order {
         let date = NaiveDate::parse_from_str(date.as_str(), date_format).map_err(|err| {
             DomainError::ParsingError(err.to_string() + format!(": date => {}", date).as_str())
         })?;
-        let completion = completion.replace("%", "").parse::<u32>().map_err(|err| {
-            DomainError::ParsingError(
-                err.to_string() + format!(": completion => {}", completion).as_str(),
-            )
-        })?;
 
-        let order_status = if order_status.is_empty() {
-            None
-        } else {
-            Some(order_status)
-        };
+        let completion = convert_string_to_option_string(completion)
+            .and_then(|s| {
+                Some(s.replace("%", "").parse::<u32>().map_err(|err| {
+                    DomainError::ParsingError(
+                        err.to_string() + format!(": completion => {}", s).as_str(),
+                    )
+                }))
+            })
+            .transpose()?;
 
-        let delivery_status = if delivery_status.is_empty() {
-            None
-        } else {
-            Some(delivery_status)
-        };
+        let po_ref = convert_string_to_option_string(po_ref);
+        let order_status = convert_string_to_option_string(order_status);
+        let delivery_status = convert_string_to_option_string(delivery_status);
 
         Self::new(
             c_order_id,
@@ -150,15 +149,15 @@ impl Order {
         self.order_ref.as_str()
     }
 
-    pub fn po_ref(&self) -> &str {
-        self.po_ref.as_str()
+    pub fn po_ref(&self) -> Option<&str> {
+        self.po_ref.as_deref()
     }
 
     pub fn origin(&self) -> &str {
         self.origin.as_str()
     }
 
-    pub fn completion(&self) -> u32 {
+    pub fn completion(&self) -> Option<u32> {
         self.completion
     }
 

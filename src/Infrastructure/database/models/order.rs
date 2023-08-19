@@ -13,6 +13,8 @@ pub struct OrderModel {
     pub id_client: u32,
     pub order_ref: String,
     pub date: chrono::NaiveDateTime,
+    pub po_ref: Option<String>,
+    pub completion: Option<u32>,
     pub order_status: Option<String>,
     pub delivery_status: Option<String>,
 }
@@ -28,26 +30,6 @@ impl CanUpsertModel for OrderModel {
             .execute(connection)
             .map(|_| ())
             .map_err(|e| e.into())
-    }
-}
-
-impl OrderModel {
-    pub fn new(
-        id_order: u32,
-        id_client: u32,
-        order_ref: String,
-        date: chrono::NaiveDateTime,
-        order_status: Option<String>,
-        delivery_status: Option<String>,
-    ) -> Self {
-        OrderModel {
-            id_order,
-            id_client,
-            order_ref,
-            date,
-            order_status: order_status,
-            delivery_status: delivery_status,
-        }
     }
 }
 
@@ -70,13 +52,8 @@ pub mod tests {
         infrastructure::database::connection::tests::{
             get_test_pooled_connection, reset_test_database,
         },
-        // infrastructure::database::models::mapping_client::insert_mapping_client,
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
-
-    // pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
-    //     insert_mapping_client(connection)
-    // }
 
     pub fn insert_order(
         connection: &mut DbConnection,

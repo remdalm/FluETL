@@ -34,12 +34,12 @@ impl From<Order> for OrderModel {
             id_order: order.c_order_id(),
             id_client: order.c_bpartner_id(),
             order_ref: order.order_ref().to_string(),
+            po_ref: order.po_ref().and_then(|s| Some(s.to_string())),
+            completion: order.completion(),
             date: NaiveDateTime::new(
                 order.date(),
                 chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             ),
-            // order_status: None,
-            // delivery_status: None,
             order_status: order.order_status().and_then(|s| Some(s.to_string())),
             delivery_status: order.delivery_status().and_then(|s| Some(s.to_string())),
         }

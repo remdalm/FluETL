@@ -154,7 +154,9 @@ fn import_order(repeat: Range<i32>) {
                 NaiveTime::MIN
             ),
             order_status: Some("Commande en attente de confirmation".to_string()),
-            delivery_status: Some("En attente".to_string())
+            delivery_status: Some("En attente".to_string()),
+            completion: Some(0),
+            po_ref: Some("P23HA01525".to_string())
         }
     );
     assert_eq!(
@@ -168,19 +170,25 @@ fn import_order(repeat: Range<i32>) {
                 NaiveTime::MIN
             ),
             order_status: None,
-            delivery_status: Some("Livré en intégralité".to_string())
+            delivery_status: Some("Livré en intégralité".to_string()),
+            completion: Some(100),
+            po_ref: Some("WEB73714".to_string())
         }
     );
 }
 
 #[derive(QueryableByName, Debug, PartialEq)]
 struct OrderPlaceholder {
-    #[diesel(sql_type = diesel::sql_types::Integer)]
-    pub id_order: i32,
-    #[diesel(sql_type = diesel::sql_types::Integer)]
-    pub id_client: i32,
+    #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
+    pub id_order: u32,
+    #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
+    pub id_client: u32,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
     pub order_ref: String,
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::Unsigned<diesel::sql_types::Integer>>)]
+    pub completion: Option<u32>,
+    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
+    pub po_ref: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Timestamp)]
     pub date: chrono::NaiveDateTime,
     #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]

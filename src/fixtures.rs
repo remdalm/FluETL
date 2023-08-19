@@ -62,9 +62,9 @@ pub fn order_fixtures() -> [Order; 3] {
             "Order 1".to_string(),
             chrono::NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
             "Ref1".to_string(),
-            "PoRef1".to_string(),
+            Some("PoRef1".to_string()),
             "Origin1".to_string(),
-            30,
+            Some(30),
             Some("done".to_string()),
             Some("done".to_string()),
         )
@@ -75,9 +75,9 @@ pub fn order_fixtures() -> [Order; 3] {
             "Order 2".to_string(),
             chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
             "Ref2".to_string(),
-            "PoRef2".to_string(),
+            Some("PoRef2".to_string()),
             "Origin2".to_string(),
-            20,
+            Some(20),
             Some("failed".to_string()),
             Some("done".to_string()),
         )
@@ -86,11 +86,11 @@ pub fn order_fixtures() -> [Order; 3] {
             3,
             1,
             "Order 3".to_string(),
-            chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+            chrono::NaiveDate::from_ymd_opt(2023, 8,3).unwrap(),
             "Ref3".to_string(),
-            "PoRef3".to_string(),
+            None,
             "Origin3".to_string(),
-            30,
+            None,
             None,
             Some("done".to_string()),
         )
@@ -100,15 +100,36 @@ pub fn order_fixtures() -> [Order; 3] {
 
 pub fn order_model_fixtures() -> [OrderModel;3] {
     [
-    OrderModel::new(
-        1, 1, "Ref1".to_string(), NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 1).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()), Some("done".to_string()), Some("done".to_string())
-    ),
-    OrderModel::new(
-        2, 2, "Ref2".to_string(), NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 2).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()), Some("failed".to_string()), Some("done".to_string())
-    ),
-    OrderModel::new(
-        3, 1, "Ref3".to_string(), NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 3).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()), None, Some("done".to_string())
-    ),
+        OrderModel{
+            id_order: 1,
+            id_client: 1,
+            order_ref: "Ref1".to_string(),
+            po_ref: Some("PoRef1".to_string()),
+            completion: Some(30),
+            date: NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 1).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()),
+            order_status: Some("done".to_string()),
+            delivery_status: Some("done".to_string())
+        },
+        OrderModel{
+            id_order: 2,
+            id_client: 2,
+            order_ref: "Ref2".to_string(),
+            po_ref: Some("PoRef2".to_string()),
+            completion: Some(20),
+            date: NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 2).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()),
+            order_status: Some("failed".to_string()),
+            delivery_status: Some("done".to_string())
+        },
+        OrderModel{
+            id_order: 3,
+            id_client: 1,
+            order_ref: "Ref3".to_string(),
+            po_ref: None,
+            completion: None,
+            date: NaiveDateTime::new(NaiveDate:: from_ymd_opt(2023, 8, 3).unwrap(),NaiveTime::from_hms_opt(0,0,0).unwrap()),
+            order_status: None,
+            delivery_status: Some("done".to_string())
+        }
     ]
 }
 
