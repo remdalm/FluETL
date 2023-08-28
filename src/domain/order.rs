@@ -63,9 +63,9 @@ impl Order {
         delivery_status: Option<String>,
     ) -> Result<Self, DomainError> {
         // Validation is performed here
-        if completion.is_some() {
-            Self::validate_completion(completion.unwrap())?;
-        }
+        // if completion.is_some() {
+        //     Self::validate_completion(completion.unwrap())?;
+        // }
 
         Ok(Self {
             c_order_id,

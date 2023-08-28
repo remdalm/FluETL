@@ -1,4 +1,4 @@
-FluETL serves as a prime illustration of a non-dogmatic, lucid architectural framework designed for the purposes of data extraction and persistence through the utilization of the Rust programming language.
+FluETL serves as an illustration of a non-dogmatic, lucid architectural framework designed for the purposes of data extraction and persistence through the utilization of the Rust programming language.
 
 # Handling databases
 ## Install diesel_cli 
