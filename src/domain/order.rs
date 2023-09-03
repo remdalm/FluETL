@@ -19,6 +19,19 @@ impl ToString for Origin {
     }
 }
 
+impl Origin {
+    pub fn from_optional_string(s: Option<String>) -> Self {
+        match s {
+            Some(s) => match s.as_str() {
+                "Web" => Origin::Web,
+                "EDI" => Origin::EDI,
+                _ => Origin::Unknown,
+            },
+            None => Origin::Unknown,
+        }
+    }
+}
+
 // Order entity
 #[derive(Debug, Clone)]
 pub struct Order {
@@ -81,6 +94,7 @@ impl Order {
         })
     }
 
+    // TODO: bad implementation, use factory instead
     pub fn new_from_sting_dto(
         dto: OrderEntityFromStringDTO,
         date_format: &str,
@@ -204,4 +218,34 @@ pub struct OrderEntityFromStringDTO {
     pub completion: String,
     pub order_status: String,
     pub delivery_status: String,
+}
+
+pub struct OrderDomainFactory {
+    pub c_order_id: u32,
+    pub c_bpartner_id: u32,
+    pub client_name: Option<String>,
+    pub date: NaiveDate,
+    pub order_ref: String,
+    pub po_ref: Option<String>,
+    pub origin: Origin,
+    pub completion: Option<u32>,
+    pub order_status: Option<String>,
+    pub delivery_status: Option<String>,
+}
+
+impl OrderDomainFactory {
+    pub fn make(self) -> Result<Order, DomainError> {
+        Order::new(
+            self.c_order_id,
+            self.c_bpartner_id,
+            self.client_name,
+            self.date,
+            self.order_ref,
+            self.po_ref,
+            self.origin,
+            self.completion,
+            self.order_status,
+            self.delivery_status,
+        )
+    }
 }
