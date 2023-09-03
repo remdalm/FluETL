@@ -9,6 +9,7 @@ use super::InfrastructureError;
 #[allow(dead_code)]
 pub enum CsvType {
     Orders,
+    OrderLines,
     Test(PathBuf),
 }
 
@@ -16,6 +17,7 @@ impl CsvType {
     fn get_path(&self) -> Result<String, VarError> {
         match self {
             CsvType::Orders => env::var("ORDERS_CSV_PATH"),
+            CsvType::OrderLines => env::var("ORDER_LINES_CSV_PATH"),
             CsvType::Test(path) => Ok(path
                 .to_str()
                 .expect("CsvType::Test cannot be cast into &str")
@@ -72,6 +74,22 @@ pub struct CsvMappingClientDTO {
 }
 
 impl CsvDTO for CsvMappingClientDTO {}
+
+#[derive(Debug, Deserialize, PartialEq, Clone)]
+pub struct CsvOrderLineDTO {
+    pub c_orderline_id: String,
+    pub c_order_id: String,
+    pub item_ref: String,
+    pub item_name: String,
+    pub qty_ordered: String,
+    pub qty_reserved: String,
+    pub qty_delivered: String,
+    pub due_date: String,
+}
+
+impl CsvDTO for CsvOrderLineDTO {}
+
+// END of DTO Structures
 
 impl CsvFileReader {
     fn new(file_path: PathBuf, delimiter: u8) -> Self {

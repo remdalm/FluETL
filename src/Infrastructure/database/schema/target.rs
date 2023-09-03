@@ -39,7 +39,7 @@ diesel::table! {
         qty_ordered -> Unsigned<Integer>,
         qty_reserved -> Unsigned<Integer>,
         qty_delivered -> Unsigned<Integer>,
-        due_date -> Datetime,
+        due_date -> Date,
     }
 }
 
