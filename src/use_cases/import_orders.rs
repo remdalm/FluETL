@@ -10,7 +10,8 @@ pub struct ImportOrderUseCase;
 pub struct OrderManager;
 
 impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
-impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManager {}
+impl CanReadCsvUseCase<CsvOrderDTO> for OrderManager {}
+impl CSVToEntityParser<CsvOrderDTO, Order> for OrderManager {}
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
 impl HasTargetConnection for OrderManager {}
 impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
@@ -43,7 +44,8 @@ mod tests {
     pub struct OrderManagerTest;
 
     impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
-    impl CanReadCsvUseCase<CsvOrderDTO, Order> for OrderManagerTest {}
+    impl CanReadCsvUseCase<CsvOrderDTO> for OrderManagerTest {}
+    impl CSVToEntityParser<CsvOrderDTO, Order> for OrderManagerTest {}
     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {}
     impl HasTargetConnection for OrderManagerTest {
         fn get_pooled_connection(&self) -> DbConnection {

@@ -6,8 +6,9 @@ use crate::infrastructure::InfrastructureError;
 
 use super::MappingError;
 
-impl From<MappingClientSource> for Result<MappingClient, MappingError> {
-    fn from(source: MappingClientSource) -> Result<MappingClient, MappingError> {
+impl TryFrom<MappingClientSource> for MappingClient {
+    type Error = MappingError;
+    fn try_from(source: MappingClientSource) -> Result<MappingClient, MappingError> {
         let dto_result: Result<MappingClientSourceDTO, InfrastructureError> = source.try_into();
         let dto = dto_result.map_err(|e| MappingError::InfrastructureError(e))?;
 
@@ -52,11 +53,12 @@ impl From<MappingClient> for MappingClientModel {
 mod tests {
     use crate::{
         fixtures::{mapping_client_fixture, mapping_client_source_model_fixture},
-        interface_adapters::mappers::ModelToEntityParser,
+        interface_adapters::mappers::GenericMapperParser,
     };
 
     struct Parser;
-    impl ModelToEntityParser<MappingClientSource, MappingClient> for Parser {}
+    //impl ModelToEntityParser<MappingClientSource, MappingClient> for Parser {}
+    impl GenericMapperParser<MappingClientSource, MappingClient> for Parser {}
 
     use super::*;
     #[test]

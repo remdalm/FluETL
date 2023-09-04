@@ -14,12 +14,12 @@ use crate::{
         InfrastructureError,
     },
     interface_adapters::mappers::{
-        convert_csv_dto_to_domain_entity, convert_domain_entity_to_model, MappingError,
-        ModelToEntityParser,
+        convert_domain_entity_to_model, CSVToEntityParser, MappingError, ModelToEntityParser,
     },
 };
 
 pub(crate) mod import_mapping_client;
+pub(crate) mod import_order_lines;
 pub(crate) mod import_orders;
 
 pub use import_mapping_client::ImportMappingClientUseCase;
@@ -30,7 +30,7 @@ pub(crate) trait ImportModelUseCase<M1, DE, M2>:
     + CanPersistIntoDatabaseUseCase<DE, M2>
     + ModelToEntityParser<M1, DE>
 where
-    M1: Model + Into<Result<DE, MappingError>> + Debug,
+    M1: Model + TryInto<DE, Error = MappingError> + Debug,
     DE: DomainEntity + Into<M2>,
     M2: CanUpsertModel,
 {
@@ -68,12 +68,13 @@ where
 
 pub(crate) trait ImportCsvUseCase<CSV, DE, M>
 where
-    CSV: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, MappingError>> + Debug,
+    CSV: CsvDTO + for<'a> Deserialize<'a> + TryInto<DE, Error = MappingError> + Debug,
     DE: DomainEntity + Into<M>,
     M: CanUpsertModel,
 {
     type ManagerImpl: UseCaseImportManager<CSV, DE, M>
-        + CanReadCsvUseCase<CSV, DE>
+        + CanReadCsvUseCase<CSV>
+        + CSVToEntityParser<CSV, DE>
         + CanPersistIntoDatabaseUseCase<DE, M>;
 
     fn execute(&self) -> Option<Vec<UseCaseError>> {
@@ -84,7 +85,7 @@ where
         }
         let csv_row = data.unwrap();
         debug!("Extract {} Csv Rows", csv_row.len());
-        let dirty_entities = manager.parse(csv_row);
+        let dirty_entities = manager.parse_all(csv_row);
 
         let mut domain_errors = vec![];
         let entities: Vec<DE> = dirty_entities
@@ -115,7 +116,7 @@ where
 
 pub trait UseCaseImportManager<T, DE, M>
 where
-    T: Into<Result<DE, MappingError>>,
+    T: TryInto<DE, Error = MappingError>,
     DE: DomainEntity + Into<M>,
     M: Model,
 {
@@ -130,10 +131,9 @@ where
 // {
 // }
 
-pub trait CanReadCsvUseCase<T, DE>
+pub trait CanReadCsvUseCase<T>
 where
-    T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, MappingError>>,
-    DE: DomainEntity,
+    T: CsvDTO + for<'a> Deserialize<'a>,
 {
     fn read(&self, csv_type: CsvType) -> Result<Vec<T>, UseCaseError> {
         let csv_reader = make_csv_file_reader(csv_type, b';')?;
@@ -142,9 +142,6 @@ where
             .read()
             .map_err(|err| UseCaseError::InfrastructureError(InfrastructureError::CsvError(err)))?;
         Ok(csv_data)
-    }
-    fn parse(&self, csv_data: Vec<T>) -> Vec<Result<DE, MappingError>> {
-        convert_csv_dto_to_domain_entity(csv_data)
     }
 }
 

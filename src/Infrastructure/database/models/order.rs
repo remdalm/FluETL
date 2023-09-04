@@ -5,7 +5,7 @@ use diesel::result::Error as DieselError;
 
 use super::{CanUpsertModel, Model, SingleRowInsertable, SingleRowUpdatable};
 
-#[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug)]
+#[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::order)]
 #[diesel(primary_key(id_order))]
 pub struct OrderModel {
@@ -44,6 +44,26 @@ impl SingleRowInsertable<schema::target::order::table, DbConnection> for OrderMo
 impl SingleRowUpdatable<schema::target::order::table, DbConnection> for OrderModel {
     fn target_client_table(&self) -> schema::target::order::table {
         schema::target::order::table
+    }
+}
+
+// pub(crate) trait CanFetchOrderModel: HasTargetConnection {
+//     fn fetch_order(&self, order_id: &u32) -> Result<OrderModel, InfrastructureError> {
+//         OrderModel::select_by_id(&mut self.get_pooled_connection(), order_id)
+//             .map_err(|e| InfrastructureError::DatabaseError(e))
+//     }
+// }
+
+impl OrderModel {
+    pub fn select_by_id(
+        connection: &mut DbConnection,
+        order_id: &u32,
+    ) -> Result<Self, DieselError> {
+        use self::schema::target::order::dsl::*;
+        order
+            .filter(id_order.eq(order_id))
+            .first(connection)
+            .map_err(|e| e.into())
     }
 }
 
@@ -123,6 +143,27 @@ pub mod tests {
 
         assert_eq!(retrieved_order.len(), 1);
         assert_eq!(retrieved_order[0].order_ref, "Updated Ref1".to_string());
+    }
+
+    #[test]
+    fn test_select_order_by_id() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_order(&mut connection, false, &order_model_fixtures()[0])
+            .expect("Failed to insert order");
+        insert_order(&mut connection, false, &order_model_fixtures()[1])
+            .expect("Failed to insert order");
+
+        let result1 =
+            OrderModel::select_by_id(&mut connection, &order_model_fixtures()[0].id_order)
+                .expect("Failed to select order by id");
+        let result2 =
+            OrderModel::select_by_id(&mut connection, &order_model_fixtures()[1].id_order)
+                .expect("Failed to select order by id");
+
+        assert_eq!(result1, order_model_fixtures()[0]);
+        assert_eq!(result2, order_model_fixtures()[1]);
     }
 
     #[test]

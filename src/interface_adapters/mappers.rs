@@ -1,7 +1,9 @@
 pub(crate) mod mapping_client;
 pub(crate) mod order;
+pub(crate) mod order_line;
 
 use crate::domain::{DomainEntity, DomainError};
+use crate::infrastructure::csv_reader::CsvDTO;
 use crate::infrastructure::database::models::Model;
 use crate::infrastructure::InfrastructureError;
 
@@ -9,6 +11,17 @@ use crate::infrastructure::InfrastructureError;
 pub enum MappingError {
     InfrastructureError(InfrastructureError),
     DomainError(DomainError),
+    ParsingError(String),
+}
+
+pub trait GenericMapperParser<S, D> {
+    fn parse_all(&self, sources: Vec<S>) -> Vec<Result<D, MappingError>>
+    where
+        S: TryInto<D>,
+        Vec<Result<D, MappingError>>: FromIterator<Result<D, <S as TryInto<D>>::Error>>,
+    {
+        sources.into_iter().map(|s| s.try_into()).collect()
+    }
 }
 
 impl From<InfrastructureError> for MappingError {
@@ -39,13 +52,37 @@ where
     d.into_iter().map(|de| de.into()).collect()
 }
 
+pub trait ToDomainEntityParser<T, DE>
+where
+    T: TryInto<DE, Error = MappingError>,
+    DE: DomainEntity,
+{
+    fn parse_all(&self, models: Vec<T>) -> Vec<Result<DE, MappingError>> {
+        models.into_iter().map(|de| de.try_into()).collect()
+    }
+}
+
+pub trait CSVToEntityParser<CSV, DE>
+where
+    CSV: CsvDTO + TryInto<DE, Error = MappingError>,
+    DE: DomainEntity,
+{
+    fn parse_all(&self, models: Vec<CSV>) -> Vec<Result<DE, MappingError>> {
+        models.into_iter().map(|de| de.try_into()).collect()
+    }
+}
+
 pub trait ModelToEntityParser<M, DE>
 where
-    M: Model + Into<Result<DE, MappingError>>,
+    M: Model + TryInto<DE, Error = MappingError>,
     DE: DomainEntity,
 {
     fn parse_all(&self, models: Vec<M>) -> Vec<Result<DE, MappingError>> {
-        models.into_iter().map(|de| de.into()).collect()
+        models.into_iter().map(|de| de.try_into()).collect()
+    }
+
+    fn parse(&self, model: M) -> Result<DE, MappingError> {
+        model.try_into()
     }
 }
 
