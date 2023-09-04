@@ -64,12 +64,29 @@ where
 
 pub trait CSVToEntityParser<CSV, DE>
 where
-    CSV: CsvDTO + TryInto<DE, Error = MappingError>,
+    CSV: CsvDTO,
     DE: DomainEntity,
 {
-    fn parse_all(&self, models: Vec<CSV>) -> Vec<Result<DE, MappingError>> {
-        models.into_iter().map(|de| de.try_into()).collect()
+    fn parse_all(&self, csv_dtos: Vec<CSV>) -> Vec<Result<DE, MappingError>> {
+        csv_dtos
+            .into_iter()
+            .map(|s| self.transform_csv(s))
+            .collect()
     }
+
+    fn transform_csv(&self, csv: CSV) -> Result<DE, MappingError>;
+
+    // fn transform<F, T>(&self, f: F) -> <T as TryInto<DE>>::Error
+    // where
+    //     F: FnOnce(T) -> <T as TryInto<DE>>::Error,
+    //     T: TryInto<DE>;
+
+    // fn transform_from_csv<F, T>(&self) -> Result<T, MappingError>
+    // where
+    //     F: FnOnce(CSV) -> T,
+    //     CSV: TryInto<T>,
+    // {
+    // }
 }
 
 pub trait ModelToEntityParser<M, DE>
@@ -79,10 +96,6 @@ where
 {
     fn parse_all(&self, models: Vec<M>) -> Vec<Result<DE, MappingError>> {
         models.into_iter().map(|de| de.try_into()).collect()
-    }
-
-    fn parse(&self, model: M) -> Result<DE, MappingError> {
-        model.try_into()
     }
 }
 

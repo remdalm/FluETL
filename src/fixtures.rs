@@ -1,10 +1,11 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::{
-    domain::{order::{Order, Origin}, mapping_client::MappingClient},
-    infrastructure::{csv_reader::CsvOrderDTO, database::models::{order::OrderModel, mapping_client::{MappingClientModel, MappingClientSource}}},
+    domain::{order::{Order, Origin}, mapping_client::MappingClient, order_line::{OrderLine, OrderLineDomainFactory}},
+    infrastructure::{csv_reader::{CsvOrderDTO, CsvOrderLineDTO}, database::models::{order::OrderModel, mapping_client::{MappingClientModel, MappingClientSource}, order_line::OrderLineModel}},
 };
 
+// ORDER FIXTURES
 pub const ORDER_FLAWLESS_CSV: &str= 
     "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status;delivery_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30;done;done\n2;2;Client 2;2023-08-02;Ref2;PoRef2;EDI;20;failed;done\n";
 pub const ORDER_WITH_EMPTY_FIELD_CSV: &str =
@@ -139,6 +140,8 @@ pub fn order_model_fixtures() -> [OrderModel;3] {
     ]
 }
 
+// MAPPING CLIENT FIXTURES
+
 pub fn mapping_client_fixture() -> [MappingClient;2] {
     [MappingClient::new(1, 1).unwrap(), MappingClient::new(2, 2).unwrap()]
 }
@@ -149,4 +152,111 @@ pub fn mapping_client_model_fixture() -> [MappingClientModel;2] {
 
 pub fn mapping_client_source_model_fixture() -> [MappingClientSource;2] {
     [MappingClientSource{ id_source_client: 1, id_source_contact: 1, id: Some(1) }, MappingClientSource{ id_source_client: 2, id_source_contact: 2, id: Some(2) }]
+}
+
+// ORDER LINE FIXTURES
+
+pub fn csv_order_line_dto_fixtures() -> [CsvOrderLineDTO; 3] {
+    [
+        CsvOrderLineDTO {
+            c_orderline_id: 1.to_string(),
+            c_order_id: 1.to_string(),
+            item_ref: "ItemRef1".to_string(),
+            item_name: "ItemName1".to_string(),
+            qty_ordered: "10".to_string(),
+            qty_reserved: "5".to_string(),
+            qty_delivered: "5".to_string(),
+            due_date: "2023-08-01".to_string(),
+        },
+        CsvOrderLineDTO {
+            c_orderline_id: 2.to_string(),
+            c_order_id: 1.to_string(),
+            item_ref: "ItemRef2".to_string(),
+            item_name: "ItemName2".to_string(),
+            qty_ordered: "20".to_string(),
+            qty_reserved: "10".to_string(),
+            qty_delivered: "10".to_string(),
+            due_date: "2023-08-02".to_string(),
+        },
+        CsvOrderLineDTO {
+            c_orderline_id: 3.to_string(),
+            c_order_id: 2.to_string(),
+            item_ref: "ItemRef3".to_string(),
+            item_name: String::new(),
+            qty_ordered: "30".to_string(),
+            qty_reserved: "15".to_string(),
+            qty_delivered: "15".to_string(),
+            due_date: "2023-08-03".to_string(),
+        }
+    ]
+}
+
+pub fn order_line_fixtures() -> [OrderLine; 3] {
+    [
+        OrderLineDomainFactory{
+            order: order_fixtures()[0].clone(),
+            orderline_id: 1,
+            item_ref: "ItemRef1".to_string(),
+            item_name: Some("ItemName1".to_string()),
+            qty_ordered: 10,
+            qty_reserved: 5,
+            qty_delivered: 5,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+        }.make().unwrap(),
+        OrderLineDomainFactory{
+            order: order_fixtures()[0].clone(),
+            orderline_id: 2,
+            item_ref: "ItemRef2".to_string(),
+            item_name: Some("ItemName2".to_string()),
+            qty_ordered: 20,
+            qty_reserved: 10,
+            qty_delivered: 10,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+        }.make().unwrap(),
+        OrderLineDomainFactory{
+            order: order_fixtures()[1].clone(),
+            orderline_id: 3,
+            item_ref: "ItemRef3".to_string(),
+            item_name: None,
+            qty_ordered: 30,
+            qty_reserved: 15,
+            qty_delivered: 15,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
+        }.make().unwrap() 
+    ]
+}
+
+pub fn order_line_model_fixtures() -> [OrderLineModel;3] {
+    [
+        OrderLineModel{
+            id_order_line: 1,
+            id_order: 1,
+            product_ref: "ItemRef1".to_string(),
+            product_name: Some("ItemName1".to_string()),
+            qty_ordered: 10,
+            qty_reserved: 5,
+            qty_delivered: 5,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+        },
+        OrderLineModel{
+            id_order_line: 2,
+            id_order: 1,
+            product_ref: "ItemRef2".to_string(),
+            product_name: Some("ItemName2".to_string()),
+            qty_ordered: 20,
+            qty_reserved: 10,
+            qty_delivered: 10,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+        },
+        OrderLineModel{
+            id_order_line: 3,
+            id_order: 2,
+            product_ref: "ItemRef3".to_string(),
+            product_name: None,
+            qty_ordered: 30,
+            qty_reserved: 15,
+            qty_delivered: 15,
+            due_date: NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
+        }
+    ]
 }

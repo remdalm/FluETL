@@ -68,7 +68,7 @@ CREATE TABLE `order_line` (
   `qty_ordered` int(10) unsigned NOT NULL,
   `qty_reserved` int(10) unsigned NOT NULL,
   `qty_delivered` int(10) unsigned NOT NULL,
-  `due_date` datetime NOT NULL,
+  `due_date` date NOT NULL,
   PRIMARY KEY (`id_order_line`),
   KEY `IDX_9CE58EE11BACD2A8` (`id_order`),
   CONSTRAINT `FK_9CE58EE11BACD2A8` FOREIGN KEY (`id_order`) REFERENCES `order` (`id_order`)

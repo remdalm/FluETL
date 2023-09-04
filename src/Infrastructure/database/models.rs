@@ -10,6 +10,7 @@ use super::connection::DbConnection;
 
 pub(crate) mod mapping_client;
 pub(crate) mod order;
+pub(crate) mod order_line;
 
 pub use order::OrderModel;
 

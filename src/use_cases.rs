@@ -68,12 +68,11 @@ where
 
 pub(crate) trait ImportCsvUseCase<CSV, DE, M>
 where
-    CSV: CsvDTO + for<'a> Deserialize<'a> + TryInto<DE, Error = MappingError> + Debug,
+    CSV: CsvDTO + for<'a> Deserialize<'a> + Debug,
     DE: DomainEntity + Into<M>,
     M: CanUpsertModel,
 {
-    type ManagerImpl: UseCaseImportManager<CSV, DE, M>
-        + CanReadCsvUseCase<CSV>
+    type ManagerImpl: CanReadCsvUseCase<CSV>
         + CSVToEntityParser<CSV, DE>
         + CanPersistIntoDatabaseUseCase<DE, M>;
 
@@ -114,13 +113,13 @@ where
     fn concrete_manager(&self) -> Self::ManagerImpl;
 }
 
-pub trait UseCaseImportManager<T, DE, M>
-where
-    T: TryInto<DE, Error = MappingError>,
-    DE: DomainEntity + Into<M>,
-    M: Model,
-{
-}
+// pub trait UseCaseImportManager<T, DE, M>
+// where
+//     T: TryInto<DE, Error = MappingError>,
+//     DE: DomainEntity + Into<M>,
+//     M: Model,
+// {
+// }
 
 // pub trait UseCaseCsvImportManager<T, DE, M>:
 //     UseCaseImportManager<T, DE, M> + CanReadCsvUseCase<T, DE> + CanPersistIntoDatabaseUseCase<DE, M>

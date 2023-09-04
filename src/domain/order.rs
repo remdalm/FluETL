@@ -152,16 +152,16 @@ impl Order {
         )
     }
 
-    fn validate_completion(completion: u32) -> Result<(), DomainError> {
-        if completion > 100 {
-            Err(DomainError::ValidationError(format!(
-                "Completion must be an integer between 0 and 100. {} given.",
-                completion,
-            )))
-        } else {
-            Ok(())
-        }
-    }
+    // fn validate_completion(completion: u32) -> Result<(), DomainError> {
+    //     if completion > 100 {
+    //         Err(DomainError::ValidationError(format!(
+    //             "Completion must be an integer between 0 and 100. {} given.",
+    //             completion,
+    //         )))
+    //     } else {
+    //         Ok(())
+    //     }
+    // }
 
     // Getters
     pub fn c_order_id(&self) -> u32 {
