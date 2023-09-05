@@ -6,19 +6,17 @@ use crate::{
 use super::*;
 
 pub struct ImportMappingClientUseCase;
-impl HasLegacyStagingConnection for ImportMappingClientUseCase {}
-impl HasTargetConnection for ImportMappingClientUseCase {}
 
 impl CanReadAllModelUseCase for ImportMappingClientUseCase {
     type ModelImpl = MappingClientSource;
-    // fn concrete_model(&self) -> Self::ModelImpl {
-    //     MappingClientSource::default()
-    // }
+
+    type DbConnection = HasLegacyStagingConnection;
 }
 
 impl CanPersistIntoDatabaseUseCase<MappingClient, MappingClientModel>
     for ImportMappingClientUseCase
 {
+    type DbConnection = HasTargetConnection;
 }
 
 impl ModelToEntityParser<MappingClientSource, MappingClient> for ImportMappingClientUseCase {}
@@ -33,9 +31,8 @@ mod tests {
     use super::*;
     use crate::{
         infrastructure::database::connection::tests::{
-            get_test_pooled_connection, reset_test_database,
+            get_test_pooled_connection, reset_test_database, HasTestConnection,
         },
-        infrastructure::database::connection::DbConnection,
         infrastructure::database::models::mapping_client::tests::{
             insert_batch_to_mapping_client_source_db, read_mapping_client,
         },
@@ -43,25 +40,15 @@ mod tests {
 
     struct ImportMappingClientUseCaseTest;
 
-    impl HasTargetConnection for ImportMappingClientUseCaseTest {
-        fn get_pooled_connection(&self) -> DbConnection {
-            get_test_pooled_connection()
-        }
-    }
-
-    impl HasLegacyStagingConnection for ImportMappingClientUseCaseTest {
-        fn get_pooled_connection(&self) -> DbConnection {
-            get_test_pooled_connection()
-        }
-    }
-
     impl CanReadAllModelUseCase for ImportMappingClientUseCaseTest {
         type ModelImpl = MappingClientSource;
+        type DbConnection = HasTestConnection;
     }
 
     impl CanPersistIntoDatabaseUseCase<MappingClient, MappingClientModel>
         for ImportMappingClientUseCaseTest
     {
+        type DbConnection = HasTestConnection;
     }
 
     impl ModelToEntityParser<MappingClientSource, MappingClient> for ImportMappingClientUseCaseTest {}

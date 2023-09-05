@@ -99,7 +99,11 @@ mod tests {
     struct ModelParser;
     struct CsvParser;
     impl ModelToEntityParser<OrderModel, Order> for ModelParser {}
-    impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {}
+    impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {
+        fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
+            csv.try_into()
+        }
+    }
 
     #[test]
     fn test_convert_dtos_to_orders() {

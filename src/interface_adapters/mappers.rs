@@ -36,14 +36,6 @@ impl From<DomainError> for MappingError {
     }
 }
 
-pub fn convert_csv_dto_to_domain_entity<CSV, DE>(dtos: Vec<CSV>) -> Vec<Result<DE, MappingError>>
-where
-    CSV: Into<Result<DE, MappingError>>,
-    DE: DomainEntity,
-{
-    dtos.into_iter().map(|dto| dto.into()).collect()
-}
-
 pub fn convert_domain_entity_to_model<DE, M>(d: Vec<DE>) -> Vec<M>
 where
     DE: DomainEntity + Into<M>,
@@ -75,18 +67,6 @@ where
     }
 
     fn transform_csv(&self, csv: CSV) -> Result<DE, MappingError>;
-
-    // fn transform<F, T>(&self, f: F) -> <T as TryInto<DE>>::Error
-    // where
-    //     F: FnOnce(T) -> <T as TryInto<DE>>::Error,
-    //     T: TryInto<DE>;
-
-    // fn transform_from_csv<F, T>(&self) -> Result<T, MappingError>
-    // where
-    //     F: FnOnce(CSV) -> T,
-    //     CSV: TryInto<T>,
-    // {
-    // }
 }
 
 pub trait ModelToEntityParser<M, DE>
@@ -98,11 +78,3 @@ where
         models.into_iter().map(|de| de.try_into()).collect()
     }
 }
-
-// fn convert_model_to_domain_entity<M, DE>(model_dtos: Vec<M>) -> Vec<Result<DE, MappingError>>
-// where
-//     M: Model + Into<Result<DE, MappingError>>,
-//     DE: DomainEntity,
-// {
-//     model_dtos.into_iter().map(|de| de.into()).collect()
-// }

@@ -8,7 +8,7 @@ use crate::{
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         database::{
-            connection::{HasLegacyStagingConnection, HasTargetConnection},
+            connection::{HasConnection, HasLegacyStagingConnection, HasTargetConnection},
             models::{CanSelectAllModel, CanUpsertModel, Model},
         },
         InfrastructureError,
@@ -66,25 +66,21 @@ where
     }
 }
 
-pub(crate) trait ImportCsvUseCase<CSV, DE, M>
+pub(crate) trait ImportCsvUseCase<CSV, DE, M>:
+    CanReadCsvUseCase<CSV> + CSVToEntityParser<CSV, DE> + CanPersistIntoDatabaseUseCase<DE, M>
 where
     CSV: CsvDTO + for<'a> Deserialize<'a> + Debug,
     DE: DomainEntity + Into<M>,
     M: CanUpsertModel,
 {
-    type ManagerImpl: CanReadCsvUseCase<CSV>
-        + CSVToEntityParser<CSV, DE>
-        + CanPersistIntoDatabaseUseCase<DE, M>;
-
     fn execute(&self) -> Option<Vec<UseCaseError>> {
-        let manager = self.concrete_manager();
-        let data = manager.read(self.get_csv_type());
+        let data = self.read(self.get_csv_type());
         if data.is_err() {
             return Some(vec![data.unwrap_err()]);
         }
         let csv_row = data.unwrap();
         debug!("Extract {} Csv Rows", csv_row.len());
-        let dirty_entities = manager.parse_all(csv_row);
+        let dirty_entities = self.parse_all(csv_row);
 
         let mut domain_errors = vec![];
         let entities: Vec<DE> = dirty_entities
@@ -92,7 +88,7 @@ where
             .filter_map(|entity| entity.map_err(|e| domain_errors.push(e)).ok())
             .collect();
 
-        let database_errors = manager.persist(entities);
+        let database_errors = self.persist(entities);
 
         let mut errors: Vec<UseCaseError> = domain_errors.into_iter().map(|e| e.into()).collect();
         errors.append(
@@ -110,25 +106,7 @@ where
         }
     }
     fn get_csv_type(&self) -> CsvType;
-    fn concrete_manager(&self) -> Self::ManagerImpl;
 }
-
-// pub trait UseCaseImportManager<T, DE, M>
-// where
-//     T: TryInto<DE, Error = MappingError>,
-//     DE: DomainEntity + Into<M>,
-//     M: Model,
-// {
-// }
-
-// pub trait UseCaseCsvImportManager<T, DE, M>:
-//     UseCaseImportManager<T, DE, M> + CanReadCsvUseCase<T, DE> + CanPersistIntoDatabaseUseCase<DE, M>
-// where
-//     T: CsvDTO + for<'a> Deserialize<'a> + Into<Result<DE, DomainError>>,
-//     DE: DomainEntity + Into<M>,
-//     M: Model,
-// {
-// }
 
 pub trait CanReadCsvUseCase<T>
 where
@@ -144,10 +122,11 @@ where
     }
 }
 
-pub(crate) trait CanReadAllModelUseCase: HasLegacyStagingConnection {
+pub(crate) trait CanReadAllModelUseCase {
     type ModelImpl: CanSelectAllModel + Model + Debug;
+    type DbConnection: HasConnection;
     fn read_all(&self) -> Result<Vec<Self::ModelImpl>, UseCaseError> {
-        let mut connection = self.get_pooled_connection();
+        let mut connection = Self::DbConnection::get_pooled_connection();
         let data = Self::ModelImpl::select_all(&mut connection).map_err(|err| {
             UseCaseError::InfrastructureError(InfrastructureError::DatabaseError(err))
         })?;
@@ -156,14 +135,16 @@ pub(crate) trait CanReadAllModelUseCase: HasLegacyStagingConnection {
     }
 }
 
-pub(crate) trait CanPersistIntoDatabaseUseCase<DE, M>: HasTargetConnection
+pub(crate) trait CanPersistIntoDatabaseUseCase<DE, M>
 where
     DE: DomainEntity + Into<M>,
     M: CanUpsertModel,
 {
+    type DbConnection: HasConnection;
+
     fn persist(&self, entities: Vec<DE>) -> Option<Vec<InfrastructureError>> {
         let mut errors: Vec<InfrastructureError> = Vec::new();
-        let mut connection = self.get_pooled_connection();
+        let mut connection = Self::DbConnection::get_pooled_connection();
         let models: Vec<M> = convert_domain_entity_to_model(entities);
 
         for model in models {

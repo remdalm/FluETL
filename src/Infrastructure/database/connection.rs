@@ -65,17 +65,35 @@ pub(crate) fn get_pooled_connection(db: Database) -> DbConnection {
     result.get().expect("Failed to get connection")
 }
 
-pub(crate) trait HasTargetConnection {
-    fn get_pooled_connection(&self) -> DbConnection {
+pub(crate) trait HasConnection {
+    fn get_pooled_connection() -> DbConnection;
+}
+
+pub(crate) struct HasTargetConnection;
+impl HasConnection for HasTargetConnection {
+    fn get_pooled_connection() -> DbConnection {
         get_pooled_connection(Database::Target)
     }
 }
 
-pub(crate) trait HasLegacyStagingConnection {
-    fn get_pooled_connection(&self) -> DbConnection {
-        get_pooled_connection(Database::LegacyStaging)
+pub(crate) struct HasLegacyStagingConnection;
+impl HasConnection for HasLegacyStagingConnection {
+    fn get_pooled_connection() -> DbConnection {
+        get_pooled_connection(Database::Target)
     }
 }
+
+// pub(crate) trait HasTargetConnection {
+//     fn get_pooled_connection(&self) -> DbConnection {
+//         get_pooled_connection(Database::Target)
+//     }
+// }
+
+// pub(crate) trait HasLegacyStagingConnection {
+//     fn get_pooled_connection(&self) -> DbConnection {
+//         get_pooled_connection(Database::LegacyStaging)
+//     }
+// }
 
 #[cfg(test)]
 pub(crate) mod tests {
@@ -94,6 +112,13 @@ pub(crate) mod tests {
 
             establish_connection_pool(&target_database_url)
         };
+    }
+
+    pub(crate) struct HasTestConnection;
+    impl HasConnection for HasTestConnection {
+        fn get_pooled_connection() -> DbConnection {
+            get_test_pooled_connection()
+        }
     }
 
     // Function to get a reference to the connection pool

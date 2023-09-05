@@ -6,23 +6,18 @@ use crate::{
 use super::*;
 
 pub struct ImportOrderUseCase;
-
-pub struct OrderManager;
-
-impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManager {}
-impl CanReadCsvUseCase<CsvOrderDTO> for OrderManager {}
-impl CSVToEntityParser<CsvOrderDTO, Order> for OrderManager {}
-impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManager {}
-impl HasTargetConnection for OrderManager {}
+impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCase {}
+impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCase {
+    fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
+        csv.try_into()
+    }
+}
+impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCase {
+    type DbConnection = HasTargetConnection;
+}
 impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
-    type ManagerImpl = OrderManager;
-
     fn get_csv_type(&self) -> CsvType {
         CsvType::Orders
-    }
-
-    fn concrete_manager(&self) -> Self::ManagerImpl {
-        OrderManager
     }
 }
 
@@ -34,28 +29,23 @@ mod tests {
     use crate::{
         fixtures::order_model_fixtures,
         infrastructure::database::connection::tests::{
-            get_test_pooled_connection, reset_test_database,
+            get_test_pooled_connection, reset_test_database, HasTestConnection,
         },
         infrastructure::database::connection::DbConnection,
         infrastructure::{csv_reader::CsvType, database::models::order::tests::read_orders},
     };
 
     pub struct ImportOrderUseCaseTest;
-    pub struct OrderManagerTest;
-
-    impl UseCaseImportManager<CsvOrderDTO, Order, OrderModel> for OrderManagerTest {}
-    impl CanReadCsvUseCase<CsvOrderDTO> for OrderManagerTest {}
-    impl CSVToEntityParser<CsvOrderDTO, Order> for OrderManagerTest {}
-    impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for OrderManagerTest {}
-    impl HasTargetConnection for OrderManagerTest {
-        fn get_pooled_connection(&self) -> DbConnection {
-            get_test_pooled_connection()
+    impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCaseTest {}
+    impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCaseTest {
+        fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
+            csv.try_into()
         }
     }
-
+    impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCaseTest {
+        type DbConnection = HasTestConnection;
+    }
     impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCaseTest {
-        type ManagerImpl = OrderManagerTest;
-
         fn get_csv_type(&self) -> CsvType {
             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
 
@@ -66,10 +56,6 @@ mod tests {
                 .join("order_for_unit_test.csv");
 
             CsvType::Test(csv_path)
-        }
-
-        fn concrete_manager(&self) -> Self::ManagerImpl {
-            OrderManagerTest
         }
     }
 
