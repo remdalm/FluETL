@@ -31,7 +31,6 @@ mod tests {
         infrastructure::database::connection::tests::{
             get_test_pooled_connection, reset_test_database, HasTestConnection,
         },
-        infrastructure::database::connection::DbConnection,
         infrastructure::{csv_reader::CsvType, database::models::order::tests::read_orders},
     };
 
@@ -64,8 +63,6 @@ mod tests {
         // Arrange
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
-
-        // insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
 
         // Result
         let use_case = ImportOrderUseCaseTest;

@@ -79,21 +79,9 @@ impl HasConnection for HasTargetConnection {
 pub(crate) struct HasLegacyStagingConnection;
 impl HasConnection for HasLegacyStagingConnection {
     fn get_pooled_connection() -> DbConnection {
-        get_pooled_connection(Database::Target)
+        get_pooled_connection(Database::LegacyStaging)
     }
 }
-
-// pub(crate) trait HasTargetConnection {
-//     fn get_pooled_connection(&self) -> DbConnection {
-//         get_pooled_connection(Database::Target)
-//     }
-// }
-
-// pub(crate) trait HasLegacyStagingConnection {
-//     fn get_pooled_connection(&self) -> DbConnection {
-//         get_pooled_connection(Database::LegacyStaging)
-//     }
-// }
 
 #[cfg(test)]
 pub(crate) mod tests {

@@ -35,7 +35,7 @@ impl CanUpsertModel for OrderLineModel {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use diesel::result::DatabaseErrorKind;
 
     use crate::{
@@ -54,8 +54,9 @@ mod tests {
         }
     }
 
-    fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
-        insert_order(connection, false, &order_model_fixtures()[0])
+    pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
+        insert_order(connection, false, &order_model_fixtures()[0])?;
+        insert_order(connection, false, &order_model_fixtures()[1])
     }
 
     pub fn insert_order_line(
@@ -68,6 +69,12 @@ mod tests {
         } else {
             new_order_line.insert(connection)
         }
+    }
+
+    pub fn read_order_lines(connection: &mut DbConnection) -> Vec<OrderLineModel> {
+        schema::target::order_line::dsl::order_line
+            .load::<OrderLineModel>(connection)
+            .expect("Error loading updated OrderLineModel")
     }
 
     #[test]

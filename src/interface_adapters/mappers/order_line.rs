@@ -111,20 +111,6 @@ mod tests {
         load_unit_test_env();
 
         let dto_fixtures = csv_order_line_dto_fixtures();
-        // let results: Vec<Result<OrderLine, MappingError>> = CsvParser
-        //     .parse_all(dto_fixtures.to_vec())
-        //     .into_iter()
-        //     .map(|i| {
-        //         i.and_then(|fields| {
-        //             Ok(OrderLineDomainFactory::new_from_order_closure(
-        //                 |id| mock_fetching_order(&id),
-        //                 fields,
-        //             )
-        //             .make()
-        //             .unwrap())
-        //         })
-        //     })
-        //     .collect();
 
         let results = CsvParser.parse_all(dto_fixtures.to_vec());
 
