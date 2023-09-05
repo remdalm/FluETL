@@ -44,14 +44,14 @@ mod tests {
 
     use super::*;
     use crate::{
-        fixtures::order_line_model_fixtures,
+        fixtures::{order_line_model_fixtures, order_model_fixtures},
         infrastructure::csv_reader::CsvType,
-        infrastructure::database::{
-            connection::tests::HasTestConnection, models::order_line::tests::read_order_lines,
+        infrastructure::database::connection::tests::{
+            get_test_pooled_connection, reset_test_database,
         },
         infrastructure::database::{
-            connection::tests::{get_test_pooled_connection, reset_test_database},
-            models::order_line::tests::insert_foreign_keys,
+            connection::tests::HasTestConnection,
+            models::{order::tests::insert_order, order_line::tests::read_order_lines},
         },
     };
 
@@ -98,7 +98,10 @@ mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        insert_foreign_keys(&mut connection).expect("Failed to insert foreign keys");
+        insert_order(&mut connection, false, &order_model_fixtures()[0])
+            .expect("Failed to insert Order 1");
+        insert_order(&mut connection, false, &order_model_fixtures()[1])
+            .expect("Failed to insert Order 2");
 
         // Result
         let use_case = ImportOrderLineUseCaseTest;

@@ -142,7 +142,7 @@ fn import_order(repeat: Range<i32>) {
         .load::<OrderPlaceholder>(&mut connection)
         .expect("Failed to query order table");
 
-    assert_eq!(query_results.len(), 4); // order_source.sql has 5 rows but one has a domain validation error
+    assert_eq!(query_results.len(), 5); //No validation error, all 5 rows are inserted
     assert_eq!(
         query_result_sample_1[0], // 1st row in order_source.sql
         OrderPlaceholder {

@@ -55,8 +55,7 @@ pub mod tests {
     }
 
     pub fn insert_foreign_keys(connection: &mut DbConnection) -> Result<(), DieselError> {
-        insert_order(connection, false, &order_model_fixtures()[0])?;
-        insert_order(connection, false, &order_model_fixtures()[1])
+        insert_order(connection, false, &order_model_fixtures()[0])
     }
 
     pub fn insert_order_line(
