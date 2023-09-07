@@ -1,6 +1,8 @@
 use chrono::NaiveDate;
 
-use super::{convert_string_to_option_string, DomainEntity, DomainError};
+use crate::interface_adapters::mappers::convert_string_to_option_string;
+
+use super::{DomainEntity, DomainError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Origin {

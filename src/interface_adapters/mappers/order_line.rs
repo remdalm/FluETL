@@ -1,10 +1,7 @@
 use std::env;
 
 use crate::{
-    domain::{
-        convert_string_to_option_string,
-        order_line::{OrderLine, OrderLinePrimaryFields},
-    },
+    domain::order_line::{OrderLine, OrderLinePrimaryFields},
     infrastructure::{
         csv_reader::CsvOrderLineDTO, database::models::order_line::OrderLineModel,
         InfrastructureError,
@@ -12,7 +9,7 @@ use crate::{
 };
 use chrono::NaiveDate;
 
-use super::MappingError;
+use super::{convert_string_to_option_string, parse_string_to_u32, MappingError};
 
 impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
     type Error = MappingError;
@@ -39,28 +36,13 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
         };
 
         Ok(OrderLinePrimaryFields {
-            order_id: dto
-                .c_order_id
-                .parse::<u32>()
-                .map_err(|e| MappingError::ParsingError(e.to_string()))?,
-            orderline_id: dto
-                .c_orderline_id
-                .parse::<u32>()
-                .map_err(|e| MappingError::ParsingError(e.to_string()))?,
+            order_id: parse_string_to_u32("order_id", &dto.c_order_id)?,
+            orderline_id: parse_string_to_u32("orderline_id", &dto.c_orderline_id)?,
             item_ref: dto.item_ref,
             item_name: convert_string_to_option_string(dto.item_name),
-            qty_ordered: dto
-                .qty_ordered
-                .parse::<u32>()
-                .map_err(|e| MappingError::ParsingError(e.to_string()))?,
-            qty_reserved: dto
-                .qty_reserved
-                .parse::<u32>()
-                .map_err(|e| MappingError::ParsingError(e.to_string()))?,
-            qty_delivered: dto
-                .qty_delivered
-                .parse::<u32>()
-                .map_err(|e| MappingError::ParsingError(e.to_string()))?,
+            qty_ordered: parse_string_to_u32("qty_ordered", &dto.qty_ordered)?,
+            qty_reserved: parse_string_to_u32("qty_reserved", &dto.qty_reserved)?,
+            qty_delivered: parse_string_to_u32("qty_delivered", &dto.qty_delivered)?,
             due_date: due_date,
         })
     }

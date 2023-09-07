@@ -82,3 +82,17 @@ where
         models.into_iter().map(|de| de.try_into()).collect()
     }
 }
+
+pub fn convert_string_to_option_string(s: String) -> Option<String> {
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
+pub fn parse_string_to_u32(key: &str, value: &str) -> Result<u32, MappingError> {
+    value.parse::<u32>().map_err(|e| {
+        MappingError::ParsingError(e.to_string() + format!(": {} => {}", key, value).as_str())
+    })
+}
