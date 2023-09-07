@@ -20,6 +20,24 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
         let date_format = env::var("CSV_DATE_FORMAT")
             .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
 
+        let due_date = {
+            let s_date = convert_string_to_option_string(dto.due_date);
+            if s_date.is_some() {
+                let date = NaiveDate::parse_from_str(
+                    s_date.as_ref().unwrap().as_str(),
+                    date_format.as_str(),
+                )
+                .map_err(|err| {
+                    MappingError::ParsingError(
+                        err.to_string() + format!(": date => {}", s_date.unwrap()).as_str(),
+                    )
+                })?;
+                Some(date)
+            } else {
+                None
+            }
+        };
+
         Ok(OrderLinePrimaryFields {
             order_id: dto
                 .c_order_id
@@ -43,12 +61,7 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
                 .qty_delivered
                 .parse::<u32>()
                 .map_err(|e| MappingError::ParsingError(e.to_string()))?,
-            due_date: NaiveDate::parse_from_str(&dto.due_date.as_str(), date_format.as_str())
-                .map_err(|err| {
-                    MappingError::ParsingError(
-                        err.to_string() + format!(": date => {}", dto.due_date).as_str(),
-                    )
-                })?,
+            due_date: due_date,
         })
     }
 }
@@ -124,6 +137,18 @@ mod tests {
             );
             assert_eq!(result.as_ref().unwrap(), &order_line_fixtures[i]);
         }
+    }
+
+    #[test]
+    fn test_convert_csv_dtos_to_order_lines_with_invalid_due_date() {
+        load_unit_test_env();
+
+        let dto_fixture = &mut csv_order_line_dto_fixtures()[0];
+        dto_fixture.due_date = "2023-13-01".to_string();
+
+        let result = CsvParser.parse(dto_fixture.to_owned());
+
+        assert!(result.is_err_and(|e| matches!(e, MappingError::ParsingError(_))));
     }
 
     #[test]

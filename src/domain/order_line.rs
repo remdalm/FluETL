@@ -11,7 +11,7 @@ pub struct OrderLine {
     qty_ordered: u32,
     qty_reserved: u32,
     qty_delivered: u32,
-    due_date: NaiveDate,
+    due_date: Option<NaiveDate>,
 }
 
 impl OrderLine {
@@ -23,7 +23,7 @@ impl OrderLine {
         qty_ordered: u32,
         qty_reserved: u32,
         qty_delivered: u32,
-        due_date: NaiveDate,
+        due_date: Option<NaiveDate>,
     ) -> Result<Self, DomainError> {
         // Validation is performed here
 
@@ -67,7 +67,7 @@ impl OrderLine {
         self.qty_delivered
     }
 
-    pub fn due_date(&self) -> NaiveDate {
+    pub fn due_date(&self) -> Option<NaiveDate> {
         self.due_date
     }
 }
@@ -82,7 +82,7 @@ pub struct OrderLineDomainFactory {
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
-    pub due_date: NaiveDate,
+    pub due_date: Option<NaiveDate>,
 }
 
 impl OrderLineDomainFactory {
@@ -98,10 +98,7 @@ impl OrderLineDomainFactory {
             self.due_date,
         )
     }
-    pub fn new_from_order(order: Order, fields: OrderLinePrimaryFields) -> Self
-// where
-    //     F: FnOnce(u32) -> Order,
-    {
+    pub fn new_from_order(order: Order, fields: OrderLinePrimaryFields) -> Self {
         Self {
             order: order,
             orderline_id: fields.orderline_id,
@@ -124,5 +121,5 @@ pub struct OrderLinePrimaryFields {
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
-    pub due_date: NaiveDate,
+    pub due_date: Option<NaiveDate>,
 }

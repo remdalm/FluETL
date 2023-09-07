@@ -17,7 +17,7 @@ pub struct OrderLineModel {
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
-    pub due_date: NaiveDate,
+    pub due_date: Option<NaiveDate>,
 }
 
 impl Model for OrderLineModel {}

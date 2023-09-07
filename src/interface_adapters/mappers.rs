@@ -66,6 +66,10 @@ where
             .collect()
     }
 
+    fn parse(&self, csv_dto: CSV) -> Result<DE, MappingError> {
+        self.transform_csv(csv_dto)
+    }
+
     fn transform_csv(&self, csv: CSV) -> Result<DE, MappingError>;
 }
 

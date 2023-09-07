@@ -216,7 +216,7 @@ pub fn csv_order_line_dto_fixtures() -> [CsvOrderLineDTO; 3] {
             qty_ordered: "30".to_string(),
             qty_reserved: "15".to_string(),
             qty_delivered: "15".to_string(),
-            due_date: "2023-08-03".to_string(),
+            due_date: String::new(),
         },
     ]
 }
@@ -231,7 +231,7 @@ pub fn order_line_fixtures() -> [OrderLine; 3] {
             qty_ordered: 10,
             qty_reserved: 5,
             qty_delivered: 5,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
         }
         .make()
         .unwrap(),
@@ -243,7 +243,7 @@ pub fn order_line_fixtures() -> [OrderLine; 3] {
             qty_ordered: 20,
             qty_reserved: 10,
             qty_delivered: 10,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
         }
         .make()
         .unwrap(),
@@ -255,7 +255,7 @@ pub fn order_line_fixtures() -> [OrderLine; 3] {
             qty_ordered: 30,
             qty_reserved: 15,
             qty_delivered: 15,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
+            due_date: None,
         }
         .make()
         .unwrap(),
@@ -272,7 +272,7 @@ pub fn order_line_model_fixtures() -> [OrderLineModel; 3] {
             qty_ordered: 10,
             qty_reserved: 5,
             qty_delivered: 5,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
         },
         OrderLineModel {
             id_order_line: 2,
@@ -282,7 +282,7 @@ pub fn order_line_model_fixtures() -> [OrderLineModel; 3] {
             qty_ordered: 20,
             qty_reserved: 10,
             qty_delivered: 10,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
         },
         OrderLineModel {
             id_order_line: 3,
@@ -292,7 +292,7 @@ pub fn order_line_model_fixtures() -> [OrderLineModel; 3] {
             qty_ordered: 30,
             qty_reserved: 15,
             qty_delivered: 15,
-            due_date: NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
+            due_date: None,
         },
     ]
 }
