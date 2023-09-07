@@ -32,9 +32,9 @@ diesel::table! {
     order_line (id_order_line) {
         id_order_line -> Unsigned<Integer>,
         id_order -> Unsigned<Integer>,
-        #[max_length = 32]
+        #[max_length = 64]
         product_ref -> Varchar,
-        #[max_length = 32]
+        #[max_length = 255]
         product_name -> Nullable<Varchar>,
         qty_ordered -> Unsigned<Integer>,
         qty_reserved -> Unsigned<Integer>,
@@ -45,4 +45,8 @@ diesel::table! {
 
 diesel::joinable!(order_line -> order (id_order));
 
-diesel::allow_tables_to_appear_in_same_query!(mapping_client_contact, order, order_line,);
+diesel::allow_tables_to_appear_in_same_query!(
+    mapping_client_contact,
+    order,
+    order_line,
+);

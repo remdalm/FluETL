@@ -63,8 +63,8 @@ DROP TABLE IF EXISTS `order_line`;
 CREATE TABLE `order_line` (
   `id_order_line` int(10) unsigned NOT NULL,
   `id_order` int(10) unsigned NOT NULL,
-  `product_ref` varchar(32) NOT NULL,
-  `product_name` varchar(32) DEFAULT NULL,
+  `product_ref` varchar(64) NOT NULL,
+  `product_name` varchar(255) DEFAULT NULL,
   `qty_ordered` int(10) unsigned NOT NULL,
   `qty_reserved` int(10) unsigned NOT NULL,
   `qty_delivered` int(10) unsigned NOT NULL,
