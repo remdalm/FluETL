@@ -23,6 +23,7 @@ pub(crate) mod import_order_lines;
 pub(crate) mod import_orders;
 
 pub use import_mapping_client::ImportMappingClientUseCase;
+pub use import_order_lines::ImportOrderLineUseCase;
 pub use import_orders::ImportOrderUseCase;
 
 pub(crate) trait ImportModelUseCase<M1, DE, M2>:

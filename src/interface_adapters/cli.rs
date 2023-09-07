@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use crate::{
     infrastructure::logger,
     use_cases::{
-        ImportCsvUseCase, ImportMappingClientUseCase, ImportModelUseCase, ImportOrderUseCase,
-        UseCaseError,
+        ImportCsvUseCase, ImportMappingClientUseCase, ImportModelUseCase, ImportOrderLineUseCase,
+        ImportOrderUseCase, UseCaseError,
     },
 };
 
@@ -88,12 +88,16 @@ pub fn main_using_clap() {
                     error_logger(ImportMappingClientUseCase.execute());
                     info!("Done");
                 }
-                other => {
-                    exit(
-                        clap::error::ErrorKind::InvalidValue,
-                        format!("{:?} is not yet implemented", other).as_str(),
-                    );
-                }
+                EntitySubCommand::Orderline => {
+                    info!("Importing order lines...");
+                    error_logger(ImportOrderLineUseCase.execute());
+                    info!("Done");
+                } // other => {
+                  //     exit(
+                  //         clap::error::ErrorKind::InvalidValue,
+                  //         format!("{:?} is not yet implemented", other).as_str(),
+                  //     );
+                  // }
             },
         }
     }
