@@ -10,10 +10,17 @@ pub enum DomainError {
     ParsingError(String),
 }
 
-pub fn convert_string_to_option_string(s: String) -> Option<String> {
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
+struct Validator;
+
+impl Validator {
+    fn string_is_not_empty(key: &str, value: &str) -> Result<(), DomainError> {
+        if value.is_empty() {
+            Err(DomainError::ValidationError(format!(
+                "The field {} cannot be empty",
+                key
+            )))
+        } else {
+            Ok(())
+        }
     }
 }

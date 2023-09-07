@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 
-use super::{order::Order, DomainEntity, DomainError};
+use super::{order::Order, DomainEntity, DomainError, Validator};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrderLine {
@@ -26,6 +26,7 @@ impl OrderLine {
         due_date: Option<NaiveDate>,
     ) -> Result<Self, DomainError> {
         // Validation is performed here
+        Validator::string_is_not_empty("item_ref", &item_ref)?;
 
         Ok(Self {
             order,
