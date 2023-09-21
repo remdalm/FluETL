@@ -5,13 +5,36 @@ use crate::{
     },
     infrastructure::{
         csv_reader::CsvOrderLineDTO,
-        database::models::{order_line::OrderLineModel, OrderModel},
+        database::{
+            connection::DbConnection,
+            models::{order_line::OrderLineModel, OrderModel},
+        },
     },
 };
 
 use super::*;
 
-pub struct ImportOrderLineUseCase;
+#[derive(Default)]
+pub struct ImportOrderLineUseCase {
+    order_cache: elsa::map::FrozenMap<u32, Box<Order>>,
+}
+
+impl ImportOrderLineUseCase {
+    fn get_order(&self, id: u32, connection: &mut DbConnection) -> Result<&Order, MappingError> {
+        if let Some(order) = self.order_cache.get(&id) {
+            return Ok(order);
+        }
+
+        let order_model = OrderModel::select_by_id(connection, &id).map_err(|e| {
+            MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
+        })?;
+        let order: Order = order_model.try_into()?;
+
+        self.order_cache.insert(id, Box::new(order));
+        let stored_order = self.order_cache.get(&id).ok_or(MappingError::CacheError)?;
+        Ok(stored_order)
+    }
+}
 
 impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCase {}
 impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
@@ -19,11 +42,7 @@ impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
         let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
         raw_fields.and_then(|fields| {
             let mut connection = HasTargetConnection::get_pooled_connection();
-            let order_model =
-                OrderModel::select_by_id(&mut connection, &fields.order_id).map_err(|e| {
-                    MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
-                })?;
-            let order: Order = order_model.try_into()?;
+            let order = self.get_order(fields.order_id, &mut connection)?.clone();
             OrderLineDomainFactory::new_from_order(order, fields)
                 .make()
                 .map_err(|e| MappingError::DomainError(e))
@@ -55,7 +74,31 @@ mod tests {
         },
     };
 
-    pub struct ImportOrderLineUseCaseTest;
+    #[derive(Default)]
+    pub struct ImportOrderLineUseCaseTest {
+        order_cache: elsa::map::FrozenMap<u32, Box<Order>>,
+    }
+
+    impl ImportOrderLineUseCaseTest {
+        fn get_order(
+            &self,
+            id: u32,
+            connection: &mut DbConnection,
+        ) -> Result<&Order, MappingError> {
+            if let Some(order) = self.order_cache.get(&id) {
+                return Ok(order);
+            }
+
+            let order_model = OrderModel::select_by_id(connection, &id).map_err(|e| {
+                MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
+            })?;
+            let order: Order = order_model.try_into()?;
+
+            self.order_cache.insert(id, Box::new(order));
+            let stored_order = self.order_cache.get(&id).ok_or(MappingError::CacheError)?;
+            Ok(stored_order)
+        }
+    }
 
     impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {}
     impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCaseTest {
@@ -63,11 +106,7 @@ mod tests {
             let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
             raw_fields.and_then(|fields| {
                 let mut connection = HasTestConnection::get_pooled_connection();
-                let order_model = OrderModel::select_by_id(&mut connection, &fields.order_id)
-                    .map_err(|e| {
-                        MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
-                    })?;
-                let order: Order = order_model.try_into()?;
+                let order = self.get_order(fields.order_id, &mut connection)?.clone();
                 OrderLineDomainFactory::new_from_order(order, fields)
                     .make()
                     .map_err(|e| MappingError::DomainError(e))
@@ -104,7 +143,7 @@ mod tests {
             .expect("Failed to insert Order 2");
 
         // Result
-        let use_case = ImportOrderLineUseCaseTest;
+        let use_case = ImportOrderLineUseCaseTest::default();
         let errors = use_case.execute();
 
         // Assert

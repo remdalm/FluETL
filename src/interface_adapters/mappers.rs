@@ -12,6 +12,7 @@ pub enum MappingError {
     InfrastructureError(InfrastructureError),
     DomainError(DomainError),
     ParsingError(String),
+    CacheError,
 }
 
 pub trait GenericMapperParser<S, D> {

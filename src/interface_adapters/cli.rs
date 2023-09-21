@@ -90,7 +90,7 @@ pub fn main_using_clap() {
                 }
                 EntitySubCommand::Orderline => {
                     info!("Importing order lines...");
-                    error_logger(ImportOrderLineUseCase.execute());
+                    error_logger(ImportOrderLineUseCase::default().execute());
                     info!("Done");
                 } // other => {
                   //     exit(
