@@ -7,7 +7,10 @@ use crate::{
         csv_reader::CsvOrderLineDTO,
         database::{
             connection::DbConnection,
-            models::{order_line::OrderLineModel, OrderModel},
+            models::{
+                order_line::{batch_upsert, OrderLineModel},
+                OrderModel,
+            },
         },
     },
 };
@@ -51,6 +54,13 @@ impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
 }
 impl CanPersistIntoDatabaseUseCase<OrderLine, OrderLineModel> for ImportOrderLineUseCase {
     type DbConnection = HasTargetConnection;
+    fn set_batch<'a>(&'a self, models: &'a [OrderLineModel]) -> Option<Batch<OrderLineModel>> {
+        Some(Batch::new(
+            models,
+            batch_upsert,
+            HasTargetConnection::get_pooled_connection(),
+        ))
+    }
 }
 impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, OrderLineModel> for ImportOrderLineUseCase {
     fn get_csv_type(&self) -> CsvType {
@@ -77,6 +87,7 @@ mod tests {
     #[derive(Default)]
     pub struct ImportOrderLineUseCaseTest {
         order_cache: elsa::map::FrozenMap<u32, Box<Order>>,
+        pub use_batch: bool,
     }
 
     impl ImportOrderLineUseCaseTest {
@@ -115,6 +126,16 @@ mod tests {
     }
     impl CanPersistIntoDatabaseUseCase<OrderLine, OrderLineModel> for ImportOrderLineUseCaseTest {
         type DbConnection = HasTestConnection;
+        fn set_batch<'a>(&'a self, models: &'a [OrderLineModel]) -> Option<Batch<OrderLineModel>> {
+            if self.use_batch {
+                return Some(Batch::new(
+                    models,
+                    batch_upsert,
+                    HasTestConnection::get_pooled_connection(),
+                ));
+            }
+            None
+        }
     }
 
     impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, OrderLineModel> for ImportOrderLineUseCaseTest {
@@ -144,6 +165,33 @@ mod tests {
 
         // Result
         let use_case = ImportOrderLineUseCaseTest::default();
+        let errors = use_case.execute();
+
+        // Assert
+        assert!(errors.is_none(), "Failed to execute use case");
+        let persisted_order_lines = read_order_lines(&mut connection);
+        assert_eq!(persisted_order_lines.len(), 3);
+        for (i, persisted_order_line) in persisted_order_lines.iter().enumerate() {
+            assert_eq!(*persisted_order_line, order_line_model_fixtures()[i]);
+        }
+    }
+
+    #[test]
+    fn test_batch_order_line_use_case() {
+        // Arrange
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        insert_order(&mut connection, false, &order_model_fixtures()[0])
+            .expect("Failed to insert Order 1");
+        insert_order(&mut connection, false, &order_model_fixtures()[1])
+            .expect("Failed to insert Order 2");
+
+        // Result
+        let use_case = ImportOrderLineUseCaseTest {
+            use_batch: true,
+            ..Default::default()
+        };
         let errors = use_case.execute();
 
         // Assert

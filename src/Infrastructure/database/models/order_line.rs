@@ -30,8 +30,16 @@ impl CanUpsertModel for OrderLineModel {
             .set(self)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
     }
+}
+
+pub fn batch_upsert(
+    models: &[OrderLineModel],
+    connection: &mut DbConnection,
+) -> Result<(), DieselError> {
+    let query = diesel::replace_into(schema::target::order_line::table).values(models);
+
+    query.execute(connection).map(|_| ())
 }
 
 #[cfg(test)]
