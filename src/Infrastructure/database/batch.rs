@@ -2,8 +2,14 @@ use super::connection::DbConnection;
 use diesel::result::Error as DieselError;
 use std::cell::RefCell;
 
-struct Config {
+pub(crate) struct Config {
     max_batch_size: usize,
+}
+
+impl Config {
+    pub fn new(max_batch_size: usize) -> Self {
+        Self { max_batch_size }
+    }
 }
 
 impl Default for Config {
@@ -14,7 +20,7 @@ impl Default for Config {
     }
 }
 
-pub struct Batch<'a, M> {
+pub(crate) struct Batch<'a, M> {
     models: &'a [M],
     config: Config,
     cb: fn(&[M], &mut DbConnection) -> Result<(), DieselError>,
@@ -24,12 +30,13 @@ pub struct Batch<'a, M> {
 impl<'a, M> Batch<'a, M> {
     pub fn new(
         models: &'a [M],
+        config: Option<Config>,
         cb: fn(&[M], &mut DbConnection) -> Result<(), DieselError>,
         connection: DbConnection,
     ) -> Self {
         Self {
             models,
-            config: Config::default(),
+            config: config.unwrap_or_default(),
             cb,
             connection: RefCell::new(connection),
         }

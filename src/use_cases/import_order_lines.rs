@@ -6,6 +6,7 @@ use crate::{
     infrastructure::{
         csv_reader::CsvOrderLineDTO,
         database::{
+            batch::Config,
             connection::DbConnection,
             models::{
                 order_line::{batch_upsert, OrderLineModel},
@@ -20,9 +21,16 @@ use super::*;
 #[derive(Default)]
 pub struct ImportOrderLineUseCase {
     order_cache: elsa::map::FrozenMap<u32, Box<Order>>,
+    batch: bool,
+    batch_size: usize,
 }
 
 impl ImportOrderLineUseCase {
+    pub fn set_batch(&mut self, batch_size: usize) {
+        self.batch = true;
+        self.batch_size = batch_size;
+    }
+
     fn get_order(&self, id: u32, connection: &mut DbConnection) -> Result<&Order, MappingError> {
         if let Some(order) = self.order_cache.get(&id) {
             return Ok(order);
@@ -55,11 +63,16 @@ impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
 impl CanPersistIntoDatabaseUseCase<OrderLine, OrderLineModel> for ImportOrderLineUseCase {
     type DbConnection = HasTargetConnection;
     fn set_batch<'a>(&'a self, models: &'a [OrderLineModel]) -> Option<Batch<OrderLineModel>> {
-        Some(Batch::new(
-            models,
-            batch_upsert,
-            HasTargetConnection::get_pooled_connection(),
-        ))
+        if self.batch {
+            Some(Batch::new(
+                models,
+                Some(Config::new(self.batch_size)),
+                batch_upsert,
+                HasTargetConnection::get_pooled_connection(),
+            ))
+        } else {
+            None
+        }
     }
 }
 impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, OrderLineModel> for ImportOrderLineUseCase {
@@ -130,6 +143,7 @@ mod tests {
             if self.use_batch {
                 return Some(Batch::new(
                     models,
+                    None,
                     batch_upsert,
                     HasTestConnection::get_pooled_connection(),
                 ));

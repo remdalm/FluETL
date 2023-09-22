@@ -14,10 +14,6 @@ use crate::{
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
 struct Cli {
-    /// Sets env file
-    #[arg(short, long, value_name = "ENV_FILE")]
-    env_file: Option<PathBuf>,
-
     #[command(subcommand)]
     action_command: Option<ActionCommands>,
 }
@@ -31,26 +27,85 @@ enum ActionCommands {
 #[derive(Debug, Args)]
 struct EntityCommand {
     /// Entity name
-    #[clap(subcommand)]
+    #[command(subcommand)]
     entity: EntitySubCommand,
 }
 
 #[derive(Debug, Subcommand)]
 pub enum EntitySubCommand {
     /// Import MappingClient from Legacy Staging Database
-    MappingClient,
+    MappingClient(MandatoryArgs),
 
     /// Import Order from CSV file defined in env file argument
-    Order,
+    Order(MandatoryArgs),
 
     /// Import OrderLine from CSV file defined in env file argument
-    Orderline,
+    Orderline(MandatoryArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct MandatoryArgs {
+    /// Sets env file
+    #[arg(short, long, value_name = "ENV_FILE")]
+    env_file: Option<PathBuf>,
+
+    /// Batch mode
+    #[arg(short = 'b', long)]
+    batch: bool,
+
+    /// Batch chunks size
+    #[arg(short = 's', long, default_value = "100")]
+    batch_size: usize,
 }
 
 pub fn main_using_clap() {
     let cli = Cli::parse();
+    if let Some(action_command) = cli.action_command {
+        match action_command {
+            ActionCommands::Import(entity_command) => match entity_command.entity {
+                EntitySubCommand::Order(arg) => {
+                    init(arg.env_file);
+                    if arg.batch {
+                        info!("Batch mode not implemented yet");
+                    }
+                    info!("Importing orders...");
+                    error_logger(ImportOrderUseCase.execute());
+                    info!("Done");
+                }
+                EntitySubCommand::MappingClient(arg) => {
+                    init(arg.env_file);
+                    if arg.batch {
+                        info!("Batch mode not implemented yet");
+                    }
+                    info!("Importing mapping clients...");
+                    error_logger(ImportMappingClientUseCase.execute());
+                    info!("Done");
+                }
+                EntitySubCommand::Orderline(arg) => {
+                    init(arg.env_file);
+                    info!("Importing order lines...");
+                    let mut handler = ImportOrderLineUseCase::default();
+                    if arg.batch {
+                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                        handler.set_batch(arg.batch_size);
+                    }
+                    error_logger(handler.execute());
+                    info!("Done");
+                } // other => {
+                  //     exit(
+                  //         clap::error::ErrorKind::InvalidValue,
+                  //         format!("{:?} is not yet implemented", other).as_str(),
+                  //     );
+                  // }
+            },
+        }
+    }
+}
+
+fn init(env_file: Option<PathBuf>) {
+    info!("Load configuration...");
     // If --env--file argument is not provided, try to get .env file from the root of the crate
-    if let Some(env_file_path) = cli.env_file {
+    if let Some(env_file_path) = env_file {
         if !env_file_path.exists() {
             exit(
                 clap::error::ErrorKind::InvalidValue,
@@ -74,33 +129,6 @@ pub fn main_using_clap() {
 
     // Init Logger when env file is loaded
     logger::init();
-
-    if let Some(action_command) = cli.action_command {
-        match action_command {
-            ActionCommands::Import(entity_command) => match entity_command.entity {
-                EntitySubCommand::Order => {
-                    info!("Importing orders...");
-                    error_logger(ImportOrderUseCase.execute());
-                    info!("Done");
-                }
-                EntitySubCommand::MappingClient => {
-                    info!("Importing mapping clients...");
-                    error_logger(ImportMappingClientUseCase.execute());
-                    info!("Done");
-                }
-                EntitySubCommand::Orderline => {
-                    info!("Importing order lines...");
-                    error_logger(ImportOrderLineUseCase::default().execute());
-                    info!("Done");
-                } // other => {
-                  //     exit(
-                  //         clap::error::ErrorKind::InvalidValue,
-                  //         format!("{:?} is not yet implemented", other).as_str(),
-                  //     );
-                  // }
-            },
-        }
-    }
 }
 
 fn exit(kind: clap::error::ErrorKind, message: &str) {
