@@ -8,6 +8,7 @@ use crate::{
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         database::{
+            batch::Batch,
             connection::{HasConnection, HasLegacyStagingConnection, HasTargetConnection},
             models::{CanSelectAllModel, CanUpsertModel, Model},
         },
@@ -100,11 +101,7 @@ where
                 .collect(),
         );
 
-        if errors.is_empty() {
-            None
-        } else {
-            Some(errors)
-        }
+        Option::from(errors).filter(|e| !e.is_empty())
     }
     fn get_csv_type(&self) -> CsvType;
 }
@@ -148,16 +145,28 @@ where
         let mut connection = Self::DbConnection::get_pooled_connection();
         let models: Vec<M> = convert_domain_entity_to_model(entities);
 
-        for model in models {
-            let _ = model
-                .upsert(&mut connection)
-                .map_err(|err| errors.push(InfrastructureError::DatabaseError(err)));
-        }
-        if errors.is_empty() {
-            None
+        if let Some(batch) = self.set_batch(&models) {
+            let batch_errors = batch.run();
+            if let Some(batch_errors) = batch_errors {
+                errors.extend(
+                    batch_errors
+                        .into_iter()
+                        .map(|err| InfrastructureError::DatabaseError(err)),
+                );
+            }
         } else {
-            Some(errors)
+            for model in models {
+                let _ = model
+                    .upsert(&mut connection)
+                    .map_err(|err| errors.push(InfrastructureError::DatabaseError(err)));
+            }
         }
+
+        Option::from(errors).filter(|e| !e.is_empty())
+    }
+
+    fn set_batch<'a>(&'a self, _models: &'a [M]) -> Option<Batch<M>> {
+        None
     }
 }
 
