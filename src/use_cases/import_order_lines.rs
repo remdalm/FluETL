@@ -4,7 +4,7 @@ use crate::{
         order_line::{OrderLine, OrderLineDomainFactory, OrderLinePrimaryFields},
     },
     infrastructure::{
-        csv_reader::CsvOrderLineDTO,
+        csv_reader::order_line::CsvOrderLineDTO,
         database::{
             batch::Config,
             connection::DbConnection,

@@ -7,7 +7,7 @@ use crate::{
         order_line::{OrderLine, OrderLineDomainFactory},
     },
     infrastructure::{
-        csv_reader::{CsvOrderDTO, CsvOrderLineDTO},
+        csv_reader::{order::CsvOrderDTO, order_line::CsvOrderLineDTO},
         database::models::{
             mapping_client::{MappingClientModel, MappingClientSource},
             order::OrderModel,

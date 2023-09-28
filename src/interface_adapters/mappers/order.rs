@@ -2,11 +2,11 @@ use std::env;
 
 use crate::{
     domain::order::{Order, OrderDomainFactory, OrderEntityFromStringDTO, Origin},
-    infrastructure::InfrastructureError,
+    infrastructure::{csv_reader::order::CsvOrderDTO, InfrastructureError},
 };
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
 
-use crate::infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel};
+use crate::infrastructure::database::models::order::OrderModel;
 
 use super::MappingError;
 

@@ -3,7 +3,7 @@ use std::env;
 use crate::{
     domain::order_line::{OrderLine, OrderLinePrimaryFields},
     infrastructure::{
-        csv_reader::CsvOrderLineDTO, database::models::order_line::OrderLineModel,
+        csv_reader::order_line::CsvOrderLineDTO, database::models::order_line::OrderLineModel,
         InfrastructureError,
     },
 };

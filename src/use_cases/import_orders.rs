@@ -1,6 +1,6 @@
 use crate::{
     domain::order::Order,
-    infrastructure::{csv_reader::CsvOrderDTO, database::models::order::OrderModel},
+    infrastructure::{csv_reader::order::CsvOrderDTO, database::models::order::OrderModel},
 };
 
 use super::*;
