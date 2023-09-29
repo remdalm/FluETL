@@ -1,6 +1,42 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    delivery_slip (id_delivery_slip) {
+        id_delivery_slip -> Unsigned<Integer>,
+        id_client -> Unsigned<Integer>,
+        #[max_length = 32]
+        reference -> Varchar,
+        shipping_date -> Nullable<Date>,
+        #[max_length = 255]
+        po_ref -> Nullable<Varchar>,
+        #[max_length = 255]
+        carrier_name -> Nullable<Varchar>,
+        #[max_length = 128]
+        status -> Nullable<Varchar>,
+        #[max_length = 255]
+        tracking_number -> Nullable<Varchar>,
+        #[max_length = 255]
+        tracking_link -> Nullable<Varchar>,
+    }
+}
+
+diesel::table! {
+    invoice (id_invoice) {
+        id_invoice -> Unsigned<Integer>,
+        id_client -> Unsigned<Integer>,
+        #[max_length = 255]
+        client_name -> Nullable<Varchar>,
+        #[max_length = 255]
+        po_ref -> Nullable<Varchar>,
+        #[sql_name = "type"]
+        #[max_length = 128]
+        type_ -> Varchar,
+        total_tax_excl -> Decimal,
+        total_tax_incl -> Decimal,
+    }
+}
+
+diesel::table! {
     mapping_client_contact (id_customer) {
         id_customer -> Unsigned<Integer>,
         idp_id_client -> Unsigned<Integer>,
@@ -46,6 +82,8 @@ diesel::table! {
 diesel::joinable!(order_line -> order (id_order));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    delivery_slip,
+    invoice,
     mapping_client_contact,
     order,
     order_line,

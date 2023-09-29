@@ -73,6 +73,37 @@ CREATE TABLE `order_line` (
   KEY `IDX_9CE58EE11BACD2A8` (`id_order`),
   CONSTRAINT `FK_9CE58EE11BACD2A8` FOREIGN KEY (`id_order`) REFERENCES `order` (`id_order`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- poolweb.delivery_slip definition
+
+DROP TABLE IF EXISTS `delivery_slip`;
+CREATE TABLE `delivery_slip` (
+  `id_delivery_slip` int(10) unsigned NOT NULL,
+  `id_client` int(10) unsigned NOT NULL,
+  `reference` varchar(32) NOT NULL,
+  `shipping_date` date DEFAULT NULL,
+  `po_ref` varchar(255) DEFAULT NULL,
+  `carrier_name` varchar(255) DEFAULT NULL,
+  `status` varchar(128) DEFAULT NULL,
+  `tracking_number` varchar(255) DEFAULT NULL,
+  `tracking_link` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id_delivery_slip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- poolweb.invoice definition
+DROP TABLE IF EXISTS `invoice`;
+CREATE TABLE `invoice` (
+  `id_invoice` int(10) unsigned NOT NULL,
+  `id_client` int(10) unsigned NOT NULL,
+  `client_name` varchar(255) DEFAULT NULL,
+  `po_ref` varchar(255) DEFAULT NULL,
+  `type` varchar(128) NOT NULL,
+  `total_tax_excl` decimal(10,2) NOT NULL,
+  `total_tax_incl` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id_invoice`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

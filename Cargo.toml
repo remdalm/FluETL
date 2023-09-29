@@ -18,6 +18,7 @@ lazy_static = "1.4.0"
 log = "0.4.20"
 log4rs = { version = "1.2.0", features = ["gzip", "background_rotation"] }
 serde = { version = "1.0.183", features = ["derive"] }
+url = "2.4.1"
 
 [dev-dependencies]
 criterion = "0.5.1"

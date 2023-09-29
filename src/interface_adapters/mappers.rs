@@ -1,6 +1,9 @@
+pub(crate) mod delivery_slip;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
+
+use chrono::NaiveDate;
 
 use crate::domain::{DomainEntity, DomainError};
 use crate::infrastructure::csv_reader::CsvDTO;
@@ -89,6 +92,24 @@ pub fn convert_string_to_option_string(s: String) -> Option<String> {
         None
     } else {
         Some(s)
+    }
+}
+
+pub fn convert_string_to_option_date(
+    s: String,
+    fmt: &str,
+) -> Option<Result<NaiveDate, MappingError>> {
+    let s_date = convert_string_to_option_string(s);
+    if s_date.is_some() {
+        let date =
+            NaiveDate::parse_from_str(s_date.as_ref().unwrap().as_str(), fmt).map_err(|err| {
+                MappingError::ParsingError(
+                    err.to_string() + format!(": date => {}", s_date.unwrap()).as_str(),
+                )
+            });
+        Some(date)
+    } else {
+        None
     }
 }
 

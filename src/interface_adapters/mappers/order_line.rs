@@ -7,33 +7,17 @@ use crate::{
         InfrastructureError,
     },
 };
-use chrono::NaiveDate;
 
-use super::{convert_string_to_option_string, parse_string_to_u32, MappingError};
+use super::{
+    convert_string_to_option_date, convert_string_to_option_string, parse_string_to_u32,
+    MappingError,
+};
 
 impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
     type Error = MappingError;
     fn try_from(dto: CsvOrderLineDTO) -> Result<OrderLinePrimaryFields, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
             .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
-
-        let due_date = {
-            let s_date = convert_string_to_option_string(dto.due_date);
-            if s_date.is_some() {
-                let date = NaiveDate::parse_from_str(
-                    s_date.as_ref().unwrap().as_str(),
-                    date_format.as_str(),
-                )
-                .map_err(|err| {
-                    MappingError::ParsingError(
-                        err.to_string() + format!(": date => {}", s_date.unwrap()).as_str(),
-                    )
-                })?;
-                Some(date)
-            } else {
-                None
-            }
-        };
 
         Ok(OrderLinePrimaryFields {
             order_id: parse_string_to_u32("order_id", &dto.c_order_id)?,
@@ -43,7 +27,7 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
             qty_ordered: parse_string_to_u32("qty_ordered", &dto.qty_ordered)?,
             qty_reserved: parse_string_to_u32("qty_reserved", &dto.qty_reserved)?,
             qty_delivered: parse_string_to_u32("qty_delivered", &dto.qty_delivered)?,
-            due_date: due_date,
+            due_date: convert_string_to_option_date(dto.due_date, &date_format).transpose()?,
         })
     }
 }

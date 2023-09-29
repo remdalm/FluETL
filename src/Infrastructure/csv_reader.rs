@@ -6,12 +6,14 @@ use std::path::{Path, PathBuf};
 
 use super::InfrastructureError;
 
+pub(crate) mod delivery_slip;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
 
 #[allow(dead_code)]
 pub enum CsvType {
+    DeliverySlip,
     Orders,
     OrderLines,
     Test(PathBuf),
@@ -20,6 +22,7 @@ pub enum CsvType {
 impl CsvType {
     fn get_path(&self) -> Result<String, VarError> {
         match self {
+            CsvType::DeliverySlip => env::var("DELIVERY_SLIPS_CSV_PATH"),
             CsvType::Orders => env::var("ORDERS_CSV_PATH"),
             CsvType::OrderLines => env::var("ORDER_LINES_CSV_PATH"),
             CsvType::Test(path) => Ok(path

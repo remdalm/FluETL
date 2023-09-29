@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use crate::{
     infrastructure::logger,
     use_cases::{
-        ImportCsvUseCase, ImportMappingClientUseCase, ImportModelUseCase, ImportOrderLineUseCase,
-        ImportOrderUseCase, UseCaseError,
+        ImportCsvUseCase, ImportDeliverySlipUseCase, ImportMappingClientUseCase,
+        ImportModelUseCase, ImportOrderLineUseCase, ImportOrderUseCase, UseCaseError,
     },
 };
 
@@ -41,6 +41,9 @@ pub enum EntitySubCommand {
 
     /// Import OrderLine from CSV file defined in env file argument
     Orderline(MandatoryArgs),
+
+    // Import DeliverySlip from CSV file defined in env file argument
+    DeliverySlip(MandatoryArgs),
 }
 
 #[derive(Debug, Args)]
@@ -91,12 +94,18 @@ pub fn main_using_clap() {
                     }
                     error_logger(handler.execute());
                     info!("Done");
-                } // other => {
-                  //     exit(
-                  //         clap::error::ErrorKind::InvalidValue,
-                  //         format!("{:?} is not yet implemented", other).as_str(),
-                  //     );
-                  // }
+                }
+                EntitySubCommand::DeliverySlip(arg) => {
+                    init(arg.env_file);
+                    info!("Importing delivery slips...");
+                    let mut handler = ImportDeliverySlipUseCase::default();
+                    if arg.batch {
+                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                        handler.set_batch(arg.batch_size);
+                    }
+                    error_logger(handler.execute());
+                    info!("Done");
+                }
             },
         }
     }

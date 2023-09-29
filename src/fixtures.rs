@@ -1,14 +1,20 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use url::Url;
 
 use crate::{
     domain::{
+        delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
         mapping_client::MappingClient,
         order::{Order, Origin},
         order_line::{OrderLine, OrderLineDomainFactory},
+        vo::tracking_link::TrackingLink,
     },
     infrastructure::{
-        csv_reader::{order::CsvOrderDTO, order_line::CsvOrderLineDTO},
+        csv_reader::{
+            delivery_slip::CsvDeliverySlipDTO, order::CsvOrderDTO, order_line::CsvOrderLineDTO,
+        },
         database::models::{
+            delivery_slip::DeliverySlipModel,
             mapping_client::{MappingClientModel, MappingClientSource},
             order::OrderModel,
             order_line::OrderLineModel,
@@ -293,6 +299,130 @@ pub fn order_line_model_fixtures() -> [OrderLineModel; 3] {
             qty_reserved: 15,
             qty_delivered: 15,
             due_date: None,
+        },
+    ]
+}
+
+// DELIVERY SLIP FIXTURES
+
+pub fn csv_delivery_slip_dto_fixtures() -> [CsvDeliverySlipDTO; 3] {
+    [
+        CsvDeliverySlipDTO {
+            m_inout_id: 1.to_string(),
+            c_bpartner_id: 1.to_string(),
+            documentno: "Doc1".to_string(),
+            shipping_date: "2023-08-01".to_string(),
+            po_ref: "PoRef1".to_string(),
+            carrier_name: "Carrier1".to_string(),
+            trackingno: "TrackingNo1".to_string(),
+            status: "1".to_string(),
+            tracking_link: "https://tracking1.com/123".to_string(),
+        },
+        CsvDeliverySlipDTO {
+            m_inout_id: 2.to_string(),
+            c_bpartner_id: 2.to_string(),
+            documentno: "Doc2".to_string(),
+            shipping_date: "2023-08-02".to_string(),
+            po_ref: "PoRef2".to_string(),
+            carrier_name: "Carrier2".to_string(),
+            trackingno: "TrackingNo2".to_string(),
+            status: "2".to_string(),
+            tracking_link: "http:://tracking2.com".to_string(),
+        },
+        CsvDeliverySlipDTO {
+            m_inout_id: 3.to_string(),
+            c_bpartner_id: 1.to_string(),
+            documentno: "Doc3".to_string(),
+            shipping_date: String::new(),
+            po_ref: String::new(),
+            carrier_name: String::new(),
+            trackingno: String::new(),
+            status: String::new(),
+            tracking_link: String::new(),
+        },
+    ]
+}
+
+pub fn delivery_slip_fixtures() -> [DeliverySlip; 3] {
+    [
+        DeliverySlipDomainFactory {
+            delivery_slip_id: 1,
+            c_bpartner_id: 1,
+            reference: "Doc1".to_string(),
+            shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+            po_ref: Some("PoRef1".to_string()),
+            carrier_name: Some("Carrier1".to_string()),
+            trackingno: Some("TrackingNo1".to_string()),
+            status: Some("1".to_string()),
+            tracking_link: Some(TrackingLink::new(
+                Url::parse("https://tracking1.com/123").unwrap(),
+            )),
+        }
+        .make()
+        .unwrap(),
+        DeliverySlipDomainFactory {
+            delivery_slip_id: 2,
+            c_bpartner_id: 2,
+            reference: "Doc2".to_string(),
+            shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+            po_ref: Some("PoRef2".to_string()),
+            carrier_name: Some("Carrier2".to_string()),
+            trackingno: Some("TrackingNo2".to_string()),
+            status: Some("2".to_string()),
+            tracking_link: None,
+        }
+        .make()
+        .unwrap(),
+        DeliverySlipDomainFactory {
+            delivery_slip_id: 3,
+            c_bpartner_id: 1,
+            reference: "Doc3".to_string(),
+            shipping_date: None,
+            po_ref: None,
+            carrier_name: None,
+            trackingno: None,
+            status: None,
+            tracking_link: None,
+        }
+        .make()
+        .unwrap(),
+    ]
+}
+
+pub fn delivery_slip_model_fixtures() -> [DeliverySlipModel; 3] {
+    [
+        DeliverySlipModel {
+            id_delivery_slip: 1,
+            id_client: 1,
+            reference: "Doc1".to_string(),
+            shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+            po_ref: Some("PoRef1".to_string()),
+            carrier_name: Some("Carrier1".to_string()),
+            status: Some("1".to_string()),
+            tracking_number: Some("TrackingNo1".to_string()),
+            tracking_link: Some("https://tracking1.com/123".to_string()),
+        },
+        DeliverySlipModel {
+            id_delivery_slip: 2,
+            id_client: 2,
+            reference: "Doc2".to_string(),
+            shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+            po_ref: Some("PoRef2".to_string()),
+            carrier_name: Some("Carrier2".to_string()),
+            status: Some("2".to_string()),
+            tracking_number: Some("TrackingNo2".to_string()),
+            tracking_link: None,
+        },
+        DeliverySlipModel {
+            id_delivery_slip: 3,
+            id_client: 1,
+            reference: "Doc3".to_string(),
+            shipping_date: None,
+            po_ref: None,
+            carrier_name: None,
+            status: None,
+            tracking_number: None,
+            tracking_link: None,
         },
     ]
 }
