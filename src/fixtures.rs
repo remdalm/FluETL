@@ -1,5 +1,4 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use url::Url;
 
 use crate::{
     domain::{
@@ -7,7 +6,6 @@ use crate::{
         mapping_client::MappingClient,
         order::{Order, Origin},
         order_line::{OrderLine, OrderLineDomainFactory},
-        vo::tracking_link::TrackingLink,
     },
     infrastructure::{
         csv_reader::{
@@ -354,9 +352,7 @@ pub fn delivery_slip_fixtures() -> [DeliverySlip; 3] {
             carrier_name: Some("Carrier1".to_string()),
             trackingno: Some("TrackingNo1".to_string()),
             status: Some("1".to_string()),
-            tracking_link: Some(TrackingLink::new(
-                Url::parse("https://tracking1.com/123").unwrap(),
-            )),
+            tracking_link: Some("https://tracking1.com/123".to_string()),
         }
         .make()
         .unwrap(),

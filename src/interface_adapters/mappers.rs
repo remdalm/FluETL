@@ -118,3 +118,18 @@ pub fn parse_string_to_u32(key: &str, value: &str) -> Result<u32, MappingError> 
         MappingError::ParsingError(e.to_string() + format!(": {} => {}", key, value).as_str())
     })
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_convert_string_to_option_string() {
+        let s = String::from("test");
+        let result = super::convert_string_to_option_string(s);
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), "test");
+
+        let s = String::new();
+        let result = super::convert_string_to_option_string(s);
+        assert!(result.is_none());
+    }
+}

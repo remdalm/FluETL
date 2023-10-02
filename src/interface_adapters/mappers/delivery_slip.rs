@@ -1,10 +1,7 @@
 use std::env;
 
 use crate::{
-    domain::{
-        delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
-        vo::tracking_link::TrackingLink,
-    },
+    domain::delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
     infrastructure::{
         csv_reader::delivery_slip::CsvDeliverySlipDTO,
         database::models::delivery_slip::DeliverySlipModel, InfrastructureError,
@@ -32,7 +29,7 @@ impl TryFrom<CsvDeliverySlipDTO> for DeliverySlipDomainFactory {
             carrier_name: convert_string_to_option_string(dto.carrier_name),
             trackingno: convert_string_to_option_string(dto.trackingno),
             status: convert_string_to_option_string(dto.status),
-            tracking_link: TrackingLink::try_from(dto.tracking_link).ok(),
+            tracking_link: convert_string_to_option_string(dto.tracking_link),
         })
     }
 }

@@ -1,12 +1,12 @@
 use chrono::NaiveDate;
 
-use super::{vo::tracking_link::TrackingLink, DomainEntity, DomainError};
+use super::{new_type::Reference, vo::tracking_link::TrackingLink, DomainEntity, DomainError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeliverySlip {
     delivery_slip_id: u32,
     c_bpartner_id: u32,
-    reference: String,
+    reference: Reference,
     shipping_date: Option<NaiveDate>,
     po_ref: Option<String>,
     carrier_name: Option<String>,
@@ -21,7 +21,7 @@ impl DeliverySlip {
     pub fn new(
         delivery_slip_id: u32,
         c_bpartner_id: u32,
-        reference: String,
+        reference: Reference,
         shipping_date: Option<NaiveDate>,
         po_ref: Option<String>,
         carrier_name: Option<String>,
@@ -51,7 +51,7 @@ impl DeliverySlip {
     }
 
     pub fn reference(&self) -> &str {
-        &self.reference
+        &self.reference.as_str()
     }
 
     pub fn shipping_date(&self) -> Option<&NaiveDate> {
@@ -88,21 +88,26 @@ pub struct DeliverySlipDomainFactory {
     pub carrier_name: Option<String>,
     pub trackingno: Option<String>,
     pub status: Option<String>,
-    pub tracking_link: Option<TrackingLink>,
+    pub tracking_link: Option<String>,
 }
 
 impl DeliverySlipDomainFactory {
     pub fn make(self) -> Result<DeliverySlip, DomainError> {
+        let tracking_link = self
+            .tracking_link
+            .map(|tl| TrackingLink::try_from(tl))
+            .transpose()
+            .unwrap_or(None);
         DeliverySlip::new(
             self.delivery_slip_id,
             self.c_bpartner_id,
-            self.reference,
+            Reference::new(self.reference)?,
             self.shipping_date,
             self.po_ref,
             self.carrier_name,
             self.trackingno,
             self.status,
-            self.tracking_link,
+            tracking_link,
         )
     }
 }
