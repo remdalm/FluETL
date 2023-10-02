@@ -35,7 +35,7 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
 impl From<OrderLine> for OrderLineModel {
     fn from(order_line: OrderLine) -> Self {
         Self {
-            id_order: order_line.order().c_order_id(),
+            id_order: order_line.order().order_id(),
             id_order_line: order_line.orderline_id(),
             product_ref: order_line.item_ref().to_string(),
             product_name: order_line.item_name().map(|s| s.to_string()),
@@ -51,10 +51,7 @@ impl From<OrderLine> for OrderLineModel {
 mod tests {
     use crate::{
         domain::{order::Order, order_line::OrderLineDomainFactory},
-        fixtures::{
-            csv_order_line_dto_fixtures, order_line_fixtures, order_line_model_fixtures,
-            order_model_fixtures,
-        },
+        fixtures::{csv_order_line_dto_fixtures, order_line_model_fixtures, order_model_fixtures},
         infrastructure::database::models::order::OrderModel,
         interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
         tests::load_unit_test_env,

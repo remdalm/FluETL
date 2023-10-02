@@ -3,8 +3,9 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use crate::{
     domain::{
         delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
+        dto::date_dto::DateDTO,
         mapping_client::MappingClient,
-        order::{Order, Origin},
+        order::{Order, OrderDomainFactory, Origin},
         order_line::{OrderLine, OrderLineDomainFactory},
     },
     infrastructure::{
@@ -63,50 +64,6 @@ pub fn csv_order_dto_fixtures() -> [CsvOrderDTO; 3] {
             order_status: String::new(),
             delivery_status: "done".to_string(),
         },
-    ]
-}
-
-pub fn order_fixtures() -> [Order; 3] {
-    [
-        Order::new(
-            1,
-            1,
-            Some("Client 1".to_string()),
-            chrono::NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
-            "Ref1".to_string(),
-            Some("PoRef1".to_string()),
-            Origin::Web,
-            Some(30),
-            Some("done".to_string()),
-            Some("done".to_string()),
-        )
-        .unwrap(),
-        Order::new(
-            2,
-            2,
-            Some("Client 2".to_string()),
-            chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
-            "Ref2".to_string(),
-            Some("PoRef2".to_string()),
-            Origin::EDI,
-            Some(20),
-            Some("failed".to_string()),
-            Some("done".to_string()),
-        )
-        .unwrap(),
-        Order::new(
-            3,
-            1,
-            None,
-            chrono::NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
-            "Ref3".to_string(),
-            None,
-            Origin::Unknown,
-            None,
-            None,
-            Some("done".to_string()),
-        )
-        .unwrap(),
     ]
 }
 
@@ -222,47 +179,6 @@ pub fn csv_order_line_dto_fixtures() -> [CsvOrderLineDTO; 3] {
             qty_delivered: "15".to_string(),
             due_date: String::new(),
         },
-    ]
-}
-
-pub fn order_line_fixtures() -> [OrderLine; 3] {
-    [
-        OrderLineDomainFactory {
-            order: order_fixtures()[0].clone(),
-            orderline_id: 1,
-            item_ref: "ItemRef1".to_string(),
-            item_name: Some("ItemName1".to_string()),
-            qty_ordered: 10,
-            qty_reserved: 5,
-            qty_delivered: 5,
-            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
-        }
-        .make()
-        .unwrap(),
-        OrderLineDomainFactory {
-            order: order_fixtures()[0].clone(),
-            orderline_id: 2,
-            item_ref: "ItemRef2".to_string(),
-            item_name: Some("ItemName2".to_string()),
-            qty_ordered: 20,
-            qty_reserved: 10,
-            qty_delivered: 10,
-            due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
-        }
-        .make()
-        .unwrap(),
-        OrderLineDomainFactory {
-            order: order_fixtures()[1].clone(),
-            orderline_id: 3,
-            item_ref: "ItemRef3".to_string(),
-            item_name: None,
-            qty_ordered: 30,
-            qty_reserved: 15,
-            qty_delivered: 15,
-            due_date: None,
-        }
-        .make()
-        .unwrap(),
     ]
 }
 

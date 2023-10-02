@@ -3,16 +3,16 @@ use url::Url;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TrackingLink {
-    url: Url,
+    value: Url,
 }
 
 impl TrackingLink {
     pub fn new(url: Url) -> Self {
-        Self { url }
+        Self { value: url }
     }
 
     pub fn url(&self) -> &Url {
-        &self.url
+        &self.value
     }
 }
 
@@ -21,13 +21,13 @@ impl TryFrom<String> for TrackingLink {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let url = Url::parse(&value)?;
-        Ok(Self { url })
+        Ok(Self { value: url })
     }
 }
 
 impl fmt::Display for TrackingLink {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.url)
+        write!(f, "{}", self.value)
     }
 }
 

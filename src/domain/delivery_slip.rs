@@ -1,6 +1,9 @@
 use chrono::NaiveDate;
 
-use super::{new_type::Reference, vo::tracking_link::TrackingLink, DomainEntity, DomainError};
+use super::{
+    vo::{tracking_link::TrackingLink, Reference},
+    DomainEntity, DomainError,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeliverySlip {

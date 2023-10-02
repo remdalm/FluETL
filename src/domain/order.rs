@@ -1,8 +1,10 @@
 use chrono::NaiveDate;
 
-use crate::interface_adapters::mappers::convert_string_to_option_string;
-
-use super::{DomainEntity, DomainError};
+use super::{
+    dto::date_dto::DateDTO,
+    vo::{completion::Completion, Reference},
+    DomainEntity, DomainError,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Origin {
@@ -34,144 +36,28 @@ impl Origin {
     }
 }
 
-// Order entity
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Order {
-    c_order_id: u32,
-    c_bpartner_id: u32,
+    order_id: u32,
+    client_id: u32,
     client_name: Option<String>,
     date: NaiveDate,
-    order_ref: String,
+    order_ref: Reference,
     po_ref: Option<String>,
-    origin: Origin,
-    completion: Option<u32>,
+    origin: Option<Origin>,
+    completion: Option<Completion>,
     order_status: Option<String>,
     delivery_status: Option<String>,
 }
 
-impl PartialEq for Order {
-    fn eq(&self, other: &Self) -> bool {
-        self.c_order_id == other.c_order_id
-            && self.c_bpartner_id == other.c_bpartner_id
-            && self.client_name == other.client_name
-            && self.date == other.date
-            && self.order_ref == other.order_ref
-            && self.po_ref == other.po_ref
-            && self.origin == other.origin
-            && self.completion == other.completion
-            && self.order_status == other.order_status
-            && self.delivery_status == other.delivery_status
-    }
-}
-
 impl Order {
-    pub fn new(
-        c_order_id: u32,
-        c_bpartner_id: u32,
-        client_name: Option<String>,
-        date: NaiveDate,
-        order_ref: String,
-        po_ref: Option<String>,
-        origin: Origin,
-        completion: Option<u32>,
-        order_status: Option<String>,
-        delivery_status: Option<String>,
-    ) -> Result<Self, DomainError> {
-        // Validation is performed here
-        // if completion.is_some() {
-        //     Self::validate_completion(completion.unwrap())?;
-        // }
-
-        Ok(Self {
-            c_order_id,
-            c_bpartner_id,
-            client_name,
-            date,
-            order_ref,
-            po_ref,
-            origin,
-            completion,
-            order_status,
-            delivery_status,
-        })
-    }
-
-    // TODO: bad implementation, use factory instead
-    pub fn new_from_sting_dto(
-        dto: OrderEntityFromStringDTO,
-        date_format: &str,
-    ) -> Result<Self, DomainError> {
-        let c_order_id = dto.c_order_id.parse::<u32>().map_err(|err| {
-            DomainError::ParsingError(
-                err.to_string() + format!(": c_order_id => {}", dto.c_order_id).as_str(),
-            )
-        })?;
-        let c_bpartner_id = dto.c_bpartner_id.parse::<u32>().map_err(|err| {
-            DomainError::ParsingError(
-                err.to_string() + format!(": c_bpartner_id => {}", dto.c_bpartner_id).as_str(),
-            )
-        })?;
-        let date = NaiveDate::parse_from_str(dto.date.as_str(), date_format).map_err(|err| {
-            DomainError::ParsingError(err.to_string() + format!(": date => {}", dto.date).as_str())
-        })?;
-
-        let completion = convert_string_to_option_string(dto.completion)
-            .and_then(|s| {
-                Some(
-                    s.replace("%", "")
-                        .parse::<f32>()
-                        .map_err(|err| {
-                            DomainError::ParsingError(
-                                err.to_string() + format!(": completion => {}", s).as_str(),
-                            )
-                        })
-                        .and_then(|number| Ok(number.round() as u32)),
-                )
-            })
-            .transpose()?;
-        let client_name = convert_string_to_option_string(dto.client_name);
-        let po_ref = convert_string_to_option_string(dto.po_ref);
-        let order_status = convert_string_to_option_string(dto.order_status);
-        let delivery_status = convert_string_to_option_string(dto.delivery_status);
-
-        let origin = match dto.origin.as_str() {
-            "Web" => Origin::Web,
-            "EDI" => Origin::EDI,
-            _ => Origin::Unknown,
-        };
-
-        Self::new(
-            c_order_id,
-            c_bpartner_id,
-            client_name,
-            date,
-            dto.order_ref,
-            po_ref,
-            origin,
-            completion,
-            order_status,
-            delivery_status,
-        )
-    }
-
-    // fn validate_completion(completion: u32) -> Result<(), DomainError> {
-    //     if completion > 100 {
-    //         Err(DomainError::ValidationError(format!(
-    //             "Completion must be an integer between 0 and 100. {} given.",
-    //             completion,
-    //         )))
-    //     } else {
-    //         Ok(())
-    //     }
-    // }
-
     // Getters
-    pub fn c_order_id(&self) -> u32 {
-        self.c_order_id
+    pub fn order_id(&self) -> u32 {
+        self.order_id
     }
 
-    pub fn c_bpartner_id(&self) -> u32 {
-        self.c_bpartner_id
+    pub fn client_id(&self) -> u32 {
+        self.client_id
     }
 
     pub fn client_name(&self) -> Option<&str> {
@@ -190,18 +76,17 @@ impl Order {
         self.po_ref.as_deref()
     }
 
-    pub fn origin(&self) -> &Origin {
-        &self.origin
+    pub fn origin(&self) -> Option<&Origin> {
+        self.origin.as_ref()
     }
 
     pub fn completion(&self) -> Option<u32> {
-        self.completion
+        self.completion.map(|c| c.as_u32())
     }
 
     pub fn order_status(&self) -> Option<&str> {
         self.order_status.as_deref()
     }
-
     pub fn delivery_status(&self) -> Option<&str> {
         self.delivery_status.as_deref()
     }
@@ -209,45 +94,88 @@ impl Order {
 
 impl DomainEntity for Order {}
 
-pub struct OrderEntityFromStringDTO {
-    pub c_order_id: String,
-    pub c_bpartner_id: String,
-    pub client_name: String,
-    pub date: String,
-    pub order_ref: String,
-    pub po_ref: String,
-    pub origin: String,
-    pub completion: String,
-    pub order_status: String,
-    pub delivery_status: String,
-}
-
-pub struct OrderDomainFactory {
-    pub c_order_id: u32,
-    pub c_bpartner_id: u32,
+pub struct OrderDomainFactory<'a> {
+    pub order_id: u32,
+    pub client_id: u32,
     pub client_name: Option<String>,
-    pub date: NaiveDate,
+    pub date_dto: DateDTO<'a>,
     pub order_ref: String,
     pub po_ref: Option<String>,
-    pub origin: Origin,
-    pub completion: Option<u32>,
+    pub origin: Option<String>,
+    pub completion: Option<Completion>,
     pub order_status: Option<String>,
     pub delivery_status: Option<String>,
 }
 
-impl OrderDomainFactory {
+impl OrderDomainFactory<'_> {
     pub fn make(self) -> Result<Order, DomainError> {
-        Order::new(
-            self.c_order_id,
-            self.c_bpartner_id,
-            self.client_name,
-            self.date,
-            self.order_ref,
-            self.po_ref,
-            self.origin,
-            self.completion,
-            self.order_status,
-            self.delivery_status,
-        )
+        let origin = self.origin.map(|s| match s.as_str() {
+            "Web" => Origin::Web,
+            "EDI" => Origin::EDI,
+            _ => Origin::Unknown,
+        });
+
+        Ok(Order {
+            order_id: self.order_id,
+            client_id: self.client_id,
+            client_name: self.client_name,
+            date: self.date_dto.unwrap()?,
+            order_ref: Reference::new(self.order_ref)?,
+            po_ref: self.po_ref,
+            origin,
+            completion: self.completion,
+            order_status: self.order_status,
+            delivery_status: self.delivery_status,
+        })
+    }
+}
+
+pub mod tests {
+    use super::*;
+    pub fn order_fixtures() -> [Order; 3] {
+        [
+            OrderDomainFactory {
+                order_id: 1,
+                client_id: 1,
+                client_name: Some("Client 1".to_string()),
+                order_ref: "Ref1".to_string(),
+                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+                po_ref: Some("PoRef1".to_string()),
+                origin: Some("Web".to_string()),
+                completion: Some(Completion::from(30)),
+                order_status: Some("done".to_string()),
+                delivery_status: Some("done".to_string()),
+            }
+            .make()
+            .unwrap(),
+            OrderDomainFactory {
+                order_id: 2,
+                client_id: 2,
+                client_name: Some("Client 2".to_string()),
+                order_ref: "Ref2".to_string(),
+                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+                po_ref: Some("PoRef2".to_string()),
+                origin: Some("EDI".to_string()),
+                completion: Some(Completion::from(20)),
+                order_status: Some("failed".to_string()),
+                delivery_status: Some("done".to_string()),
+            }
+            .make()
+            .unwrap(),
+            OrderDomainFactory {
+                order_id: 3,
+                client_id: 1,
+                client_name: None,
+                order_ref: "Ref3".to_string(),
+                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 3).unwrap()),
+                po_ref: None,
+                origin: None,
+                completion: None,
+                order_status: None,
+                delivery_status: Some("done".to_string()),
+            }
+            .make()
+            .unwrap(),
+        ]
     }
 }

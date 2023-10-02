@@ -1,4 +1,5 @@
 pub(crate) mod delivery_slip;
+pub(crate) mod dto;
 pub(crate) mod mapping_client;
 pub(crate) mod new_type;
 pub(crate) mod order;
@@ -11,6 +12,7 @@ pub trait DomainEntity {}
 pub enum DomainError {
     ValidationError(String),
     ParsingError(String),
+    DtoError(String),
 }
 
 struct Validator;

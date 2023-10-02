@@ -124,3 +124,49 @@ pub struct OrderLinePrimaryFields {
     pub qty_delivered: u32,
     pub due_date: Option<NaiveDate>,
 }
+
+mod tests {
+    use crate::domain::order::tests::order_fixtures;
+
+    use super::*;
+    pub fn order_line_fixtures() -> [OrderLine; 3] {
+        [
+            OrderLineDomainFactory {
+                order: order_fixtures()[0].clone(),
+                orderline_id: 1,
+                item_ref: "ItemRef1".to_string(),
+                item_name: Some("ItemName1".to_string()),
+                qty_ordered: 10,
+                qty_reserved: 5,
+                qty_delivered: 5,
+                due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+            }
+            .make()
+            .unwrap(),
+            OrderLineDomainFactory {
+                order: order_fixtures()[0].clone(),
+                orderline_id: 2,
+                item_ref: "ItemRef2".to_string(),
+                item_name: Some("ItemName2".to_string()),
+                qty_ordered: 20,
+                qty_reserved: 10,
+                qty_delivered: 10,
+                due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+            }
+            .make()
+            .unwrap(),
+            OrderLineDomainFactory {
+                order: order_fixtures()[1].clone(),
+                orderline_id: 3,
+                item_ref: "ItemRef3".to_string(),
+                item_name: None,
+                qty_ordered: 30,
+                qty_reserved: 15,
+                qty_delivered: 15,
+                due_date: None,
+            }
+            .make()
+            .unwrap(),
+        ]
+    }
+}

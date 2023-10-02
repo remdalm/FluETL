@@ -1,5 +1,5 @@
 use crate::{
-    domain::order::Order,
+    domain::order::{Order, OrderDomainFactory},
     infrastructure::{csv_reader::order::CsvOrderDTO, database::models::order::OrderModel},
 };
 
@@ -9,7 +9,8 @@ pub struct ImportOrderUseCase;
 impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCase {}
 impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCase {
     fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
-        csv.try_into()
+        let factory: OrderDomainFactory = csv.try_into()?;
+        factory.make().map_err(|e| MappingError::DomainError(e))
     }
 }
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCase {
@@ -38,7 +39,8 @@ mod tests {
     impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCaseTest {}
     impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCaseTest {
         fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
-            csv.try_into()
+            let factory: OrderDomainFactory = csv.try_into()?;
+            factory.make().map_err(|e| MappingError::DomainError(e))
         }
     }
     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCaseTest {
