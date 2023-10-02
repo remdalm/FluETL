@@ -1,0 +1,6 @@
+m_inout_id;c_bpartner_id;documentno;shipping_date;po_ref;carrier_name;trackingno;status;tracking_link
+1011124;1009681;BL501714;01/03/2023;ABC / DEF;UPS;250238315641646373;1;https://tracking1.com/123
+1009011;1012489;BLP400040;06/03/2023;mail 25/11;DPD;250238315641646374;fsdhkf;http:://tracking2.com
+1012515;1012489;BL501392;;;;;;
+1008692;1009681;BL501550;01/03/2023;ACALOG201138802;Carrier 1;TrackingNo3;1;http:://tracking2.com
+1008519;1012489;;06/03/2023;PoRef5;Carrier2;TrackingNo4;lfdjsf;
