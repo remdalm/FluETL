@@ -114,3 +114,51 @@ impl DeliverySlipDomainFactory {
         )
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    pub fn delivery_slip_fixtures() -> [DeliverySlip; 3] {
+        [
+            DeliverySlipDomainFactory {
+                delivery_slip_id: 1,
+                c_bpartner_id: 1,
+                reference: "Doc1".to_string(),
+                shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+                po_ref: Some("PoRef1".to_string()),
+                carrier_name: Some("Carrier1".to_string()),
+                trackingno: Some("TrackingNo1".to_string()),
+                status: Some("1".to_string()),
+                tracking_link: Some("https://tracking1.com/123".to_string()),
+            }
+            .make()
+            .unwrap(),
+            DeliverySlipDomainFactory {
+                delivery_slip_id: 2,
+                c_bpartner_id: 2,
+                reference: "Doc2".to_string(),
+                shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+                po_ref: Some("PoRef2".to_string()),
+                carrier_name: Some("Carrier2".to_string()),
+                trackingno: Some("TrackingNo2".to_string()),
+                status: Some("2".to_string()),
+                tracking_link: None,
+            }
+            .make()
+            .unwrap(),
+            DeliverySlipDomainFactory {
+                delivery_slip_id: 3,
+                c_bpartner_id: 1,
+                reference: "Doc3".to_string(),
+                shipping_date: None,
+                po_ref: None,
+                carrier_name: None,
+                trackingno: None,
+                status: None,
+                tracking_link: None,
+            }
+            .make()
+            .unwrap(),
+        ]
+    }
+}

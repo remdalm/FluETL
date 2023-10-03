@@ -50,9 +50,17 @@ impl From<OrderLine> for OrderLineModel {
 #[cfg(test)]
 mod tests {
     use crate::{
-        domain::{order::Order, order_line::OrderLineDomainFactory},
-        fixtures::{csv_order_line_dto_fixtures, order_line_model_fixtures, order_model_fixtures},
-        infrastructure::database::models::order::OrderModel,
+        domain::{
+            order::Order,
+            order_line::{tests::order_line_fixtures, OrderLineDomainFactory},
+        },
+        infrastructure::{
+            csv_reader::order_line::tests::csv_order_line_dto_fixtures,
+            database::models::{
+                order::{tests::order_model_fixtures, OrderModel},
+                order_line::tests::order_line_model_fixtures,
+            },
+        },
         interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
         tests::load_unit_test_env,
     };

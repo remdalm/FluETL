@@ -31,3 +31,14 @@ impl MappingClient {
 }
 
 impl DomainEntity for MappingClient {}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    pub fn mapping_client_fixture() -> [MappingClient; 2] {
+        [
+            MappingClient::new(1, 1).unwrap(),
+            MappingClient::new(2, 2).unwrap(),
+        ]
+    }
+}

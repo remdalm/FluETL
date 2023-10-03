@@ -125,10 +125,11 @@ pub struct OrderLinePrimaryFields {
     pub due_date: Option<NaiveDate>,
 }
 
-mod tests {
+pub mod tests {
     use crate::domain::order::tests::order_fixtures;
 
     use super::*;
+    #[allow(dead_code)] //use in other modules
     pub fn order_line_fixtures() -> [OrderLine; 3] {
         [
             OrderLineDomainFactory {

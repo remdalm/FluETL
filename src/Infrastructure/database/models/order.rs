@@ -69,12 +69,10 @@ impl OrderModel {
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{
-        fixtures::order_model_fixtures,
-        infrastructure::database::connection::tests::{
-            get_test_pooled_connection, reset_test_database,
-        },
+    use crate::infrastructure::database::connection::tests::{
+        get_test_pooled_connection, reset_test_database,
     };
+    use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
     pub fn insert_order(
@@ -96,6 +94,57 @@ pub mod tests {
     }
 
     use super::*;
+
+    pub fn order_model_fixtures() -> [OrderModel; 3] {
+        [
+            OrderModel {
+                id_order: 1,
+                id_client: 1,
+                client_name: Some("Client 1".to_string()),
+                order_ref: "Ref1".to_string(),
+                po_ref: Some("PoRef1".to_string()),
+                origin: Some("Web".to_string()),
+                completion: Some(30),
+                date: NaiveDateTime::new(
+                    NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
+                    NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+                ),
+                order_status: Some("done".to_string()),
+                delivery_status: Some("done".to_string()),
+            },
+            OrderModel {
+                id_order: 2,
+                id_client: 2,
+                client_name: Some("Client 2".to_string()),
+                order_ref: "Ref2".to_string(),
+                po_ref: Some("PoRef2".to_string()),
+                origin: Some("EDI".to_string()),
+                completion: Some(20),
+                date: NaiveDateTime::new(
+                    NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
+                    NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+                ),
+                order_status: Some("failed".to_string()),
+                delivery_status: Some("done".to_string()),
+            },
+            OrderModel {
+                id_order: 3,
+                id_client: 1,
+                client_name: None,
+                order_ref: "Ref3".to_string(),
+                po_ref: None,
+                origin: None,
+                completion: None,
+                date: NaiveDateTime::new(
+                    NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
+                    NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+                ),
+                order_status: None,
+                delivery_status: Some("done".to_string()),
+            },
+        ]
+    }
+
     #[test]
     fn test_insert_order() {
         let mut connection = get_test_pooled_connection();

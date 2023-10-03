@@ -28,11 +28,13 @@ mod tests {
 
     use super::*;
     use crate::{
-        fixtures::order_model_fixtures,
         infrastructure::database::connection::tests::{
             get_test_pooled_connection, reset_test_database, HasTestConnection,
         },
-        infrastructure::{csv_reader::CsvType, database::models::order::tests::read_orders},
+        infrastructure::{
+            csv_reader::CsvType,
+            database::models::order::tests::{order_model_fixtures, read_orders},
+        },
     };
 
     pub struct ImportOrderUseCaseTest;

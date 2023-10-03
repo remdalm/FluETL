@@ -45,15 +45,49 @@ pub fn batch_upsert(
 
 #[cfg(test)]
 pub mod tests {
-    use crate::{
-        fixtures::delivery_slip_model_fixtures,
-        infrastructure::database::{
-            connection::tests::{get_test_pooled_connection, reset_test_database},
-            models::SingleRowInsertable,
-        },
+    use crate::infrastructure::database::{
+        connection::tests::{get_test_pooled_connection, reset_test_database},
+        models::SingleRowInsertable,
     };
 
     use super::*;
+    pub fn delivery_slip_model_fixtures() -> [DeliverySlipModel; 3] {
+        [
+            DeliverySlipModel {
+                id_delivery_slip: 1,
+                id_client: 1,
+                reference: "Doc1".to_string(),
+                shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+                po_ref: Some("PoRef1".to_string()),
+                carrier_name: Some("Carrier1".to_string()),
+                status: Some("1".to_string()),
+                tracking_number: Some("TrackingNo1".to_string()),
+                tracking_link: Some("https://tracking1.com/123".to_string()),
+            },
+            DeliverySlipModel {
+                id_delivery_slip: 2,
+                id_client: 2,
+                reference: "Doc2".to_string(),
+                shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+                po_ref: Some("PoRef2".to_string()),
+                carrier_name: Some("Carrier2".to_string()),
+                status: Some("2".to_string()),
+                tracking_number: Some("TrackingNo2".to_string()),
+                tracking_link: None,
+            },
+            DeliverySlipModel {
+                id_delivery_slip: 3,
+                id_client: 1,
+                reference: "Doc3".to_string(),
+                shipping_date: None,
+                po_ref: None,
+                carrier_name: None,
+                status: None,
+                tracking_number: None,
+                tracking_link: None,
+            },
+        ]
+    }
 
     impl SingleRowInsertable<schema::target::delivery_slip::table, DbConnection> for DeliverySlipModel {
         fn target_client_table(&self) -> schema::target::delivery_slip::table {

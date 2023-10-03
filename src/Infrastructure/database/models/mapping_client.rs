@@ -90,12 +90,28 @@ impl CanSelectAllModel for MappingClientSource {
 pub mod tests {
     use diesel::result::Error as DieselError;
 
-    use crate::{
-        fixtures::mapping_client_model_fixture,
-        infrastructure::database::connection::tests::{
-            get_test_pooled_connection, reset_test_database,
-        },
+    use crate::infrastructure::database::connection::tests::{
+        get_test_pooled_connection, reset_test_database,
     };
+
+    pub fn mapping_client_model_fixture() -> [MappingClientModel; 2] {
+        [MappingClientModel::new(1, 1), MappingClientModel::new(2, 2)]
+    }
+
+    pub fn mapping_client_source_model_fixture() -> [MappingClientSource; 2] {
+        [
+            MappingClientSource {
+                id_source_client: 1,
+                id_source_contact: 1,
+                id: Some(1),
+            },
+            MappingClientSource {
+                id_source_client: 2,
+                id_source_contact: 2,
+                id: Some(2),
+            },
+        ]
+    }
 
     use super::*;
 

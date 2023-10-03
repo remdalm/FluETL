@@ -3,8 +3,6 @@ pub mod infrastructure;
 pub mod interface_adapters;
 mod use_cases;
 
-pub mod fixtures;
-
 #[cfg(test)]
 pub mod tests {
     const UNIT_TEST_ENV_PATH: &str = ".env.unit.test";

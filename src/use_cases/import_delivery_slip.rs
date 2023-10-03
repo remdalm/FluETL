@@ -63,12 +63,14 @@ mod tests {
 
     use super::*;
     use crate::{
-        fixtures::delivery_slip_model_fixtures,
         infrastructure::database::connection::tests::{
             get_test_pooled_connection, reset_test_database, HasTestConnection,
         },
         infrastructure::{
-            csv_reader::CsvType, database::models::delivery_slip::tests::read_delivery_slips,
+            csv_reader::CsvType,
+            database::models::delivery_slip::tests::{
+                delivery_slip_model_fixtures, read_delivery_slips,
+            },
         },
     };
 

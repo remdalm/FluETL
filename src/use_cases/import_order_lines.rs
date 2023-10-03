@@ -86,14 +86,17 @@ mod tests {
 
     use super::*;
     use crate::{
-        fixtures::{order_line_model_fixtures, order_model_fixtures},
         infrastructure::csv_reader::CsvType,
-        infrastructure::database::connection::tests::{
-            get_test_pooled_connection, reset_test_database,
-        },
         infrastructure::database::{
             connection::tests::HasTestConnection,
-            models::{order::tests::insert_order, order_line::tests::read_order_lines},
+            models::{
+                order::tests::insert_order,
+                order_line::tests::{order_line_model_fixtures, read_order_lines},
+            },
+        },
+        infrastructure::database::{
+            connection::tests::{get_test_pooled_connection, reset_test_database},
+            models::order::tests::order_model_fixtures,
         },
     };
 

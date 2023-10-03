@@ -52,7 +52,8 @@ impl From<MappingClient> for MappingClientModel {
 #[cfg(test)]
 mod tests {
     use crate::{
-        fixtures::{mapping_client_fixture, mapping_client_source_model_fixture},
+        domain::mapping_client::tests::mapping_client_fixture,
+        infrastructure::database::models::mapping_client::tests::mapping_client_source_model_fixture,
         interface_adapters::mappers::GenericMapperParser,
     };
 

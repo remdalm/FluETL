@@ -53,8 +53,10 @@ impl From<DeliverySlip> for DeliverySlipModel {
 #[cfg(test)]
 mod tests {
     use crate::{
-        fixtures::{
-            csv_delivery_slip_dto_fixtures, delivery_slip_fixtures, delivery_slip_model_fixtures,
+        domain::delivery_slip::tests::delivery_slip_fixtures,
+        infrastructure::{
+            csv_reader::delivery_slip::tests::csv_delivery_slip_dto_fixtures,
+            database::models::delivery_slip::tests::delivery_slip_model_fixtures,
         },
         interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
         tests::load_unit_test_env,

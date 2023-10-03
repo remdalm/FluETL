@@ -84,7 +84,10 @@ impl TryFrom<OrderModel> for Order {
 mod tests {
     use crate::{
         domain::order::{tests::order_fixtures, Order},
-        fixtures::{csv_order_dto_fixtures, order_model_fixtures},
+        infrastructure::{
+            csv_reader::order::tests::csv_order_dto_fixtures,
+            database::models::order::tests::order_model_fixtures,
+        },
         interface_adapters::mappers::{
             convert_domain_entity_to_model, CSVToEntityParser, MappingError, ModelToEntityParser,
         },

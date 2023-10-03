@@ -46,15 +46,50 @@ pub fn batch_upsert(
 pub mod tests {
     use diesel::result::DatabaseErrorKind;
 
-    use crate::{
-        fixtures::{order_line_model_fixtures, order_model_fixtures},
-        infrastructure::database::{
-            connection::tests::{get_test_pooled_connection, reset_test_database},
-            models::{order::tests::insert_order, SingleRowInsertable},
+    use crate::infrastructure::database::{
+        connection::tests::{get_test_pooled_connection, reset_test_database},
+        models::{
+            order::tests::{insert_order, order_model_fixtures},
+            SingleRowInsertable,
         },
     };
 
     use super::*;
+
+    pub fn order_line_model_fixtures() -> [OrderLineModel; 3] {
+        [
+            OrderLineModel {
+                id_order_line: 1,
+                id_order: 1,
+                product_ref: "ItemRef1".to_string(),
+                product_name: Some("ItemName1".to_string()),
+                qty_ordered: 10,
+                qty_reserved: 5,
+                qty_delivered: 5,
+                due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+            },
+            OrderLineModel {
+                id_order_line: 2,
+                id_order: 1,
+                product_ref: "ItemRef2".to_string(),
+                product_name: Some("ItemName2".to_string()),
+                qty_ordered: 20,
+                qty_reserved: 10,
+                qty_delivered: 10,
+                due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+            },
+            OrderLineModel {
+                id_order_line: 3,
+                id_order: 2,
+                product_ref: "ItemRef3".to_string(),
+                product_name: None,
+                qty_ordered: 30,
+                qty_reserved: 15,
+                qty_delivered: 15,
+                due_date: None,
+            },
+        ]
+    }
 
     impl SingleRowInsertable<schema::target::order_line::table, DbConnection> for OrderLineModel {
         fn target_client_table(&self) -> schema::target::order_line::table {
