@@ -134,48 +134,42 @@ pub mod tests {
     use super::*;
     pub fn order_fixtures() -> [Order; 3] {
         [
-            OrderDomainFactory {
+            Order {
                 order_id: 1,
                 client_id: 1,
                 client_name: Some("Client 1".to_string()),
-                order_ref: "Ref1".to_string(),
-                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
+                order_ref: Reference::new("Ref1".to_string()).unwrap(),
+                date: chrono::NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
                 po_ref: Some("PoRef1".to_string()),
-                origin: Some("Web".to_string()),
+                origin: Some(Origin::Web),
                 completion: Some(Completion::from(30)),
                 order_status: Some("done".to_string()),
                 delivery_status: Some("done".to_string()),
-            }
-            .make()
-            .unwrap(),
-            OrderDomainFactory {
+            },
+            Order {
                 order_id: 2,
                 client_id: 2,
                 client_name: Some("Client 2".to_string()),
-                order_ref: "Ref2".to_string(),
-                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
+                order_ref: Reference::new("Ref2".to_string()).unwrap(),
+                date: chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
                 po_ref: Some("PoRef2".to_string()),
-                origin: Some("EDI".to_string()),
+                origin: Some(Origin::EDI),
                 completion: Some(Completion::from(20)),
                 order_status: Some("failed".to_string()),
                 delivery_status: Some("done".to_string()),
-            }
-            .make()
-            .unwrap(),
-            OrderDomainFactory {
+            },
+            Order {
                 order_id: 3,
                 client_id: 1,
                 client_name: None,
-                order_ref: "Ref3".to_string(),
-                date_dto: DateDTO::from(chrono::NaiveDate::from_ymd_opt(2023, 8, 3).unwrap()),
+                order_ref: Reference::new("Ref3".to_string()).unwrap(),
+                date: chrono::NaiveDate::from_ymd_opt(2023, 8, 3).unwrap(),
                 po_ref: None,
                 origin: None,
                 completion: None,
                 order_status: None,
                 delivery_status: Some("done".to_string()),
-            }
-            .make()
-            .unwrap(),
+            },
         ]
     }
 }

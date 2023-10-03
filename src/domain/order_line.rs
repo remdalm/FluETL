@@ -1,12 +1,12 @@
 use chrono::NaiveDate;
 
-use super::{order::Order, DomainEntity, DomainError, Validator};
+use super::{order::Order, vo::Reference, DomainEntity, DomainError};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OrderLine {
     order: Order,
     orderline_id: u32,
-    item_ref: String,
+    item_ref: Reference,
     item_name: Option<String>,
     qty_ordered: u32,
     qty_reserved: u32,
@@ -15,31 +15,6 @@ pub struct OrderLine {
 }
 
 impl OrderLine {
-    fn new(
-        order: Order,
-        orderline_id: u32,
-        item_ref: String,
-        item_name: Option<String>,
-        qty_ordered: u32,
-        qty_reserved: u32,
-        qty_delivered: u32,
-        due_date: Option<NaiveDate>,
-    ) -> Result<Self, DomainError> {
-        // Validation is performed here
-        Validator::string_is_not_empty("item_ref", &item_ref)?;
-
-        Ok(Self {
-            order,
-            orderline_id,
-            item_ref,
-            item_name,
-            qty_ordered,
-            qty_reserved,
-            qty_delivered,
-            due_date,
-        })
-    }
-
     pub fn order(&self) -> &Order {
         &self.order
     }
@@ -49,7 +24,7 @@ impl OrderLine {
     }
 
     pub fn item_ref(&self) -> &str {
-        &self.item_ref
+        self.item_ref.as_str()
     }
 
     pub fn item_name(&self) -> Option<&str> {
@@ -88,16 +63,16 @@ pub struct OrderLineDomainFactory {
 
 impl OrderLineDomainFactory {
     pub fn make(self) -> Result<OrderLine, DomainError> {
-        OrderLine::new(
-            self.order,
-            self.orderline_id,
-            self.item_ref,
-            self.item_name,
-            self.qty_ordered,
-            self.qty_reserved,
-            self.qty_delivered,
-            self.due_date,
-        )
+        Ok(OrderLine {
+            order: self.order,
+            orderline_id: self.orderline_id,
+            item_ref: Reference::new(self.item_ref)?,
+            item_name: self.item_name,
+            qty_ordered: self.qty_ordered,
+            qty_reserved: self.qty_reserved,
+            qty_delivered: self.qty_delivered,
+            due_date: self.due_date,
+        })
     }
     pub fn new_from_order(order: Order, fields: OrderLinePrimaryFields) -> Self {
         Self {
@@ -132,42 +107,36 @@ pub mod tests {
     #[allow(dead_code)] //use in other modules
     pub fn order_line_fixtures() -> [OrderLine; 3] {
         [
-            OrderLineDomainFactory {
+            OrderLine {
                 order: order_fixtures()[0].clone(),
                 orderline_id: 1,
-                item_ref: "ItemRef1".to_string(),
+                item_ref: Reference::new("ItemRef1".to_string()).unwrap(),
                 item_name: Some("ItemName1".to_string()),
                 qty_ordered: 10,
                 qty_reserved: 5,
                 qty_delivered: 5,
                 due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
-            }
-            .make()
-            .unwrap(),
-            OrderLineDomainFactory {
+            },
+            OrderLine {
                 order: order_fixtures()[0].clone(),
                 orderline_id: 2,
-                item_ref: "ItemRef2".to_string(),
+                item_ref: Reference::new("ItemRef2".to_string()).unwrap(),
                 item_name: Some("ItemName2".to_string()),
                 qty_ordered: 20,
                 qty_reserved: 10,
                 qty_delivered: 10,
                 due_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
-            }
-            .make()
-            .unwrap(),
-            OrderLineDomainFactory {
+            },
+            OrderLine {
                 order: order_fixtures()[1].clone(),
                 orderline_id: 3,
-                item_ref: "ItemRef3".to_string(),
+                item_ref: Reference::new("ItemRef3".to_string()).unwrap(),
                 item_name: None,
                 qty_ordered: 30,
                 qty_reserved: 15,
                 qty_delivered: 15,
                 due_date: None,
-            }
-            .make()
-            .unwrap(),
+            },
         ]
     }
 }

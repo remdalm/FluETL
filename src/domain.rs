@@ -14,18 +14,3 @@ pub enum DomainError {
     ParsingError(String),
     DtoError(String),
 }
-
-struct Validator;
-
-impl Validator {
-    fn string_is_not_empty(key: &str, value: &str) -> Result<(), DomainError> {
-        if value.is_empty() {
-            Err(DomainError::ValidationError(format!(
-                "The field {} cannot be empty",
-                key
-            )))
-        } else {
-            Ok(())
-        }
-    }
-}
