@@ -96,7 +96,7 @@ mod tests {
         },
         infrastructure::database::{
             connection::tests::{get_test_pooled_connection, reset_test_database},
-            models::order::tests::order_model_fixtures,
+            models::order::bench::order_model_fixtures,
         },
     };
 

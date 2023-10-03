@@ -57,7 +57,7 @@ mod tests {
         infrastructure::{
             csv_reader::order_line::tests::csv_order_line_dto_fixtures,
             database::models::{
-                order::{tests::order_model_fixtures, OrderModel},
+                order::{bench::order_model_fixtures, OrderModel},
                 order_line::tests::order_line_model_fixtures,
             },
         },

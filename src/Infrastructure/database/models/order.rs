@@ -67,33 +67,10 @@ impl OrderModel {
     }
 }
 
-#[cfg(test)]
-pub mod tests {
-    use crate::infrastructure::database::connection::tests::{
-        get_test_pooled_connection, reset_test_database,
-    };
+pub mod bench {
     use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-    use diesel::result::{DatabaseErrorKind, Error as DieselError};
 
-    pub fn insert_order(
-        connection: &mut DbConnection,
-        use_upsert: bool,
-        new_order: &OrderModel,
-    ) -> Result<(), DieselError> {
-        if use_upsert {
-            new_order.upsert(connection)
-        } else {
-            new_order.insert(connection)
-        }
-    }
-
-    pub fn read_orders(connection: &mut DbConnection) -> Vec<OrderModel> {
-        schema::target::order::dsl::order
-            .load::<OrderModel>(connection)
-            .expect("Error loading updated OrderModel")
-    }
-
-    use super::*;
+    use super::OrderModel;
 
     pub fn order_model_fixtures() -> [OrderModel; 3] {
         [
@@ -144,6 +121,35 @@ pub mod tests {
             },
         ]
     }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use crate::infrastructure::database::{
+        connection::tests::{get_test_pooled_connection, reset_test_database},
+        models::order::bench::order_model_fixtures,
+    };
+    use diesel::result::{DatabaseErrorKind, Error as DieselError};
+
+    pub fn insert_order(
+        connection: &mut DbConnection,
+        use_upsert: bool,
+        new_order: &OrderModel,
+    ) -> Result<(), DieselError> {
+        if use_upsert {
+            new_order.upsert(connection)
+        } else {
+            new_order.insert(connection)
+        }
+    }
+
+    pub fn read_orders(connection: &mut DbConnection) -> Vec<OrderModel> {
+        schema::target::order::dsl::order
+            .load::<OrderModel>(connection)
+            .expect("Error loading updated OrderModel")
+    }
+
+    use super::*;
 
     #[test]
     fn test_insert_order() {

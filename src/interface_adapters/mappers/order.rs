@@ -86,7 +86,7 @@ mod tests {
         domain::order::{tests::order_fixtures, Order},
         infrastructure::{
             csv_reader::order::tests::csv_order_dto_fixtures,
-            database::models::order::tests::order_model_fixtures,
+            database::models::order::bench::order_model_fixtures,
         },
         interface_adapters::mappers::{
             convert_domain_entity_to_model, CSVToEntityParser, MappingError, ModelToEntityParser,

@@ -86,6 +86,14 @@ impl CanSelectAllModel for MappingClientSource {
     }
 }
 
+// Use for benchmarking
+pub mod bench {
+    use super::*;
+    pub fn mapping_client_model_fixture() -> [MappingClientModel; 2] {
+        [MappingClientModel::new(1, 1), MappingClientModel::new(2, 2)]
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
     use diesel::result::Error as DieselError;
@@ -93,10 +101,6 @@ pub mod tests {
     use crate::infrastructure::database::connection::tests::{
         get_test_pooled_connection, reset_test_database,
     };
-
-    pub fn mapping_client_model_fixture() -> [MappingClientModel; 2] {
-        [MappingClientModel::new(1, 1), MappingClientModel::new(2, 2)]
-    }
 
     pub fn mapping_client_source_model_fixture() -> [MappingClientSource; 2] {
         [
@@ -191,14 +195,14 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        mapping_client_model_fixture()[0]
+        bench::mapping_client_model_fixture()[0]
             .upsert(&mut connection)
             .expect("Error upserting MappingClientModel");
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
             .filter(
                 schema::target::mapping_client_contact::id_customer
-                    .eq(mapping_client_model_fixture()[0].id_customer),
+                    .eq(bench::mapping_client_model_fixture()[0].id_customer),
             )
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading inserted MappingClientModel");
@@ -206,11 +210,11 @@ pub mod tests {
         assert_eq!(query_result.len(), 1);
         assert_eq!(
             query_result[0].id_customer,
-            mapping_client_model_fixture()[0].id_customer
+            bench::mapping_client_model_fixture()[0].id_customer
         );
         assert_eq!(
             query_result[0].idp_id_client,
-            mapping_client_model_fixture()[0].idp_id_client
+            bench::mapping_client_model_fixture()[0].idp_id_client
         );
     }
 
@@ -219,18 +223,18 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        mapping_client_model_fixture()[0]
+        bench::mapping_client_model_fixture()[0]
             .upsert(&mut connection)
             .expect("Error upserting first MappingClientModel");
 
-        MappingClientModel::new(mapping_client_model_fixture()[0].id_customer, 2)
+        MappingClientModel::new(bench::mapping_client_model_fixture()[0].id_customer, 2)
             .upsert(&mut connection)
             .expect("Error upserting second MappingClientModel");
 
         let query_result = schema::target::mapping_client_contact::dsl::mapping_client_contact
             .filter(
                 schema::target::mapping_client_contact::id_customer
-                    .eq(mapping_client_model_fixture()[0].id_customer),
+                    .eq(bench::mapping_client_model_fixture()[0].id_customer),
             )
             .load::<MappingClientModel>(&mut connection)
             .expect("Error loading upserted MappingClientModel");
@@ -238,7 +242,7 @@ pub mod tests {
         assert_eq!(query_result.len(), 1);
         assert_eq!(
             query_result[0].id_customer,
-            mapping_client_model_fixture()[0].id_customer
+            bench::mapping_client_model_fixture()[0].id_customer
         );
         assert_eq!(query_result[0].idp_id_client, 2);
     }

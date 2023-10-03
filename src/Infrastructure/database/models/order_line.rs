@@ -49,7 +49,7 @@ pub mod tests {
     use crate::infrastructure::database::{
         connection::tests::{get_test_pooled_connection, reset_test_database},
         models::{
-            order::tests::{insert_order, order_model_fixtures},
+            order::{bench::order_model_fixtures, tests::insert_order},
             SingleRowInsertable,
         },
     };

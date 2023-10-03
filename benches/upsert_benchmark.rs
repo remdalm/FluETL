@@ -3,7 +3,7 @@ use std::env;
 use criterion::{criterion_group, criterion_main, Criterion};
 use diesel::result::DatabaseErrorKind;
 use fluetl::{
-    fixtures::{mapping_client_model_fixture, order_model_fixtures},
+    benchmark_fixtures::{mapping_client_model_fixture, order_model_fixtures},
     infrastructure::database::connection::{establish_connection_pool, DbConnection},
     infrastructure::database::models::{
         CanUpsertModel, OrderModel, SingleRowInsertable, SingleRowUpdatable,

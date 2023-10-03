@@ -33,7 +33,7 @@ mod tests {
         },
         infrastructure::{
             csv_reader::CsvType,
-            database::models::order::tests::{order_model_fixtures, read_orders},
+            database::models::order::{bench::order_model_fixtures, tests::read_orders},
         },
     };
 
