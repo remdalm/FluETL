@@ -31,3 +31,32 @@ impl From<u32> for Completion {
         Self(value)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_completion_as_u32() {
+        let completion = Completion::from(50);
+        assert_eq!(completion.as_u32(), 50);
+    }
+
+    #[test]
+    fn test_completion_try_from() {
+        let completion = Completion::try_from("50%".to_string());
+        assert_eq!(completion.unwrap(), Completion::from(50));
+    }
+
+    #[test]
+    fn test_completion_try_from_with_invalid_string() {
+        let completion = Completion::try_from("invalid".to_string());
+        assert!(completion.is_err());
+    }
+
+    #[test]
+    fn test_completion_from() {
+        let completion = Completion::from(50);
+        assert_eq!(completion, Completion(50));
+    }
+}

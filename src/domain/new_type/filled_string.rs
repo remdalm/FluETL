@@ -26,9 +26,9 @@ mod tests {
     #[test]
     fn test_new_filled_string_with_non_empty_alphanumeric_string() {
         // Test creating a FilledString with a non-empty alphanumeric string
-        let filled_string = FilledString::new("abc123".to_string());
+        let filled_string = FilledString::new("aBc 123".to_string());
         assert!(filled_string.is_ok());
-        assert_eq!(filled_string.unwrap().as_str(), "abc123");
+        assert_eq!(filled_string.unwrap().as_str(), "aBc 123");
     }
 
     #[test]
