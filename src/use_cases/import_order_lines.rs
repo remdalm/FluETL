@@ -9,8 +9,8 @@ use crate::{
             batch::Config,
             connection::DbConnection,
             models::{
+                order::OrderModel,
                 order_line::{batch_upsert, OrderLineModel},
-                OrderModel,
             },
         },
     },

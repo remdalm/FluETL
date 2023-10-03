@@ -21,7 +21,7 @@ impl TryFrom<CsvDeliverySlipDTO> for DeliverySlipDomainFactory {
 
         Ok(DeliverySlipDomainFactory {
             delivery_slip_id: parse_string_to_u32("delivery_slip_id", &dto.m_inout_id)?,
-            c_bpartner_id: parse_string_to_u32("c_bpartner_id", &dto.c_bpartner_id)?,
+            client_id: parse_string_to_u32("c_bpartner_id", &dto.c_bpartner_id)?,
             reference: dto.documentno,
             shipping_date: convert_string_to_option_date(dto.shipping_date, &date_format)
                 .transpose()?,
@@ -38,7 +38,7 @@ impl From<DeliverySlip> for DeliverySlipModel {
     fn from(delivery_slip: DeliverySlip) -> Self {
         Self {
             id_delivery_slip: delivery_slip.delivery_slip_id(),
-            id_client: delivery_slip.c_bpartner_id(),
+            id_client: delivery_slip.client_id(),
             reference: delivery_slip.reference().to_string(),
             shipping_date: delivery_slip.shipping_date().map(|d| *d),
             po_ref: delivery_slip.po_ref().map(|s| s.to_string()),

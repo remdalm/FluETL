@@ -1,5 +1,7 @@
 use std::fmt;
 
+use rust_decimal::Decimal;
+
 use crate::domain::DomainError;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -14,6 +16,7 @@ pub enum Currency {
 }
 
 impl Price {
+    #[allow(dead_code)]
     pub fn new(amount_in_cents: i64, currency: Currency) -> Self {
         Price {
             amount_in_cents,
@@ -25,8 +28,8 @@ impl Price {
     //     self.amount_in_cents
     // }
 
-    pub fn get_amount_as_float(&self) -> f64 {
-        self.amount_in_cents as f64 / 100.0
+    pub fn get_amount_as_decimal(&self) -> Decimal {
+        Decimal::new(self.amount_in_cents, 2)
     }
 
     // pub fn get_currency(&self) -> Currency {
@@ -85,7 +88,7 @@ impl TryFrom<String> for Price {
 
 impl fmt::Display for Price {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.get_amount_as_float())
+        write!(f, "{}", self.get_amount_as_decimal())
     }
 }
 
@@ -107,9 +110,9 @@ mod tests {
     // }
 
     #[test]
-    fn test_get_amount_as_float() {
-        let price = Price::new(100, Currency::EUR);
-        assert_eq!(price.get_amount_as_float(), 1.0);
+    fn test_get_amount_as_decimal() {
+        let price = Price::new(1234, Currency::EUR);
+        assert_eq!(price.get_amount_as_decimal().to_string(), "12.34");
     }
 
     // #[test]
@@ -183,6 +186,6 @@ mod tests {
     #[test]
     fn test_display() {
         let price = Price::new(100, Currency::EUR);
-        assert_eq!(format!("{}", price), "1");
+        assert_eq!(format!("{}", price), "1.00");
     }
 }

@@ -26,6 +26,11 @@ diesel::table! {
         id_client -> Unsigned<Integer>,
         #[max_length = 255]
         client_name -> Nullable<Varchar>,
+        #[max_length = 32]
+        invoice_ref -> Varchar,
+        date -> Date,
+        #[max_length = 255]
+        file_name -> Nullable<Varchar>,
         #[max_length = 255]
         po_ref -> Nullable<Varchar>,
         #[sql_name = "type"]

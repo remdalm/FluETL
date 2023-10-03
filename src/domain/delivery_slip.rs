@@ -8,7 +8,7 @@ use super::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct DeliverySlip {
     delivery_slip_id: u32,
-    c_bpartner_id: u32,
+    client_id: u32,
     reference: Reference,
     shipping_date: Option<NaiveDate>,
     po_ref: Option<String>,
@@ -25,8 +25,8 @@ impl DeliverySlip {
         self.delivery_slip_id
     }
 
-    pub fn c_bpartner_id(&self) -> u32 {
-        self.c_bpartner_id
+    pub fn client_id(&self) -> u32 {
+        self.client_id
     }
 
     pub fn reference(&self) -> &str {
@@ -60,7 +60,7 @@ impl DeliverySlip {
 
 pub struct DeliverySlipDomainFactory {
     pub delivery_slip_id: u32,
-    pub c_bpartner_id: u32,
+    pub client_id: u32,
     pub reference: String,
     pub shipping_date: Option<NaiveDate>,
     pub po_ref: Option<String>,
@@ -79,7 +79,7 @@ impl DeliverySlipDomainFactory {
             .unwrap_or(None);
         Ok(DeliverySlip {
             delivery_slip_id: self.delivery_slip_id,
-            c_bpartner_id: self.c_bpartner_id,
+            client_id: self.client_id,
             reference: Reference::new(self.reference)?,
             shipping_date: self.shipping_date,
             po_ref: self.po_ref,
@@ -98,7 +98,7 @@ pub mod tests {
         [
             DeliverySlip {
                 delivery_slip_id: 1,
-                c_bpartner_id: 1,
+                client_id: 1,
                 reference: Reference::new("Doc1".to_string()).unwrap(),
                 shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
                 po_ref: Some("PoRef1".to_string()),
@@ -111,7 +111,7 @@ pub mod tests {
             },
             DeliverySlip {
                 delivery_slip_id: 2,
-                c_bpartner_id: 2,
+                client_id: 2,
                 reference: Reference::new("Doc2".to_string()).unwrap(),
                 shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
                 po_ref: Some("PoRef2".to_string()),
@@ -122,7 +122,7 @@ pub mod tests {
             },
             DeliverySlip {
                 delivery_slip_id: 3,
-                c_bpartner_id: 1,
+                client_id: 1,
                 reference: Reference::new("Doc3".to_string()).unwrap(),
                 shipping_date: None,
                 po_ref: None,

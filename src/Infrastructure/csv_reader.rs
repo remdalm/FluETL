@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use super::InfrastructureError;
 
 pub(crate) mod delivery_slip;
+pub(crate) mod invoice;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
