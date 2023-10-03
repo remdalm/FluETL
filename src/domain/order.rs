@@ -81,7 +81,7 @@ impl Order {
     }
 
     pub fn completion(&self) -> Option<u32> {
-        self.completion.map(|c| c.as_u32())
+        self.completion.as_ref().map(|c| c.as_u32())
     }
 
     pub fn order_status(&self) -> Option<&str> {
@@ -94,11 +94,11 @@ impl Order {
 
 impl DomainEntity for Order {}
 
-pub struct OrderDomainFactory<'a> {
+pub struct OrderDomainFactory {
     pub order_id: u32,
     pub client_id: u32,
     pub client_name: Option<String>,
-    pub date_dto: DateDTO<'a>,
+    pub date_dto: DateDTO,
     pub order_ref: String,
     pub po_ref: Option<String>,
     pub origin: Option<String>,
@@ -107,7 +107,7 @@ pub struct OrderDomainFactory<'a> {
     pub delivery_status: Option<String>,
 }
 
-impl OrderDomainFactory<'_> {
+impl OrderDomainFactory {
     pub fn make(self) -> Result<Order, DomainError> {
         let origin = self.origin.map(|s| match s.as_str() {
             "Web" => Origin::Web,
