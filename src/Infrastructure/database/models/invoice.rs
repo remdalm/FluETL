@@ -138,7 +138,7 @@ pub mod tests {
         let result = schema::target::invoice::dsl::invoice
             .filter(schema::target::invoice::id_invoice.eq(1))
             .load::<InvoiceModel>(&mut connection)
-            .expect("Error loading inserted/upserted DeloverySlipModel");
+            .expect("Error loading inserted/upserted InvoiceModel");
 
         assert_eq!(result.len(), 1);
         assert_eq!(

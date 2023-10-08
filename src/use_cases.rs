@@ -20,14 +20,16 @@ use crate::{
 };
 
 pub(crate) mod import_delivery_slip;
+pub(crate) mod import_invoice;
 pub(crate) mod import_mapping_client;
-pub(crate) mod import_order_lines;
-pub(crate) mod import_orders;
+pub(crate) mod import_order;
+pub(crate) mod import_order_line;
 
 pub use import_delivery_slip::ImportDeliverySlipUseCase;
+pub use import_invoice::ImportInvoiceUseCase;
 pub use import_mapping_client::ImportMappingClientUseCase;
-pub use import_order_lines::ImportOrderLineUseCase;
-pub use import_orders::ImportOrderUseCase;
+pub use import_order::ImportOrderUseCase;
+pub use import_order_line::ImportOrderLineUseCase;
 
 pub(crate) trait ImportModelUseCase<M1, DE, M2>:
     CanReadAllModelUseCase<ModelImpl = M1>

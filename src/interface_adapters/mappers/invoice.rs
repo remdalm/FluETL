@@ -29,7 +29,7 @@ impl<'a> TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
             file_name: convert_string_to_option_string(dto.file_name),
             date_dto: date_dto,
             po_ref: convert_string_to_option_string(dto.po_ref),
-            type_: dto.type_,
+            type_: dto.invoice_type,
             total_tax_excl: dto.total_tax_excl,
             total_tax_incl: dto.total_tax_incl,
         })

@@ -77,7 +77,7 @@ impl CanPersistIntoDatabaseUseCase<OrderLine, OrderLineModel> for ImportOrderLin
 }
 impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, OrderLineModel> for ImportOrderLineUseCase {
     fn get_csv_type(&self) -> CsvType {
-        CsvType::OrderLines
+        CsvType::OrderLine
     }
 }
 #[cfg(test)]
@@ -185,7 +185,11 @@ mod tests {
         let errors = use_case.execute();
 
         // Assert
-        assert!(errors.is_none(), "Failed to execute use case");
+        assert!(
+            errors.is_none(),
+            "Failed to execute use case: {:?}",
+            errors.unwrap()
+        );
         let persisted_order_lines = read_order_lines(&mut connection);
         assert_eq!(persisted_order_lines.len(), 3);
         for (i, persisted_order_line) in persisted_order_lines.iter().enumerate() {

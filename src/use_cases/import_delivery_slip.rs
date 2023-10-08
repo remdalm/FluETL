@@ -131,7 +131,11 @@ mod tests {
         let errors = use_case.execute();
 
         // Assert
-        assert!(errors.is_none(), "Failed to execute use case");
+        assert!(
+            errors.is_none(),
+            "Failed to execute use case: {:?}",
+            errors.unwrap()
+        );
         let persisted_delivery_slips = read_delivery_slips(&mut connection);
         assert_eq!(persisted_delivery_slips.len(), 3);
         assert_eq!(

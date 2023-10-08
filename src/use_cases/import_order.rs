@@ -18,7 +18,7 @@ impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCase {
 }
 impl ImportCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
     fn get_csv_type(&self) -> CsvType {
-        CsvType::Orders
+        CsvType::Order
     }
 }
 
@@ -73,7 +73,11 @@ mod tests {
         let errors = use_case.execute();
 
         // Assert
-        assert!(errors.is_none(), "Failed to execute use case");
+        assert!(
+            errors.is_none(),
+            "Failed to execute use case: {:?}",
+            errors.unwrap()
+        );
         let persisted_orders = read_orders(&mut connection);
         assert_eq!(persisted_orders.len(), 2);
         assert_eq!(persisted_orders[0], order_model_fixtures()[0]);

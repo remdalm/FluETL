@@ -70,7 +70,11 @@ mod tests {
         let errors = use_case.execute();
 
         // Assert
-        assert!(errors.is_none(), "Failed to execute use case");
+        assert!(
+            errors.is_none(),
+            "Failed to execute use case: {:?}",
+            errors.unwrap()
+        );
         let persisted_mapping_client = read_mapping_client(&mut connection);
         assert_eq!(persisted_mapping_client.len(), 2);
         assert_eq!(persisted_mapping_client[0].id_customer, 1);

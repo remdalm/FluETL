@@ -5,8 +5,9 @@ use std::path::PathBuf;
 use crate::{
     infrastructure::logger,
     use_cases::{
-        ImportCsvUseCase, ImportDeliverySlipUseCase, ImportMappingClientUseCase,
-        ImportModelUseCase, ImportOrderLineUseCase, ImportOrderUseCase, UseCaseError,
+        ImportCsvUseCase, ImportDeliverySlipUseCase, ImportInvoiceUseCase,
+        ImportMappingClientUseCase, ImportModelUseCase, ImportOrderLineUseCase, ImportOrderUseCase,
+        UseCaseError,
     },
 };
 
@@ -33,17 +34,20 @@ struct EntityCommand {
 
 #[derive(Debug, Subcommand)]
 pub enum EntitySubCommand {
-    /// Import MappingClient from Legacy Staging Database
+    /// Import MappingClient Entities from Legacy Staging Database
     MappingClient(MandatoryArgs),
 
-    /// Import Order from CSV file defined in env file argument
+    /// Import Orders from CSV file defined in env file argument
     Order(MandatoryArgs),
 
-    /// Import OrderLine from CSV file defined in env file argument
+    /// Import OrderLines from CSV file defined in env file argument
     Orderline(MandatoryArgs),
 
-    // Import DeliverySlip from CSV file defined in env file argument
+    // Import Delivery Slips from CSV file defined in env file argument
     DeliverySlip(MandatoryArgs),
+
+    /// Import Invoices from CSV file defined in env file argument
+    Invoice(MandatoryArgs),
 }
 
 #[derive(Debug, Args)]
@@ -99,6 +103,17 @@ pub fn main_using_clap() {
                     init(arg.env_file);
                     info!("Importing delivery slips...");
                     let mut handler = ImportDeliverySlipUseCase::default();
+                    if arg.batch {
+                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                        handler.set_batch(arg.batch_size);
+                    }
+                    error_logger(handler.execute());
+                    info!("Done");
+                }
+                EntitySubCommand::Invoice(arg) => {
+                    init(arg.env_file);
+                    info!("Importing invoices...");
+                    let mut handler = ImportInvoiceUseCase::default();
                     if arg.batch {
                         info!("Batch mode enabled - batch size: {}", arg.batch_size);
                         handler.set_batch(arg.batch_size);
