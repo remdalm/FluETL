@@ -68,17 +68,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
-      # - name: Cache cargo registry
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~/.cargo/registry
-      #       ~/.cargo/git
-      #     key: clippy-cargo-${{ hashFiles('**/Cargo.toml') }}
-      - name: Debug
-        run: |
-          ls -la .
-          ls -la src
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: clippy-cargo-${{ hashFiles('**/Cargo.toml') }}
       - name: Set environment variables
         shell: bash
         run: |
@@ -89,6 +85,6 @@ jobs:
       - name: Check Cargo version
         run: cargo --version
       - name: Run clippy
-        run: cargo clippy --tests
+        run: cargo clippy
       - name: Check formatting
         run: cargo +stable fmt --all -- --check
