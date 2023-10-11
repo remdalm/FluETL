@@ -1,4 +1,5 @@
-name: Test
+# https://github.com/diesel-rs/diesel/blob/master/.github/workflows/ci.yml
+name: CI Tests
 
 on:
   push:
@@ -9,10 +10,77 @@ env:
   RUST_BACKTRACE: full
 
 jobs:
-  test:
-    name: cargo test
+  check_and_test:
+    name: Check
+    needs: [rustfmt_and_clippy]
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: ["stable"] #rust: ["stable", "beta", "nightly"]
+        backend: ["mysql"]
+        os: [ubuntu-latest] #[ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-${{ matrix.backend }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+
+      - name: Set environment variables
+        shell: bash
+        if: matrix.backend == 'mysql'
+        run: |
+          echo "RUST_TEST_THREADS=1" >> $GITHUB_ENV
+
+      - name: Install mysql
+        if: matrix.backend == 'mysql'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install libmysqlclient-dev
+          docker pull mariadb
+          docker run -p 3399:3306 --name fluetl-mariadb --env MARIADB_USER=test --env MARIADB_PASSWORD=test --env MARIADB_ROOT_PASSWORD=test  --env MARIADB_DATABASE=test mariadb:latest
+
+      - name: Install rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+
+      - name: Rust version check
+        shell: bash
+        run: |
+          cargo +${{ matrix.rust }} --version
+          rustc +${{ matrix.rust }} --version
+
+      - name: CARGO TEST
+        run: cargo test --verbose
+      
+  rustfmt_and_clippy:
+    name: Check rustfmt style && run clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test -verbose -- --test-threads=1
+        with:
+          components: clippy, rustfmt
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: clippy-cargo-${{ hashFiles('**/Cargo.toml') }}
+      - name: Set environment variables
+        shell: bash
+        run: |
+          echo "RUSTFLAGS=-D warnings" >> $GITHUB_ENV
+          echo "RUSTDOCFLAGS=-D warnings" >> $GITHUB_ENV
+      - name: Run clippy
+        run: cargo clippy --tests
+      - name: Check formatting
+        run: cargo +stable fmt --all -- --check
