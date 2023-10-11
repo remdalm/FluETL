@@ -164,13 +164,13 @@ fn error_logger(errors: Option<Vec<UseCaseError>>) {
     if let Some(errors) = errors {
         for error in errors {
             match error {
-                UseCaseError::DomainError(e) => {
+                UseCaseError::Domain(e) => {
                     warn!("DomainError: {:?}", e);
                 }
-                UseCaseError::InfrastructureError(e) => {
+                UseCaseError::Infrastructure(e) => {
                     error!("InfrastructureError: {:?}", e);
                 }
-                UseCaseError::MappingError(e) => {
+                UseCaseError::Mapping(e) => {
                     error!("MappingError: {:?}", e);
                 }
             }

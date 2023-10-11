@@ -14,11 +14,11 @@ use crate::infrastructure::database::models::order::OrderModel;
 
 use super::{convert_string_to_option_string, parse_string_to_u32, MappingError};
 
-impl<'a> TryFrom<CsvOrderDTO> for OrderDomainFactory {
+impl TryFrom<CsvOrderDTO> for OrderDomainFactory {
     type Error = MappingError;
     fn try_from(dto: CsvOrderDTO) -> Result<OrderDomainFactory, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
-            .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
+            .map_err(|e| MappingError::Infrastructure(InfrastructureError::EnvVarError(e)))?;
 
         let completion = convert_string_to_option_string(dto.completion)
             .map(Completion::try_from)
@@ -76,7 +76,7 @@ impl TryFrom<OrderModel> for Order {
             delivery_status: order_model.delivery_status,
         }
         .make()
-        .map_err(MappingError::DomainError)
+        .map_err(MappingError::Domain)
     }
 }
 
@@ -102,7 +102,7 @@ mod tests {
     impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {
         fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
 

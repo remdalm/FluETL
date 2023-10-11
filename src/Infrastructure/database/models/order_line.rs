@@ -177,10 +177,12 @@ pub mod tests {
         reset_test_database(&mut connection);
 
         let result = insert_order_line(&mut connection, false, &order_line_model_fixtures()[0]);
-
-        assert!(result.is_err_and(|e| match e {
-            DieselError::DatabaseError(DatabaseErrorKind::ForeignKeyViolation, _) => true,
-            _ => false,
-        }));
+        matches!(
+            result,
+            Err(DieselError::DatabaseError(
+                DatabaseErrorKind::ForeignKeyViolation,
+                _
+            ))
+        );
     }
 }

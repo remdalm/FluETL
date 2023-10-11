@@ -9,7 +9,7 @@ use super::{
 #[derive(Debug, Clone, PartialEq)]
 pub enum Origin {
     Web,
-    EDI,
+    Edi,
     Unknown,
 }
 
@@ -17,7 +17,7 @@ impl ToString for Origin {
     fn to_string(&self) -> String {
         match self {
             Origin::Web => "Web".to_string(),
-            Origin::EDI => "EDI".to_string(),
+            Origin::Edi => "EDI".to_string(),
             Origin::Unknown => "Unknown".to_string(),
         }
     }
@@ -25,10 +25,11 @@ impl ToString for Origin {
 
 impl Origin {
     pub fn from_optional_string(s: Option<String>) -> Self {
+        // Todo : use a regex
         match s {
             Some(s) => match s.as_str() {
                 "Web" => Origin::Web,
-                "EDI" => Origin::EDI,
+                "EDI" => Origin::Edi,
                 _ => Origin::Unknown,
             },
             None => Origin::Unknown,
@@ -111,7 +112,7 @@ impl OrderDomainFactory {
     pub fn make(self) -> Result<Order, DomainError> {
         let origin = self.origin.map(|s| match s.as_str() {
             "Web" => Origin::Web,
-            "EDI" => Origin::EDI,
+            "EDI" => Origin::Edi,
             _ => Origin::Unknown,
         });
 
@@ -153,7 +154,7 @@ pub mod tests {
                 order_ref: Reference::new("Ref2".to_string()).unwrap(),
                 date: chrono::NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
                 po_ref: Some("PoRef2".to_string()),
-                origin: Some(Origin::EDI),
+                origin: Some(Origin::Edi),
                 completion: Some(Completion::from(20)),
                 order_status: Some("failed".to_string()),
                 delivery_status: Some("done".to_string()),

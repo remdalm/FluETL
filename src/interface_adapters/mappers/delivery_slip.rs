@@ -17,7 +17,7 @@ impl TryFrom<CsvDeliverySlipDTO> for DeliverySlipDomainFactory {
     type Error = MappingError;
     fn try_from(dto: CsvDeliverySlipDTO) -> Result<DeliverySlipDomainFactory, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
-            .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
+            .map_err(|e| MappingError::Infrastructure(InfrastructureError::EnvVarError(e)))?;
 
         Ok(DeliverySlipDomainFactory {
             delivery_slip_id: parse_string_to_u32("delivery_slip_id", &dto.m_inout_id)?,
@@ -68,7 +68,7 @@ mod tests {
     impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
         fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
 

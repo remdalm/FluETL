@@ -13,10 +13,10 @@ use crate::infrastructure::InfrastructureError;
 
 #[derive(Debug)]
 pub enum MappingError {
-    InfrastructureError(InfrastructureError),
-    DomainError(DomainError),
-    ParsingError(String),
-    CacheError,
+    Infrastructure(InfrastructureError),
+    Domain(DomainError),
+    Parsing(String),
+    Cache,
 }
 
 pub trait GenericMapperParser<S, D> {
@@ -31,13 +31,13 @@ pub trait GenericMapperParser<S, D> {
 
 impl From<InfrastructureError> for MappingError {
     fn from(e: InfrastructureError) -> Self {
-        MappingError::InfrastructureError(e)
+        MappingError::Infrastructure(e)
     }
 }
 
 impl From<DomainError> for MappingError {
     fn from(e: DomainError) -> Self {
-        MappingError::DomainError(e)
+        MappingError::Domain(e)
     }
 }
 
@@ -104,7 +104,7 @@ pub fn convert_string_to_option_date(
     if s_date.is_some() {
         let date =
             NaiveDate::parse_from_str(s_date.as_ref().unwrap().as_str(), fmt).map_err(|err| {
-                MappingError::ParsingError(
+                MappingError::Parsing(
                     err.to_string() + format!(": date => {}", s_date.unwrap()).as_str(),
                 )
             });
@@ -116,7 +116,7 @@ pub fn convert_string_to_option_date(
 
 pub fn parse_string_to_u32(key: &str, value: &str) -> Result<u32, MappingError> {
     value.parse::<u32>().map_err(|e| {
-        MappingError::ParsingError(e.to_string() + format!(": {} => {}", key, value).as_str())
+        MappingError::Parsing(e.to_string() + format!(": {} => {}", key, value).as_str())
     })
 }
 

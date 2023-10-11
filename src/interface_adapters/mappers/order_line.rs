@@ -17,7 +17,7 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
     type Error = MappingError;
     fn try_from(dto: CsvOrderLineDTO) -> Result<OrderLinePrimaryFields, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
-            .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
+            .map_err(|e| MappingError::Infrastructure(InfrastructureError::EnvVarError(e)))?;
 
         Ok(OrderLinePrimaryFields {
             order_id: parse_string_to_u32("order_id", &dto.c_order_id)?,
@@ -76,7 +76,7 @@ mod tests {
                 let order: Order = order_model.try_into()?;
                 OrderLineDomainFactory::new_from_order(order, fields)
                     .make()
-                    .map_err(MappingError::DomainError)
+                    .map_err(MappingError::Domain)
             })
         }
     }
@@ -119,7 +119,7 @@ mod tests {
 
         let result = CsvParser.parse(dto_fixture.to_owned());
 
-        assert!(result.is_err_and(|e| matches!(e, MappingError::ParsingError(_))));
+        assert!(result.is_err_and(|e| matches!(e, MappingError::Parsing(_))));
     }
 
     #[test]

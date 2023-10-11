@@ -168,7 +168,7 @@ pub mod tests {
         if let InfrastructureError::CSVFileNotFound(file) = error_variant {
             assert_eq!(file, invalid_file_path);
         } else {
-            assert!(false, "Expected InfrastructureError::FileNotFound");
+            panic!("Expected InfrastructureError::FileNotFound");
         }
     }
 }

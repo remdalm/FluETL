@@ -13,11 +13,11 @@ use crate::{
 
 use super::{convert_string_to_option_string, parse_string_to_u32, MappingError};
 
-impl<'a> TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
+impl TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
     type Error = MappingError;
     fn try_from(dto: CsvInvoiceDTO) -> Result<InvoiceDomainFactory, MappingError> {
         let date_format = env::var("CSV_DATE_FORMAT")
-            .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
+            .map_err(|e| MappingError::Infrastructure(InfrastructureError::EnvVarError(e)))?;
 
         let date_dto = DateDTO::from(StringDateDTO::new(dto.date, date_format));
 
@@ -73,7 +73,7 @@ mod tests {
     impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for CsvParser {
         fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let factory: InvoiceDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
 

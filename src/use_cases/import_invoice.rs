@@ -28,7 +28,7 @@ impl CanReadCsvUseCase<CsvInvoiceDTO> for ImportInvoiceUseCase {}
 impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCase {
     fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
         let factory: InvoiceDomainFactory = csv.try_into()?;
-        factory.make().map_err(MappingError::DomainError)
+        factory.make().map_err(MappingError::Domain)
     }
 }
 impl CanPersistIntoDatabaseUseCase<Invoice, InvoiceModel> for ImportInvoiceUseCase {
@@ -72,7 +72,7 @@ mod tests {
     impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCaseTest {
         fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let factory: InvoiceDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
     impl CanPersistIntoDatabaseUseCase<Invoice, InvoiceModel> for ImportInvoiceUseCaseTest {

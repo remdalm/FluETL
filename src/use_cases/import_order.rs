@@ -10,7 +10,7 @@ impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCase {}
 impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCase {
     fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
         let factory: OrderDomainFactory = csv.try_into()?;
-        factory.make().map_err(MappingError::DomainError)
+        factory.make().map_err(MappingError::Domain)
     }
 }
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCase {
@@ -42,7 +42,7 @@ mod tests {
     impl CSVToEntityParser<CsvOrderDTO, Order> for ImportOrderUseCaseTest {
         fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCaseTest {

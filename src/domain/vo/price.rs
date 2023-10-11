@@ -12,7 +12,7 @@ pub struct Price {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Currency {
-    EUR,
+    Eur,
 }
 
 impl Price {
@@ -40,6 +40,7 @@ impl Price {
 impl TryFrom<String> for Price {
     type Error = DomainError;
 
+    #[allow(clippy::unnecessary_unwrap)]
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let parts: Vec<&str> = value.split('.').collect();
         let is_negative = parts[0].starts_with('-');
@@ -81,7 +82,7 @@ impl TryFrom<String> for Price {
 
         Ok(Price {
             amount_in_cents,
-            currency: Currency::EUR,
+            currency: Currency::Eur,
         })
     }
 }
@@ -98,9 +99,9 @@ mod tests {
 
     #[test]
     fn test_new_price() {
-        let price = Price::new(100, Currency::EUR);
+        let price = Price::new(100, Currency::Eur);
         assert_eq!(price.amount_in_cents, 100);
-        assert_eq!(price.currency, Currency::EUR);
+        assert_eq!(price.currency, Currency::Eur);
     }
 
     // #[test]
@@ -111,7 +112,7 @@ mod tests {
 
     #[test]
     fn test_get_amount_as_decimal() {
-        let price = Price::new(1234, Currency::EUR);
+        let price = Price::new(1234, Currency::Eur);
         assert_eq!(price.get_amount_as_decimal().to_string(), "12.34");
     }
 
@@ -185,7 +186,7 @@ mod tests {
     }
     #[test]
     fn test_display() {
-        let price = Price::new(100, Currency::EUR);
+        let price = Price::new(100, Currency::Eur);
         assert_eq!(format!("{}", price), "1.00");
     }
 }

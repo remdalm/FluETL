@@ -28,7 +28,7 @@ impl CanReadCsvUseCase<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {}
 impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCase {
     fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
         let factory: DeliverySlipDomainFactory = csv.try_into()?;
-        factory.make().map_err(MappingError::DomainError)
+        factory.make().map_err(MappingError::Domain)
     }
 }
 impl CanPersistIntoDatabaseUseCase<DeliverySlip, DeliverySlipModel> for ImportDeliverySlipUseCase {
@@ -82,7 +82,7 @@ mod tests {
     impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCaseTest {
         fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
-            factory.make().map_err(MappingError::DomainError)
+            factory.make().map_err(MappingError::Domain)
         }
     }
     impl CanPersistIntoDatabaseUseCase<DeliverySlip, DeliverySlipModel>
@@ -155,10 +155,7 @@ mod tests {
         reset_test_database(&mut connection);
 
         // Result
-        let use_case = ImportDeliverySlipUseCaseTest {
-            use_batch: true,
-            ..Default::default()
-        };
+        let use_case = ImportDeliverySlipUseCaseTest { use_batch: true };
         let errors = use_case.execute();
 
         // Assert

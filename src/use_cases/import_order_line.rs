@@ -36,13 +36,12 @@ impl ImportOrderLineUseCase {
             return Ok(order);
         }
 
-        let order_model = OrderModel::select_by_id(connection, &id).map_err(|e| {
-            MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
-        })?;
+        let order_model = OrderModel::select_by_id(connection, &id)
+            .map_err(|e| MappingError::Infrastructure(InfrastructureError::DatabaseError(e)))?;
         let order: Order = order_model.try_into()?;
 
         self.order_cache.insert(id, Box::new(order));
-        let stored_order = self.order_cache.get(&id).ok_or(MappingError::CacheError)?;
+        let stored_order = self.order_cache.get(&id).ok_or(MappingError::Cache)?;
         Ok(stored_order)
     }
 }
@@ -56,7 +55,7 @@ impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
             let order = self.get_order(fields.order_id, &mut connection)?.clone();
             OrderLineDomainFactory::new_from_order(order, fields)
                 .make()
-                .map_err(MappingError::DomainError)
+                .map_err(MappingError::Domain)
         })
     }
 }
@@ -116,13 +115,12 @@ mod tests {
                 return Ok(order);
             }
 
-            let order_model = OrderModel::select_by_id(connection, &id).map_err(|e| {
-                MappingError::InfrastructureError(InfrastructureError::DatabaseError(e))
-            })?;
+            let order_model = OrderModel::select_by_id(connection, &id)
+                .map_err(|e| MappingError::Infrastructure(InfrastructureError::DatabaseError(e)))?;
             let order: Order = order_model.try_into()?;
 
             self.order_cache.insert(id, Box::new(order));
-            let stored_order = self.order_cache.get(&id).ok_or(MappingError::CacheError)?;
+            let stored_order = self.order_cache.get(&id).ok_or(MappingError::Cache)?;
             Ok(stored_order)
         }
     }
@@ -136,7 +134,7 @@ mod tests {
                 let order = self.get_order(fields.order_id, &mut connection)?.clone();
                 OrderLineDomainFactory::new_from_order(order, fields)
                     .make()
-                    .map_err(MappingError::DomainError)
+                    .map_err(MappingError::Domain)
             })
         }
     }

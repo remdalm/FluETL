@@ -179,7 +179,6 @@ pub mod tests {
             .values(data)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e)
     }
 
     pub fn read_mapping_client(connection: &mut DbConnection) -> Vec<MappingClientModel> {

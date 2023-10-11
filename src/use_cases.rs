@@ -119,7 +119,7 @@ where
 
         let csv_data: Vec<T> = csv_reader
             .read()
-            .map_err(|err| UseCaseError::InfrastructureError(InfrastructureError::CsvError(err)))?;
+            .map_err(|err| UseCaseError::Infrastructure(InfrastructureError::CsvError(err)))?;
         Ok(csv_data)
     }
 }
@@ -129,9 +129,8 @@ pub(crate) trait CanReadAllModelUseCase {
     type DbConnection: HasConnection;
     fn read_all(&self) -> Result<Vec<Self::ModelImpl>, UseCaseError> {
         let mut connection = Self::DbConnection::get_pooled_connection();
-        let data = Self::ModelImpl::select_all(&mut connection).map_err(|err| {
-            UseCaseError::InfrastructureError(InfrastructureError::DatabaseError(err))
-        })?;
+        let data = Self::ModelImpl::select_all(&mut connection)
+            .map_err(|err| UseCaseError::Infrastructure(InfrastructureError::DatabaseError(err)))?;
         debug!("Found {} Entities", data.len());
         Ok(data)
     }
@@ -176,31 +175,31 @@ where
 
 #[derive(Debug)]
 pub enum UseCaseError {
-    DomainError(DomainError),
-    InfrastructureError(InfrastructureError),
-    MappingError(MappingError),
+    Domain(DomainError),
+    Infrastructure(InfrastructureError),
+    Mapping(MappingError),
 }
 
 impl From<MappingError> for UseCaseError {
     fn from(error: MappingError) -> Self {
-        UseCaseError::MappingError(error)
+        UseCaseError::Mapping(error)
     }
 }
 
 impl From<DomainError> for UseCaseError {
     fn from(error: DomainError) -> Self {
-        UseCaseError::DomainError(error)
+        UseCaseError::Domain(error)
     }
 }
 
 impl From<diesel::result::Error> for UseCaseError {
     fn from(error: diesel::result::Error) -> Self {
-        UseCaseError::InfrastructureError(InfrastructureError::DatabaseError(error))
+        UseCaseError::Infrastructure(InfrastructureError::DatabaseError(error))
     }
 }
 
 impl From<InfrastructureError> for UseCaseError {
     fn from(error: InfrastructureError) -> Self {
-        UseCaseError::InfrastructureError(error)
+        UseCaseError::Infrastructure(error)
     }
 }
