@@ -56,7 +56,7 @@ impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
             let order = self.get_order(fields.order_id, &mut connection)?.clone();
             OrderLineDomainFactory::new_from_order(order, fields)
                 .make()
-                .map_err(|e| MappingError::DomainError(e))
+                .map_err(MappingError::DomainError)
         })
     }
 }
@@ -136,7 +136,7 @@ mod tests {
                 let order = self.get_order(fields.order_id, &mut connection)?.clone();
                 OrderLineDomainFactory::new_from_order(order, fields)
                     .make()
-                    .map_err(|e| MappingError::DomainError(e))
+                    .map_err(MappingError::DomainError)
             })
         }
     }

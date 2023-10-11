@@ -14,14 +14,13 @@ impl TryFrom<String> for Completion {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         let completion = value
-            .replace("%", "")
+            .replace('%', "")
             .parse::<f32>()
             .map_err(|err| {
                 DomainError::ParsingError(
                     err.to_string() + format!(": completion => {}", value).as_str(),
                 )
-            })
-            .and_then(|number| Ok(number.round() as u32))?;
+            }).map(|number| number.round() as u32)?;
         Ok(Self(completion))
     }
 }

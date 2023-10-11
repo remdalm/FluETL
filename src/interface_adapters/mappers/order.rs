@@ -21,7 +21,7 @@ impl<'a> TryFrom<CsvOrderDTO> for OrderDomainFactory {
             .map_err(|e| MappingError::InfrastructureError(InfrastructureError::EnvVarError(e)))?;
 
         let completion = convert_string_to_option_string(dto.completion)
-            .map(|s| Completion::try_from(s))
+            .map(Completion::try_from)
             .transpose()?;
 
         let date_dto = DateDTO::from(StringDateDTO::new(dto.date, date_format));
@@ -29,11 +29,11 @@ impl<'a> TryFrom<CsvOrderDTO> for OrderDomainFactory {
             order_id: parse_string_to_u32("c_order_id", &dto.c_order_id)?,
             client_id: parse_string_to_u32("c_bpartner_id", &dto.c_bpartner_id)?,
             client_name: convert_string_to_option_string(dto.client_name),
-            date_dto: date_dto,
+            date_dto,
             order_ref: dto.order_ref,
             po_ref: convert_string_to_option_string(dto.po_ref),
             origin: convert_string_to_option_string(dto.origin),
-            completion: completion,
+            completion,
             order_status: convert_string_to_option_string(dto.order_status),
             delivery_status: convert_string_to_option_string(dto.delivery_status),
         })
@@ -45,17 +45,17 @@ impl From<Order> for OrderModel {
         Self {
             id_order: order.order_id(),
             id_client: order.client_id(),
-            client_name: order.client_name().and_then(|s| Some(s.to_string())),
+            client_name: order.client_name().map(|s| s.to_string()),
             order_ref: order.order_ref().to_string(),
-            po_ref: order.po_ref().and_then(|s| Some(s.to_string())),
+            po_ref: order.po_ref().map(|s| s.to_string()),
             completion: order.completion(),
             date: NaiveDateTime::new(
                 order.date(),
                 chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             ),
-            origin: order.origin().and_then(|s| Some(s.to_string())),
-            order_status: order.order_status().and_then(|s| Some(s.to_string())),
-            delivery_status: order.delivery_status().and_then(|s| Some(s.to_string())),
+            origin: order.origin().map(|s| s.to_string()),
+            order_status: order.order_status().map(|s| s.to_string()),
+            delivery_status: order.delivery_status().map(|s| s.to_string()),
         }
     }
 }
@@ -71,12 +71,12 @@ impl TryFrom<OrderModel> for Order {
             date_dto: DateDTO::from(order_model.date.date()),
             po_ref: order_model.po_ref,
             origin: order_model.origin,
-            completion: order_model.completion.map(|int| Completion::from(int)),
+            completion: order_model.completion.map(Completion::from),
             order_status: order_model.order_status,
             delivery_status: order_model.delivery_status,
         }
         .make()
-        .map_err(|e| MappingError::DomainError(e))
+        .map_err(MappingError::DomainError)
     }
 }
 
@@ -102,7 +102,7 @@ mod tests {
     impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {
         fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
-            factory.make().map_err(|e| MappingError::DomainError(e))
+            factory.make().map_err(MappingError::DomainError)
         }
     }
 

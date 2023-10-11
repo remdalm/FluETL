@@ -30,7 +30,7 @@ impl DeliverySlip {
     }
 
     pub fn reference(&self) -> &str {
-        &self.reference.as_str()
+        self.reference.as_str()
     }
 
     pub fn shipping_date(&self) -> Option<&NaiveDate> {
@@ -74,7 +74,7 @@ impl DeliverySlipDomainFactory {
     pub fn make(self) -> Result<DeliverySlip, DomainError> {
         let tracking_link = self
             .tracking_link
-            .map(|tl| TrackingLink::try_from(tl))
+            .map(TrackingLink::try_from)
             .transpose()
             .unwrap_or(None);
         Ok(DeliverySlip {
@@ -86,7 +86,7 @@ impl DeliverySlipDomainFactory {
             carrier_name: self.carrier_name,
             trackingno: self.trackingno,
             status: self.status,
-            tracking_link: tracking_link,
+            tracking_link,
         })
     }
 }

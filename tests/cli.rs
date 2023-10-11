@@ -42,7 +42,7 @@ fn import_mapping_client(repeat: Range<i32>) {
     // Result
     for _ in repeat {
         let output = Command::new("target/debug/fluetl")
-            .args(&["import", "mapping-client", "--env-file=.env.test"])
+            .args(["import", "mapping-client", "--env-file=.env.test"])
             .output()
             .expect("Failed to execute command");
 
@@ -116,7 +116,7 @@ fn import_order(repeat: Range<i32>) {
     // Result
     for _ in repeat {
         let output = Command::new("target/debug/fluetl")
-            .args(&["import", "order", "--env-file=.env.test"])
+            .args(["import", "order", "--env-file=.env.test"])
             .output()
             .expect("Failed to execute command");
 
@@ -225,14 +225,14 @@ fn import_order_line(repeat: Range<i32>) {
 
     // Import Orders:
     Command::new("target/debug/fluetl")
-        .args(&["import", "order", "--env-file=.env.test"])
+        .args(["import", "order", "--env-file=.env.test"])
         .output()
         .expect("Failed to execute command");
 
     // Result
     for _ in repeat {
         let output = Command::new("target/debug/fluetl")
-            .args(&["import", "orderline", "--env-file=.env.test"])
+            .args(["import", "orderline", "--env-file=.env.test"])
             .output()
             .expect("Failed to execute command");
 
@@ -299,12 +299,12 @@ fn import_order_line_batch() {
 
     // Import Orders:
     Command::new("target/debug/fluetl")
-        .args(&["import", "order", "--env-file=.env.test"])
+        .args(["import", "order", "--env-file=.env.test"])
         .output()
         .expect("Failed to execute command");
 
     let output = Command::new("target/debug/fluetl")
-        .args(&["import", "orderline", "-b", "-s2", "--env-file=.env.test"])
+        .args(["import", "orderline", "-b", "-s2", "--env-file=.env.test"])
         .output()
         .expect("Failed to execute command");
 
@@ -401,7 +401,7 @@ fn import_delivery_slip(repeat: Range<i32>) {
     // Result
     for _ in repeat {
         let output = Command::new("target/debug/fluetl")
-            .args(&["import", "delivery-slip", "--env-file=.env.test"])
+            .args(["import", "delivery-slip", "--env-file=.env.test"])
             .output()
             .expect("Failed to execute command");
 
@@ -426,7 +426,7 @@ fn import_delivery_slip_batch() {
     reset_test_database(&mut connection);
 
     let output = Command::new("target/debug/fluetl")
-        .args(&[
+        .args([
             "import",
             "delivery-slip",
             "-b",

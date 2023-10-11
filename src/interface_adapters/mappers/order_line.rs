@@ -76,7 +76,7 @@ mod tests {
                 let order: Order = order_model.try_into()?;
                 OrderLineDomainFactory::new_from_order(order, fields)
                     .make()
-                    .map_err(|e| MappingError::DomainError(e))
+                    .map_err(MappingError::DomainError)
             })
         }
     }

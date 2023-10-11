@@ -50,11 +50,11 @@ pub fn establish_connection_pool(target_database_url: &str) -> DbPool {
 
 // Function to get a reference to the connection pool
 fn get_target_pooled_connection() -> &'static DbPool {
-    &*TARGET_CONNECTION_POOL
+    &TARGET_CONNECTION_POOL
 }
 
 fn get_legacy_staging_pooled_connection() -> &'static DbPool {
-    &*LEGACT_STAGING_CONNECTION_POOL
+    &LEGACT_STAGING_CONNECTION_POOL
 }
 
 pub(crate) fn get_pooled_connection(db: Database) -> DbConnection {
@@ -111,7 +111,7 @@ pub(crate) mod tests {
 
     // Function to get a reference to the connection pool
     fn get_test_connection_pool() -> &'static DbPool {
-        &*TEST_CONNECTION_POOL
+        &TEST_CONNECTION_POOL
     }
 
     pub fn get_test_pooled_connection() -> DbConnection {

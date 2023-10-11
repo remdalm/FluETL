@@ -31,7 +31,6 @@ impl CanUpsertModel for OrderModel {
             .set(self)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
     }
 }
 
@@ -63,7 +62,6 @@ impl OrderModel {
         order
             .filter(id_order.eq(order_id))
             .first(connection)
-            .map_err(|e| e.into())
     }
 }
 

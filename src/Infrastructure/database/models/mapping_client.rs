@@ -23,7 +23,6 @@ impl CanUpsertModel for MappingClientModel {
             .set(self)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
     }
 }
 
@@ -82,7 +81,6 @@ impl CanSelectAllModel for MappingClientSource {
             .filter(id.is_not_null())
             .select(MappingClientSource::as_select())
             .load(connection)
-            .map_err(|e| e.into())
     }
 }
 
@@ -181,7 +179,7 @@ pub mod tests {
             .values(data)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
+            .map_err(|e| e)
     }
 
     pub fn read_mapping_client(connection: &mut DbConnection) -> Vec<MappingClientModel> {

@@ -76,7 +76,7 @@ impl OrderLineDomainFactory {
     }
     pub fn new_from_order(order: Order, fields: OrderLinePrimaryFields) -> Self {
         Self {
-            order: order,
+            order,
             orderline_id: fields.orderline_id,
             item_ref: fields.item_ref,
             item_name: fields.item_name,

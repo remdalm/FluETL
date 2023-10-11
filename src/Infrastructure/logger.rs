@@ -18,13 +18,13 @@ use super::InfrastructureError;
 
 fn make() -> Result<Config, InfrastructureError> {
     let log_directory =
-        env::var("LOG_DIRECTORY").map_err(|e| InfrastructureError::EnvVarError(e))?;
+        env::var("LOG_DIRECTORY").map_err(InfrastructureError::EnvVarError)?;
 
     let log_level = env::var("LOG_LEVEL").unwrap_or("INFO".to_string());
 
     let log_line_pattern = "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}";
 
-    let trigger_size = 2000000 as u64; //2MB
+    let trigger_size = 2000000_u64; //2MB
     let trigger = Box::new(SizeTrigger::new(trigger_size));
 
     let roller_pattern_path = format!("{}/step_{}.gz", log_directory, "{}");

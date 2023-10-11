@@ -62,8 +62,8 @@ impl Default for CsvFileReader {
 impl CsvFileReader {
     fn new(file_path: PathBuf, delimiter: u8) -> Self {
         CsvFileReader {
-            file_path: file_path,
-            delimiter: delimiter,
+            file_path,
+            delimiter,
         }
     }
 
@@ -93,7 +93,7 @@ pub fn make_csv_file_reader(
 ) -> Result<CsvFileReader, InfrastructureError> {
     let file_path = csv_type
         .get_path()
-        .map_err(|err| InfrastructureError::EnvVarError(err))?;
+        .map_err(InfrastructureError::EnvVarError)?;
 
     if !Path::new(&file_path).exists() {
         return Err(InfrastructureError::CSVFileNotFound(file_path));

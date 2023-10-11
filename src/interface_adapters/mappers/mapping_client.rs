@@ -10,7 +10,7 @@ impl TryFrom<MappingClientSource> for MappingClient {
     type Error = MappingError;
     fn try_from(source: MappingClientSource) -> Result<MappingClient, MappingError> {
         let dto_result: Result<MappingClientSourceDTO, InfrastructureError> = source.try_into();
-        let dto = dto_result.map_err(|e| MappingError::InfrastructureError(e))?;
+        let dto = dto_result.map_err(MappingError::InfrastructureError)?;
 
         MappingClient::from_i32(dto.id, dto.id_source_client).map_err(|e| e.into())
     }

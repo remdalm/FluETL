@@ -40,7 +40,7 @@ impl From<DeliverySlip> for DeliverySlipModel {
             id_delivery_slip: delivery_slip.delivery_slip_id(),
             id_client: delivery_slip.client_id(),
             reference: delivery_slip.reference().to_string(),
-            shipping_date: delivery_slip.shipping_date().map(|d| *d),
+            shipping_date: delivery_slip.shipping_date().copied(),
             po_ref: delivery_slip.po_ref().map(|s| s.to_string()),
             carrier_name: delivery_slip.carrier_name().map(|s| s.to_string()),
             status: delivery_slip.status().map(|s| s.to_string()),
@@ -68,7 +68,7 @@ mod tests {
     impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
         fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
-            factory.make().map_err(|e| MappingError::DomainError(e))
+            factory.make().map_err(MappingError::DomainError)
         }
     }
 

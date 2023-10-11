@@ -49,7 +49,7 @@ pub fn benchmark_upsert(c: &mut Criterion) {
 
     c.bench_function("homemade_upsert", |b| {
         b.iter(|| {
-            homemade_upsert(&order, &mut connection).unwrap();
+            homemade_upsert(order, &mut connection).unwrap();
         })
     });
 }

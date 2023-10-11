@@ -53,7 +53,7 @@ impl TryFrom<String> for Price {
 
         if decimal_part.is_some()
             && !integer_part.is_empty()
-            && (decimal_part.unwrap().len() >= 1 && decimal_part.unwrap().len() <= 2)
+            && (!decimal_part.unwrap().is_empty() && decimal_part.unwrap().len() <= 2)
             && integer_part.parse::<u64>().is_ok()
             && decimal_part.unwrap().parse::<u64>().is_ok()
         {

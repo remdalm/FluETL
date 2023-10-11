@@ -27,7 +27,7 @@ impl<'a> TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
             client_name: convert_string_to_option_string(dto.client_name),
             invoice_ref: dto.invoice_ref,
             file_name: convert_string_to_option_string(dto.file_name),
-            date_dto: date_dto,
+            date_dto,
             po_ref: convert_string_to_option_string(dto.po_ref),
             type_: dto.invoice_type,
             total_tax_excl: dto.total_tax_excl,
@@ -73,7 +73,7 @@ mod tests {
     impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for CsvParser {
         fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let factory: InvoiceDomainFactory = csv.try_into()?;
-            factory.make().map_err(|e| MappingError::DomainError(e))
+            factory.make().map_err(MappingError::DomainError)
         }
     }
 

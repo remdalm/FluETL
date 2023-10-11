@@ -155,7 +155,7 @@ where
                 errors.extend(
                     batch_errors
                         .into_iter()
-                        .map(|err| InfrastructureError::DatabaseError(err)),
+                        .map(InfrastructureError::DatabaseError),
                 );
             }
         } else {

@@ -48,7 +48,6 @@ where
             .values(self)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
     }
 
     fn target_client_table(&self) -> T;
@@ -73,7 +72,6 @@ where
             .set(self)
             .execute(connection)
             .map(|_| ())
-            .map_err(|e| e.into())
     }
 
     fn target_client_table(&self) -> T;
