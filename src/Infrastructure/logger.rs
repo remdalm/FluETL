@@ -17,8 +17,7 @@ use log4rs::Config;
 use super::InfrastructureError;
 
 fn make() -> Result<Config, InfrastructureError> {
-    let log_directory =
-        env::var("LOG_DIRECTORY").map_err(InfrastructureError::EnvVarError)?;
+    let log_directory = env::var("LOG_DIRECTORY").map_err(InfrastructureError::EnvVarError)?;
 
     let log_level = env::var("LOG_LEVEL").unwrap_or("INFO".to_string());
 

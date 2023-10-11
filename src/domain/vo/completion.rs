@@ -20,7 +20,8 @@ impl TryFrom<String> for Completion {
                 DomainError::ParsingError(
                     err.to_string() + format!(": completion => {}", value).as_str(),
                 )
-            }).map(|number| number.round() as u32)?;
+            })
+            .map(|number| number.round() as u32)?;
         Ok(Self(completion))
     }
 }

@@ -88,10 +88,7 @@ impl InvoiceDomainFactory {
             client_id: self.client_id,
             client_name: self.client_name,
             invoice_ref: Reference::new(self.invoice_ref)?,
-            file_name: self
-                .file_name
-                .map(FileName::try_from)
-                .transpose()?,
+            file_name: self.file_name.map(FileName::try_from).transpose()?,
             date: self.date_dto.unwrap()?,
             po_ref: self.po_ref,
             type_: InvoiceType::new(self.type_)?,

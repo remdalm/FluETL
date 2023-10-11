@@ -59,9 +59,7 @@ impl OrderModel {
         order_id: &u32,
     ) -> Result<Self, DieselError> {
         use self::schema::target::order::dsl::*;
-        order
-            .filter(id_order.eq(order_id))
-            .first(connection)
+        order.filter(id_order.eq(order_id)).first(connection)
     }
 }
 
