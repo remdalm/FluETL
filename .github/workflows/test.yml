@@ -2,7 +2,7 @@
 name: CI Tests
 
 on:
-  push:
+  push: { branches: [main] }
   pull_request:
 
 env:
@@ -10,8 +10,8 @@ env:
   RUST_BACKTRACE: full
 
 jobs:
-  check_and_test:
-    name: Check
+  tests:
+    name: Integration and unit tests
     needs: [rustfmt_and_clippy]
     strategy:
       fail-fast: false
@@ -80,6 +80,10 @@ jobs:
         run: |
           echo "RUSTFLAGS=-D warnings" >> $GITHUB_ENV
           echo "RUSTDOCFLAGS=-D warnings" >> $GITHUB_ENV
+      - name: Check Rust version
+        run: rustc --version
+      - name: Check Cargo version
+        run: cargo --version
       - name: Run clippy
         run: cargo clippy --tests
       - name: Check formatting
