@@ -4,6 +4,7 @@ run-name: ${{ github.actor }} is testing ${{  github.ref_name }} 🧪
 
 on:
   pull_request:
+  workflow_call:
 
 env:
   CARGO_TERM_COLOR: always
