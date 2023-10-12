@@ -16,7 +16,7 @@ use crate::{
 #[clap(author, version, about)]
 struct Cli {
     #[command(subcommand)]
-    action_command: Option<ActionCommands>,
+    action_command: ActionCommands,
 }
 
 #[derive(Debug, Subcommand)]
@@ -67,62 +67,60 @@ pub struct MandatoryArgs {
 
 pub fn main_using_clap() {
     let cli = Cli::parse();
-    if let Some(action_command) = cli.action_command {
-        match action_command {
-            ActionCommands::Import(entity_command) => match entity_command.entity {
-                EntitySubCommand::Order(arg) => {
-                    init(arg.env_file);
-                    if arg.batch {
-                        info!("Batch mode not implemented yet");
-                    }
-                    info!("Importing orders...");
-                    error_logger(ImportOrderUseCase.execute());
-                    info!("Done");
+    match cli.action_command {
+        ActionCommands::Import(entity_command) => match entity_command.entity {
+            EntitySubCommand::Order(arg) => {
+                init(arg.env_file);
+                if arg.batch {
+                    info!("Batch mode not implemented yet");
                 }
-                EntitySubCommand::MappingClient(arg) => {
-                    init(arg.env_file);
-                    if arg.batch {
-                        info!("Batch mode not implemented yet");
-                    }
-                    info!("Importing mapping clients...");
-                    error_logger(ImportMappingClientUseCase.execute());
-                    info!("Done");
+                info!("Importing orders...");
+                error_logger(ImportOrderUseCase.execute());
+                info!("Done");
+            }
+            EntitySubCommand::MappingClient(arg) => {
+                init(arg.env_file);
+                if arg.batch {
+                    info!("Batch mode not implemented yet");
                 }
-                EntitySubCommand::Orderline(arg) => {
-                    init(arg.env_file);
-                    info!("Importing order lines...");
-                    let mut handler = ImportOrderLineUseCase::default();
-                    if arg.batch {
-                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
-                        handler.set_batch(arg.batch_size);
-                    }
-                    error_logger(handler.execute());
-                    info!("Done");
+                info!("Importing mapping clients...");
+                error_logger(ImportMappingClientUseCase.execute());
+                info!("Done");
+            }
+            EntitySubCommand::Orderline(arg) => {
+                init(arg.env_file);
+                info!("Importing order lines...");
+                let mut handler = ImportOrderLineUseCase::default();
+                if arg.batch {
+                    info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                    handler.set_batch(arg.batch_size);
                 }
-                EntitySubCommand::DeliverySlip(arg) => {
-                    init(arg.env_file);
-                    info!("Importing delivery slips...");
-                    let mut handler = ImportDeliverySlipUseCase::default();
-                    if arg.batch {
-                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
-                        handler.set_batch(arg.batch_size);
-                    }
-                    error_logger(handler.execute());
-                    info!("Done");
+                error_logger(handler.execute());
+                info!("Done");
+            }
+            EntitySubCommand::DeliverySlip(arg) => {
+                init(arg.env_file);
+                info!("Importing delivery slips...");
+                let mut handler = ImportDeliverySlipUseCase::default();
+                if arg.batch {
+                    info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                    handler.set_batch(arg.batch_size);
                 }
-                EntitySubCommand::Invoice(arg) => {
-                    init(arg.env_file);
-                    info!("Importing invoices...");
-                    let mut handler = ImportInvoiceUseCase::default();
-                    if arg.batch {
-                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
-                        handler.set_batch(arg.batch_size);
-                    }
-                    error_logger(handler.execute());
-                    info!("Done");
+                error_logger(handler.execute());
+                info!("Done");
+            }
+            EntitySubCommand::Invoice(arg) => {
+                init(arg.env_file);
+                info!("Importing invoices...");
+                let mut handler = ImportInvoiceUseCase::default();
+                if arg.batch {
+                    info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                    handler.set_batch(arg.batch_size);
                 }
-            },
-        }
+                error_logger(handler.execute());
+                info!("Done");
+            }
+        },
     }
 }
 

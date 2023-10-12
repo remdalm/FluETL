@@ -69,11 +69,12 @@ jobs:
       - name: "Check out the repo"
         uses: actions/checkout@v4
 
-      - name: "Install lmysqlclient" # needed for diesel compilation
-        if: matrix.os == 'macos-latest'
-        shell: bash
-        run : |
-          brew install mysql
+      # Macos for M1 achitecture is only available for organizations and enterprises using the GitHub Team or GitHub Enterprise Cloud plans.
+      # - name: "Install lmysqlclient" # needed for diesel compilation
+      #   if: matrix.os == 'macos-latest'
+      #   shell: bash
+      #   run : |
+      #     brew install mysql
 
       - name: "Upload Binaries"
         uses: "taiki-e/upload-rust-binary-action@v1"
