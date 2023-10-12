@@ -1,4 +1,5 @@
 name: "Tag"
+run-name: ${{ github.actor }} is creating new tag from ${{  github.ref_name }}
 
 permissions:
   contents: "write"
@@ -9,8 +10,11 @@ on:
       - "main"
 
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
   create-tag:
     name: "Create tag"
+    needs: tests
     runs-on: "ubuntu-latest"
     steps:
       - name: "Check out the repo"

@@ -3,7 +3,6 @@ name: Tests
 run-name: ${{ github.actor }} is testing ${{  github.ref_name }} 🧪
 
 on:
-  push: { branches: [main] }
   pull_request:
 
 env:
