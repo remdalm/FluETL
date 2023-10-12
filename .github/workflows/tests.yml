@@ -1,5 +1,6 @@
 # https://github.com/diesel-rs/diesel/blob/master/.github/workflows/ci.yml
 name: Tests
+run-name: ${{ github.actor }} is testing ${{  github.ref_name }} 🧪
 
 on:
   push: { branches: [main] }

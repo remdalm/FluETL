@@ -1,5 +1,8 @@
 name: "Tag"
 
+permissions:
+  contents: "write"
+
 on:
   push:
     branches:
@@ -24,4 +27,6 @@ jobs:
       - name: "Set Tag"
         shell: "bash"
         run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
           git tag v${{ steps.get-tag.outputs.PKG_VERSION }} && git push --tags
