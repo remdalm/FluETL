@@ -1,5 +1,5 @@
 # https://github.com/diesel-rs/diesel/blob/master/.github/workflows/ci.yml
-name: CI Tests
+name: Tests
 
 on:
   push: { branches: [main] }
@@ -11,7 +11,7 @@ env:
 
 jobs:
   tests:
-    name: Integration and unit tests
+    name: Integration and unit tests 🧪
     needs: [rustfmt_and_clippy]
     strategy:
       fail-fast: false
@@ -38,7 +38,7 @@ jobs:
         run: |
           echo "RUST_TEST_THREADS=1" >> $GITHUB_ENV
 
-      - name: Install mysql
+      - name: Setup mysql dependencies and run MariaDB docker image
         if: matrix.backend == 'mysql'
         run: |
           sudo apt-get update
@@ -61,7 +61,7 @@ jobs:
         run: cargo test --verbose
       
   rustfmt_and_clippy:
-    name: Check rustfmt style && run clippy
+    name: Check rustfmt style && run clippy ✅
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
