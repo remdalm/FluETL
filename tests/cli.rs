@@ -155,8 +155,8 @@ fn import_order(repeat: Range<i32>) {
                 NaiveTime::MIN
             ),
             origin: Some("Web".to_string()),
-            order_status: Some("Commande en attente de confirmation".to_string()),
-            delivery_status: Some("En attente".to_string()),
+            order_status: Some("IP".to_string()),
+            delivery_status: Some("IP".to_string()),
             completion: Some(1), // 0.9% rounded up to 1
             po_ref: Some("P23HA01525".to_string())
         }
@@ -174,7 +174,7 @@ fn import_order(repeat: Range<i32>) {
             ),
             origin: None,
             order_status: None,
-            delivery_status: Some("Livré en intégralité".to_string()),
+            delivery_status: Some("CO".to_string()),
             completion: Some(100),
             po_ref: Some("WEB73714".to_string())
         }

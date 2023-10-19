@@ -2,7 +2,7 @@ use chrono::NaiveDate;
 
 use super::{
     dto::date_dto::DateDTO,
-    vo::{completion::Completion, Reference},
+    vo::{completion::Completion, status::Status, Reference},
     DomainEntity, DomainError,
 };
 
@@ -47,8 +47,8 @@ pub struct Order {
     po_ref: Option<String>,
     origin: Option<Origin>,
     completion: Option<Completion>,
-    order_status: Option<String>,
-    delivery_status: Option<String>,
+    order_status: Option<Status>,
+    delivery_status: Option<Status>,
 }
 
 impl Order {
@@ -85,11 +85,11 @@ impl Order {
         self.completion.as_ref().map(|c| c.as_u32())
     }
 
-    pub fn order_status(&self) -> Option<&str> {
-        self.order_status.as_deref()
+    pub fn order_status(&self) -> Option<&Status> {
+        self.order_status.as_ref()
     }
-    pub fn delivery_status(&self) -> Option<&str> {
-        self.delivery_status.as_deref()
+    pub fn delivery_status(&self) -> Option<&Status> {
+        self.delivery_status.as_ref()
     }
 }
 
@@ -125,8 +125,8 @@ impl OrderDomainFactory {
             po_ref: self.po_ref,
             origin,
             completion: self.completion,
-            order_status: self.order_status,
-            delivery_status: self.delivery_status,
+            order_status: self.order_status.map(|s| Status::from(s.as_str())),
+            delivery_status: self.delivery_status.map(|s| Status::from(s.as_str())),
         })
     }
 }
@@ -144,8 +144,8 @@ pub mod tests {
                 po_ref: Some("PoRef1".to_string()),
                 origin: Some(Origin::Web),
                 completion: Some(Completion::from(30)),
-                order_status: Some("done".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some(Status::Completed),
+                delivery_status: Some(Status::Completed),
             },
             Order {
                 order_id: 2,
@@ -156,8 +156,8 @@ pub mod tests {
                 po_ref: Some("PoRef2".to_string()),
                 origin: Some(Origin::Edi),
                 completion: Some(Completion::from(20)),
-                order_status: Some("failed".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some(Status::Invalid),
+                delivery_status: Some(Status::Completed),
             },
             Order {
                 order_id: 3,
@@ -169,7 +169,7 @@ pub mod tests {
                 origin: None,
                 completion: None,
                 order_status: None,
-                delivery_status: Some("done".to_string()),
+                delivery_status: Some(Status::Completed),
             },
         ]
     }

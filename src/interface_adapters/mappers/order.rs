@@ -54,8 +54,8 @@ impl From<Order> for OrderModel {
                 chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             ),
             origin: order.origin().map(|s| s.to_string()),
-            order_status: order.order_status().map(|s| s.to_string()),
-            delivery_status: order.delivery_status().map(|s| s.to_string()),
+            order_status: order.order_status().map(|s| s.as_str().to_string()),
+            delivery_status: order.delivery_status().map(|s| s.as_str().to_string()),
         }
     }
 }

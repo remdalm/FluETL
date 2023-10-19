@@ -82,8 +82,8 @@ pub mod bench {
                     NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
-                order_status: Some("done".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some("CO".to_string()),
+                delivery_status: Some("CO".to_string()),
             },
             OrderModel {
                 id_order: 2,
@@ -97,8 +97,8 @@ pub mod bench {
                     NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
-                order_status: Some("failed".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some("IN".to_string()),
+                delivery_status: Some("CO".to_string()),
             },
             OrderModel {
                 id_order: 3,
@@ -113,7 +113,7 @@ pub mod bench {
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
                 order_status: None,
-                delivery_status: Some("done".to_string()),
+                delivery_status: Some("CO".to_string()),
             },
         ]
     }
