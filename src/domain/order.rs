@@ -2,40 +2,9 @@ use chrono::NaiveDate;
 
 use super::{
     dto::date_dto::DateDTO,
-    vo::{completion::Completion, status::Status, Reference},
+    vo::{completion::Completion, origin::Origin, status::Status, Reference},
     DomainEntity, DomainError,
 };
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Origin {
-    Web,
-    Edi,
-    Unknown,
-}
-
-impl ToString for Origin {
-    fn to_string(&self) -> String {
-        match self {
-            Origin::Web => "Web".to_string(),
-            Origin::Edi => "EDI".to_string(),
-            Origin::Unknown => "Unknown".to_string(),
-        }
-    }
-}
-
-impl Origin {
-    pub fn from_optional_string(s: Option<String>) -> Self {
-        // Todo : use a regex
-        match s {
-            Some(s) => match s.as_str() {
-                "Web" => Origin::Web,
-                "EDI" => Origin::Edi,
-                _ => Origin::Unknown,
-            },
-            None => Origin::Unknown,
-        }
-    }
-}
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Order {
@@ -105,12 +74,6 @@ pub struct OrderDomainFactory {
 
 impl OrderDomainFactory {
     pub fn make(self) -> Result<Order, DomainError> {
-        let origin = self.origin.map(|s| match s.as_str() {
-            "Web" => Origin::Web,
-            "EDI" => Origin::Edi,
-            _ => Origin::Unknown,
-        });
-
         Ok(Order {
             order_id: self.order_id,
             client_id: self.client_id,
@@ -118,7 +81,7 @@ impl OrderDomainFactory {
             date: self.date_dto.unwrap()?,
             order_ref: Reference::new(self.order_ref)?,
             po_ref: self.po_ref,
-            origin,
+            origin: self.origin.map(|s| Origin::from(s.as_ref())),
             completion: self.completion,
             order_status: self.order_status.map(|s| Status::from(s.as_str())),
         })
