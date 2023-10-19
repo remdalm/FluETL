@@ -18,7 +18,6 @@ pub struct OrderModel {
     pub origin: Option<String>,
     pub completion: Option<u32>,
     pub order_status: Option<String>,
-    pub delivery_status: Option<String>,
 }
 
 impl Model for OrderModel {}
@@ -83,7 +82,6 @@ pub mod bench {
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
                 order_status: Some("CO".to_string()),
-                delivery_status: Some("CO".to_string()),
             },
             OrderModel {
                 id_order: 2,
@@ -98,7 +96,6 @@ pub mod bench {
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
                 order_status: Some("IN".to_string()),
-                delivery_status: Some("CO".to_string()),
             },
             OrderModel {
                 id_order: 3,
@@ -113,7 +110,6 @@ pub mod bench {
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
                 order_status: None,
-                delivery_status: Some("CO".to_string()),
             },
         ]
     }

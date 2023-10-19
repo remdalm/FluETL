@@ -35,7 +35,6 @@ impl TryFrom<CsvOrderDTO> for OrderDomainFactory {
             origin: convert_string_to_option_string(dto.origin),
             completion,
             order_status: convert_string_to_option_string(dto.order_status),
-            delivery_status: convert_string_to_option_string(dto.delivery_status),
         })
     }
 }
@@ -55,7 +54,6 @@ impl From<Order> for OrderModel {
             ),
             origin: order.origin().map(|s| s.to_string()),
             order_status: order.order_status().map(|s| s.as_str().to_string()),
-            delivery_status: order.delivery_status().map(|s| s.as_str().to_string()),
         }
     }
 }
@@ -73,7 +71,6 @@ impl TryFrom<OrderModel> for Order {
             origin: order_model.origin,
             completion: order_model.completion.map(Completion::from),
             order_status: order_model.order_status,
-            delivery_status: order_model.delivery_status,
         }
         .make()
         .map_err(MappingError::Domain)

@@ -62,10 +62,8 @@ diesel::table! {
         #[max_length = 255]
         origin -> Nullable<Varchar>,
         completion -> Nullable<Unsigned<Integer>>,
-        #[max_length = 128]
+        #[max_length = 2]
         order_status -> Nullable<Varchar>,
-        #[max_length = 128]
-        delivery_status -> Nullable<Varchar>,
     }
 }
 

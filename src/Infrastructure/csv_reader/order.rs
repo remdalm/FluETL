@@ -13,7 +13,6 @@ pub struct CsvOrderDTO {
     pub origin: String,
     pub completion: String,
     pub order_status: String,
-    pub delivery_status: String,
 }
 
 impl CsvDTO for CsvOrderDTO {}
@@ -26,9 +25,9 @@ pub mod tests {
 
     pub const DELIMITER: u8 = b';';
 
-    pub const ORDER_FLAWLESS_CSV: &str= "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status;delivery_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30;CO;CO\n2;2;Client 2;2023-08-02;Ref2;PoRef2;EDI;20;IN;CO\n";
-    pub const ORDER_WITH_EMPTY_FIELD_CSV: &str = "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status;delivery_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30;;\n3;1;;2023-08-03;Ref3;PoRef3;Origin3;0;;CO\n";
-    pub const ORDER_WITH_MISSING_DATA_CSV: &str = "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status;delivery_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30\n2;2;Client 2;2023-08-02;Ref2;PoRef2;EDI;20\n";
+    pub const ORDER_FLAWLESS_CSV: &str= "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30;CO\n2;2;Client 2;2023-08-02;Ref2;PoRef2;EDI;20;IN\n";
+    pub const ORDER_WITH_EMPTY_FIELD_CSV: &str = "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30;\n3;1;;2023-08-03;Ref3;PoRef3;Origin3;0;\n";
+    pub const ORDER_WITH_MISSING_DATA_CSV: &str = "c_order_id;c_bpartner_id;client_name;date;order_ref;po_ref;origin;completion;order_status\n1;1;Client 1;2023-08-01;Ref1;PoRef1;Web;30\n2;2;Client 2;2023-08-02;Ref2;PoRef2;EDI;20\n";
 
     pub fn csv_order_dto_fixtures() -> [CsvOrderDTO; 3] {
         [
@@ -42,7 +41,6 @@ pub mod tests {
                 origin: "Web".to_string(),
                 completion: "30".to_string(),
                 order_status: "CO".to_string(),
-                delivery_status: "CO".to_string(),
             },
             CsvOrderDTO {
                 c_order_id: 2.to_string(),
@@ -54,7 +52,6 @@ pub mod tests {
                 origin: "EDI".to_string(),
                 completion: "20".to_string(),
                 order_status: "IN".to_string(),
-                delivery_status: "CO".to_string(),
             },
             CsvOrderDTO {
                 c_order_id: 3.to_string(),
@@ -66,7 +63,6 @@ pub mod tests {
                 origin: "Origin3".to_string(),
                 completion: "0".to_string(),
                 order_status: String::new(),
-                delivery_status: "CO".to_string(),
             },
         ]
     }
@@ -121,7 +117,7 @@ pub mod tests {
                             len,
                         } => {
                             let csv_lengh: u64 = 8;
-                            let csv_expexted_lengh: u64 = 10;
+                            let csv_expexted_lengh: u64 = 9;
 
                             assert_eq!(expected_len, &csv_expexted_lengh);
                             assert_eq!(len, &csv_lengh);

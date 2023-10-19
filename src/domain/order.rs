@@ -48,7 +48,6 @@ pub struct Order {
     origin: Option<Origin>,
     completion: Option<Completion>,
     order_status: Option<Status>,
-    delivery_status: Option<Status>,
 }
 
 impl Order {
@@ -88,9 +87,6 @@ impl Order {
     pub fn order_status(&self) -> Option<&Status> {
         self.order_status.as_ref()
     }
-    pub fn delivery_status(&self) -> Option<&Status> {
-        self.delivery_status.as_ref()
-    }
 }
 
 impl DomainEntity for Order {}
@@ -105,7 +101,6 @@ pub struct OrderDomainFactory {
     pub origin: Option<String>,
     pub completion: Option<Completion>,
     pub order_status: Option<String>,
-    pub delivery_status: Option<String>,
 }
 
 impl OrderDomainFactory {
@@ -126,7 +121,6 @@ impl OrderDomainFactory {
             origin,
             completion: self.completion,
             order_status: self.order_status.map(|s| Status::from(s.as_str())),
-            delivery_status: self.delivery_status.map(|s| Status::from(s.as_str())),
         })
     }
 }
@@ -145,7 +139,6 @@ pub mod tests {
                 origin: Some(Origin::Web),
                 completion: Some(Completion::from(30)),
                 order_status: Some(Status::Completed),
-                delivery_status: Some(Status::Completed),
             },
             Order {
                 order_id: 2,
@@ -157,7 +150,6 @@ pub mod tests {
                 origin: Some(Origin::Edi),
                 completion: Some(Completion::from(20)),
                 order_status: Some(Status::Invalid),
-                delivery_status: Some(Status::Completed),
             },
             Order {
                 order_id: 3,
@@ -169,7 +161,6 @@ pub mod tests {
                 origin: None,
                 completion: None,
                 order_status: None,
-                delivery_status: Some(Status::Completed),
             },
         ]
     }
