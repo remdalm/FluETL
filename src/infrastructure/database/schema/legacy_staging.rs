@@ -1,6 +1,14 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    language_list (locale) {
+        #[max_length = 5]
+        locale -> Varchar,
+        id -> Integer,
+    }
+}
+
+diesel::table! {
     staging_customer (id_source_contact) {
         id_source_client -> Integer,
         id_source_contact -> Integer,
@@ -23,3 +31,5 @@ diesel::table! {
         force_update -> Bool,
     }
 }
+
+diesel::allow_tables_to_appear_in_same_query!(language_list, staging_customer,);
