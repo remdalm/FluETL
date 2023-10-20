@@ -263,7 +263,6 @@ fn import_order_line(repeat: Range<i32>) {
             id_order_line: 1833200,
             id_order: 1113194,
             product_ref: "9995269".to_string(),
-            product_name: Some("Hélice + Vis ".to_string()),
             qty_ordered: 10,
             qty_reserved: 5,
             qty_delivered: 5,
@@ -276,7 +275,6 @@ fn import_order_line(repeat: Range<i32>) {
             id_order_line: 1833202,
             id_order: 1112737,
             product_ref: "CDE20".to_string(),
-            product_name: None,
             qty_ordered: 30,
             qty_reserved: 15,
             qty_delivered: 15,
@@ -334,7 +332,6 @@ fn import_order_line_batch() {
             id_order_line: 1833200,
             id_order: 1113194,
             product_ref: "9995269".to_string(),
-            product_name: Some("Hélice + Vis ".to_string()),
             qty_ordered: 10,
             qty_reserved: 5,
             qty_delivered: 5,
@@ -347,7 +344,6 @@ fn import_order_line_batch() {
             id_order_line: 1833202,
             id_order: 1112737,
             product_ref: "CDE20".to_string(),
-            product_name: None,
             qty_ordered: 30,
             qty_reserved: 15,
             qty_delivered: 15,
@@ -364,8 +360,6 @@ struct OrderLinePlaceholder {
     pub id_order: u32,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
     pub product_ref: String,
-    #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
-    pub product_name: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
     pub qty_ordered: u32,
     #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]

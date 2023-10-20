@@ -1,6 +1,6 @@
-no_need_1;c_order_id;c_orderline_id;item_ref;item_name;qty_ordered;qty_reserved;qty_delivered;due_date
-07/06/2023;1113194;1833200;9995269;Hélice + Vis ;10;5;5;07/06/2023
-07/06/2023;1113194;1833201;6101925;Tube de rouleau - Remplace 6101911 20€;20;10;10;
-07/06/2023;1112737;1833202;CDE20;;30;15;15;
-07/06/2023;1112737;1833203;4405010542;Boîtier principal avec ressorts - Remplace R0836700;10;;5;
-07/06/2023;1112737;1833204;;Boîtier principal avec ressorts - Remplace R0836700;20;10;10;
+c_order_id;c_orderline_id;item_ref;qty_ordered;qty_reserved;qty_delivered;due_date
+1113194;1833200;9995269;10;5;5;07/06/2023
+1113194;1833201;6101925;20;10;10;
+1112737;1833202;CDE20;30;15;15;
+1112737;1833203;4405010542;10;;5;
+1112737;1833204;;20;10;10;

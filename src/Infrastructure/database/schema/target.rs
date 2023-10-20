@@ -73,12 +73,19 @@ diesel::table! {
         id_order -> Unsigned<Integer>,
         #[max_length = 64]
         product_ref -> Varchar,
-        #[max_length = 255]
-        product_name -> Nullable<Varchar>,
         qty_ordered -> Unsigned<Integer>,
         qty_reserved -> Unsigned<Integer>,
         qty_delivered -> Unsigned<Integer>,
         due_date -> Nullable<Date>,
+    }
+}
+
+diesel::table! {
+    order_line_lang (id_order_line, id_lang) {
+        id_order_line -> Unsigned<Integer>,
+        id_lang -> Unsigned<Integer>,
+        #[max_length = 255]
+        product_name -> Varchar,
     }
 }
 
@@ -90,4 +97,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     mapping_client_contact,
     order,
     order_line,
+    order_line_lang,
 );

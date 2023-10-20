@@ -7,7 +7,6 @@ pub struct OrderLine {
     order: Order,
     orderline_id: u32,
     item_ref: Reference,
-    item_name: Option<String>,
     qty_ordered: u32,
     qty_reserved: u32,
     qty_delivered: u32,
@@ -25,10 +24,6 @@ impl OrderLine {
 
     pub fn item_ref(&self) -> &str {
         self.item_ref.as_str()
-    }
-
-    pub fn item_name(&self) -> Option<&str> {
-        self.item_name.as_deref()
     }
 
     pub fn qty_ordered(&self) -> u32 {
@@ -54,7 +49,6 @@ pub struct OrderLineDomainFactory {
     pub order: Order,
     pub orderline_id: u32,
     pub item_ref: String,
-    pub item_name: Option<String>,
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
@@ -67,7 +61,6 @@ impl OrderLineDomainFactory {
             order: self.order,
             orderline_id: self.orderline_id,
             item_ref: Reference::new(self.item_ref)?,
-            item_name: self.item_name,
             qty_ordered: self.qty_ordered,
             qty_reserved: self.qty_reserved,
             qty_delivered: self.qty_delivered,
@@ -79,7 +72,6 @@ impl OrderLineDomainFactory {
             order,
             orderline_id: fields.orderline_id,
             item_ref: fields.item_ref,
-            item_name: fields.item_name,
             qty_ordered: fields.qty_ordered,
             qty_reserved: fields.qty_reserved,
             qty_delivered: fields.qty_delivered,
@@ -93,7 +85,6 @@ pub struct OrderLinePrimaryFields {
     pub order_id: u32,
     pub orderline_id: u32,
     pub item_ref: String,
-    pub item_name: Option<String>,
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
@@ -111,7 +102,6 @@ pub mod tests {
                 order: order_fixtures()[0].clone(),
                 orderline_id: 1,
                 item_ref: Reference::new("ItemRef1".to_string()).unwrap(),
-                item_name: Some("ItemName1".to_string()),
                 qty_ordered: 10,
                 qty_reserved: 5,
                 qty_delivered: 5,
@@ -121,7 +111,6 @@ pub mod tests {
                 order: order_fixtures()[0].clone(),
                 orderline_id: 2,
                 item_ref: Reference::new("ItemRef2".to_string()).unwrap(),
-                item_name: Some("ItemName2".to_string()),
                 qty_ordered: 20,
                 qty_reserved: 10,
                 qty_delivered: 10,
@@ -131,7 +120,6 @@ pub mod tests {
                 order: order_fixtures()[1].clone(),
                 orderline_id: 3,
                 item_ref: Reference::new("ItemRef3".to_string()).unwrap(),
-                item_name: None,
                 qty_ordered: 30,
                 qty_reserved: 15,
                 qty_delivered: 15,

@@ -8,10 +8,7 @@ use crate::{
     },
 };
 
-use super::{
-    convert_string_to_option_date, convert_string_to_option_string, parse_string_to_u32,
-    MappingError,
-};
+use super::{convert_string_to_option_date, parse_string_to_u32, MappingError};
 
 impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
     type Error = MappingError;
@@ -23,7 +20,6 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
             order_id: parse_string_to_u32("order_id", &dto.c_order_id)?,
             orderline_id: parse_string_to_u32("orderline_id", &dto.c_orderline_id)?,
             item_ref: dto.item_ref,
-            item_name: convert_string_to_option_string(dto.item_name),
             qty_ordered: parse_string_to_u32("qty_ordered", &dto.qty_ordered)?,
             qty_reserved: parse_string_to_u32("qty_reserved", &dto.qty_reserved)?,
             qty_delivered: parse_string_to_u32("qty_delivered", &dto.qty_delivered)?,
@@ -38,7 +34,6 @@ impl From<OrderLine> for OrderLineModel {
             id_order: order_line.order().order_id(),
             id_order_line: order_line.orderline_id(),
             product_ref: order_line.item_ref().to_string(),
-            product_name: order_line.item_name().map(|s| s.to_string()),
             qty_ordered: order_line.qty_ordered(),
             qty_reserved: order_line.qty_reserved(),
             qty_delivered: order_line.qty_delivered(),
