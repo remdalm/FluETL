@@ -18,6 +18,7 @@ pub enum CsvType {
     Invoice,
     Order,
     OrderLine,
+    OrderLineItem,
     Test(PathBuf),
 }
 
@@ -28,6 +29,7 @@ impl CsvType {
             CsvType::Invoice => env::var("INVOICES_CSV_PATH"),
             CsvType::Order => env::var("ORDERS_CSV_PATH"),
             CsvType::OrderLine => env::var("ORDER_LINES_CSV_PATH"),
+            CsvType::OrderLineItem => env::var("ORDER_LINE_ITEMS_CSV_PATH"),
             CsvType::Test(path) => Ok(path
                 .to_str()
                 .expect("CsvType::Test cannot be cast into &str")

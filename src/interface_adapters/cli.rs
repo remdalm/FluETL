@@ -90,12 +90,17 @@ pub fn main_using_clap() {
             EntitySubCommand::Orderline(arg) => {
                 init(arg.env_file);
                 info!("Importing order lines...");
-                let mut handler = ImportOrderLineUseCase::default();
-                if arg.batch {
-                    info!("Batch mode enabled - batch size: {}", arg.batch_size);
-                    handler.set_batch(arg.batch_size);
+                let result = ImportOrderLineUseCase::new().map(|mut handler| {
+                    if arg.batch {
+                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                        handler.set_batch(arg.batch_size);
+                    }
+                    error_logger(handler.execute());
+                });
+                if let Err(e) = result {
+                    error_logger(Some(e));
                 }
-                error_logger(handler.execute());
+
                 info!("Done");
             }
             EntitySubCommand::DeliverySlip(arg) => {

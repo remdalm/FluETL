@@ -6,6 +6,29 @@ use diesel::result::Error as DieselError;
 
 use super::{CanUpsertModel, Model};
 
+#[derive(
+    Queryable, Identifiable, Insertable, AsChangeset, Associations, PartialEq, Debug, Clone,
+)]
+#[diesel(table_name = schema::target::order_line_lang)]
+#[belongs_to(OrderLineModel, foreign_key = "id_order_line")]
+#[diesel(primary_key(id_order_line, id_lang))]
+pub struct OrderLineLangModel {
+    pub id_order_line: u32,
+    pub id_lang: u32,
+    pub product_name: String,
+}
+
+// impl Model for OrderLineLangModel {}
+
+// impl CanUpsertModel for OrderLineLangModel {
+//     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+//         diesel::replace_into(schema::target::order_line_lang::table)
+//             .values(self)
+//             .execute(connection)
+//             .map(|_| ())
+//     }
+// }
+
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::order_line)]
 #[diesel(primary_key(id_order_line))]
@@ -27,6 +50,21 @@ impl CanUpsertModel for OrderLineModel {
             .on_conflict(diesel::dsl::DuplicatedKeys)
             .do_update()
             .set(self)
+            .execute(connection)
+            .map(|_| ())
+    }
+}
+
+impl Model for (OrderLineModel, Vec<OrderLineLangModel>) {}
+impl CanUpsertModel for (OrderLineModel, Vec<OrderLineLangModel>) {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        diesel::replace_into(schema::target::order_line::table)
+            .values(&self.0)
+            .execute(connection)
+            .map(|_| ())?;
+
+        diesel::replace_into(schema::target::order_line_lang::table)
+            .values(&self.1)
             .execute(connection)
             .map(|_| ())
     }

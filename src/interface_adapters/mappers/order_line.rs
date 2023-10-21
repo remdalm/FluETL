@@ -1,9 +1,13 @@
 use std::env;
 
 use crate::{
-    domain::order_line::{OrderLine, OrderLinePrimaryFields},
+    domain::{
+        order_line::{OrderLine, OrderLineLocalizedItemFactory, OrderLinePrimaryFields},
+        vo::{locale::Locale, Translation},
+    },
     infrastructure::{
-        csv_reader::order_line::CsvOrderLineDTO, database::models::order_line::OrderLineModel,
+        csv_reader::order_line::{CsvOrderLineDTO, CsvOrderLineLocalizedItemDTO},
+        database::models::order_line::{OrderLineLangModel, OrderLineModel},
         InfrastructureError,
     },
 };
@@ -28,17 +32,42 @@ impl TryFrom<CsvOrderLineDTO> for OrderLinePrimaryFields {
     }
 }
 
-impl From<OrderLine> for OrderLineModel {
+impl TryFrom<CsvOrderLineLocalizedItemDTO> for OrderLineLocalizedItemFactory {
+    type Error = MappingError;
+    fn try_from(
+        dto: CsvOrderLineLocalizedItemDTO,
+    ) -> Result<OrderLineLocalizedItemFactory, MappingError> {
+        Ok(OrderLineLocalizedItemFactory {
+            orderline_id: parse_string_to_u32("orderline_id", &dto.c_orderline_id)?,
+            locale: Locale::try_from(dto.ad_language.as_str())?,
+            name: Translation::new(dto.item_name)?,
+        })
+    }
+}
+
+impl From<OrderLine> for (OrderLineModel, Vec<OrderLineLangModel>) {
     fn from(order_line: OrderLine) -> Self {
-        Self {
-            id_order: order_line.order().order_id(),
-            id_order_line: order_line.orderline_id(),
-            product_ref: order_line.item_ref().to_string(),
-            qty_ordered: order_line.qty_ordered(),
-            qty_reserved: order_line.qty_reserved(),
-            qty_delivered: order_line.qty_delivered(),
-            due_date: order_line.due_date(),
-        }
+        let order_line_items: Vec<OrderLineLangModel> = order_line
+            .item_names()
+            .iter()
+            .map(|item_name| OrderLineLangModel {
+                id_order_line: order_line.orderline_id(),
+                id_lang: item_name.language().id(),
+                product_name: item_name.name().as_str().to_string(),
+            })
+            .collect();
+        (
+            OrderLineModel {
+                id_order: order_line.order().order_id(),
+                id_order_line: order_line.orderline_id(),
+                product_ref: order_line.item_ref().to_string(),
+                qty_ordered: order_line.qty_ordered(),
+                qty_reserved: order_line.qty_reserved(),
+                qty_delivered: order_line.qty_delivered(),
+                due_date: order_line.due_date(),
+            },
+            order_line_items,
+        )
     }
 }
 
@@ -69,7 +98,7 @@ mod tests {
             raw_fields.and_then(|fields| {
                 let order_model = mock_fetching_order(&fields.order_id);
                 let order: Order = order_model.try_into()?;
-                OrderLineDomainFactory::new_from_order(order, fields)
+                OrderLineDomainFactory::new_from_order(order, &fields)
                     .make()
                     .map_err(MappingError::Domain)
             })

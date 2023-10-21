@@ -1,8 +1,12 @@
 use crate::domain::DomainError;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Locale {
-    value: String,
+pub struct Locale(String);
+
+impl Locale {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl TryFrom<&str> for Locale {
@@ -16,9 +20,7 @@ impl TryFrom<&str> for Locale {
             let region = parts[1];
 
             if language.len() == 2 && region.len() == 2 {
-                return Ok(Locale {
-                    value: String::from(value),
-                });
+                return Ok(Locale(String::from(value)));
             }
         }
 
@@ -41,7 +43,7 @@ mod tests {
 
         // Check if the parsed locale value is correct
         let locale = result.unwrap();
-        assert_eq!(locale.value, locale_str);
+        assert_eq!(locale.as_str(), locale_str);
     }
 
     #[test]

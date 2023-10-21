@@ -1,5 +1,6 @@
 pub(crate) mod delivery_slip;
 pub(crate) mod invoice;
+pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;

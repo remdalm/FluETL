@@ -15,6 +15,15 @@ pub struct CsvOrderLineDTO {
 
 impl CsvDTO for CsvOrderLineDTO {}
 
+#[derive(Debug, Deserialize, PartialEq, Clone)]
+pub struct CsvOrderLineLocalizedItemDTO {
+    pub c_orderline_id: String,
+    pub ad_language: String,
+    pub item_name: String,
+}
+
+impl CsvDTO for CsvOrderLineLocalizedItemDTO {}
+
 pub mod tests {
     use super::*;
     #[allow(dead_code)] //use in other modules
