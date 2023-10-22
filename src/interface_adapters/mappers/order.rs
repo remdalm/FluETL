@@ -86,7 +86,7 @@ mod tests {
             database::models::order::bench::order_model_fixtures,
         },
         interface_adapters::mappers::{
-            convert_domain_entity_to_model, CSVToEntityParser, MappingError, ModelToEntityParser,
+            convert_domain_entity_to_model, CsvEntityParser, MappingError, ModelToEntityParser,
         },
         tests::load_unit_test_env,
     };
@@ -96,8 +96,8 @@ mod tests {
     struct ModelParser;
     struct CsvParser;
     impl ModelToEntityParser<OrderModel, Order> for ModelParser {}
-    impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {
-        fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
+    impl CsvEntityParser<CsvOrderDTO, Order> for CsvParser {
+        fn transform_csv_row_to_entity(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }

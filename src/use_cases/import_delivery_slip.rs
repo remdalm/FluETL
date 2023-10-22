@@ -8,12 +8,12 @@ use crate::{
             models::delivery_slip::{batch_upsert, DeliverySlipModel},
         },
     },
-    interface_adapters::mappers::CSVToEntityParser,
+    interface_adapters::mappers::CsvEntityParser,
 };
 
 use super::{
     helpers::{
-        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
         model::CanPersistIntoDatabaseUseCase,
     },
     *,
@@ -33,8 +33,11 @@ impl ImportDeliverySlipUseCase {
 }
 
 impl CanReadCsvUseCase<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {}
-impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCase {
-    fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
+impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCase {
+    fn transform_csv_row_to_entity(
+        &self,
+        csv: CsvDeliverySlipDTO,
+    ) -> Result<DeliverySlip, MappingError> {
         let factory: DeliverySlipDomainFactory = csv.try_into()?;
         factory.make().map_err(MappingError::Domain)
     }
@@ -57,7 +60,7 @@ impl CanPersistIntoDatabaseUseCase<DeliverySlip, DeliverySlipModel> for ImportDe
         }
     }
 }
-impl ImportCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
+impl ImportEntityCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
     for ImportDeliverySlipUseCase
 {
     fn get_csv_type(&self) -> CsvType {
@@ -87,8 +90,11 @@ mod tests {
         pub use_batch: bool,
     }
     impl CanReadCsvUseCase<CsvDeliverySlipDTO> for ImportDeliverySlipUseCaseTest {}
-    impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCaseTest {
-        fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
+    impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCaseTest {
+        fn transform_csv_row_to_entity(
+            &self,
+            csv: CsvDeliverySlipDTO,
+        ) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }
@@ -112,7 +118,7 @@ mod tests {
             None
         }
     }
-    impl ImportCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
+    impl ImportEntityCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
         for ImportDeliverySlipUseCaseTest
     {
         fn get_csv_type(&self) -> CsvType {

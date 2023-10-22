@@ -88,15 +88,18 @@ mod tests {
                 order_line::tests::{order_line_lang_model_fixtures, order_line_model_fixtures},
             },
         },
-        interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
+        interface_adapters::mappers::{convert_domain_entity_to_model, CsvEntityParser},
         tests::load_unit_test_env,
     };
 
     use super::*;
 
     struct CsvParser;
-    impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for CsvParser {
-        fn transform_csv(&self, csv: CsvOrderLineDTO) -> Result<OrderLine, MappingError> {
+    impl CsvEntityParser<CsvOrderLineDTO, OrderLine> for CsvParser {
+        fn transform_csv_row_to_entity(
+            &self,
+            csv: CsvOrderLineDTO,
+        ) -> Result<OrderLine, MappingError> {
             let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
             raw_fields.and_then(|fields| {
                 let order_model = mock_fetching_order(&fields.order_id);

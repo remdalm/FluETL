@@ -8,12 +8,12 @@ use crate::{
             models::invoice::{batch_upsert, InvoiceModel},
         },
     },
-    interface_adapters::mappers::CSVToEntityParser,
+    interface_adapters::mappers::CsvEntityParser,
 };
 
 use super::{
     helpers::{
-        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
         model::CanPersistIntoDatabaseUseCase,
     },
     *,
@@ -33,8 +33,8 @@ impl ImportInvoiceUseCase {
 }
 
 impl CanReadCsvUseCase<CsvInvoiceDTO> for ImportInvoiceUseCase {}
-impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCase {
-    fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
+impl CsvEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCase {
+    fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
         let factory: InvoiceDomainFactory = csv.try_into()?;
         factory.make().map_err(MappingError::Domain)
     }
@@ -54,7 +54,7 @@ impl CanPersistIntoDatabaseUseCase<Invoice, InvoiceModel> for ImportInvoiceUseCa
         }
     }
 }
-impl ImportCsvUseCase<CsvInvoiceDTO, Invoice, InvoiceModel> for ImportInvoiceUseCase {
+impl ImportEntityCsvUseCase<CsvInvoiceDTO, Invoice, InvoiceModel> for ImportInvoiceUseCase {
     fn get_csv_type(&self) -> CsvType {
         CsvType::Invoice
     }
@@ -77,8 +77,8 @@ mod tests {
 
     pub struct ImportInvoiceUseCaseTest;
     impl CanReadCsvUseCase<CsvInvoiceDTO> for ImportInvoiceUseCaseTest {}
-    impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCaseTest {
-        fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
+    impl CsvEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCaseTest {
+        fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let factory: InvoiceDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }
@@ -86,7 +86,7 @@ mod tests {
     impl CanPersistIntoDatabaseUseCase<Invoice, InvoiceModel> for ImportInvoiceUseCaseTest {
         type DbConnection = HasTestConnection;
     }
-    impl ImportCsvUseCase<CsvInvoiceDTO, Invoice, InvoiceModel> for ImportInvoiceUseCaseTest {
+    impl ImportEntityCsvUseCase<CsvInvoiceDTO, Invoice, InvoiceModel> for ImportInvoiceUseCaseTest {
         fn get_csv_type(&self) -> CsvType {
             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
 

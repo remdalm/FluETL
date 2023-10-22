@@ -62,7 +62,7 @@ mod tests {
             database::models::invoice::tests::invoice_model_fixtures,
         },
         interface_adapters::mappers::{
-            convert_domain_entity_to_model, CSVToEntityParser, MappingError,
+            convert_domain_entity_to_model, CsvEntityParser, MappingError,
         },
         tests::load_unit_test_env,
     };
@@ -70,8 +70,8 @@ mod tests {
     use super::*;
 
     struct CsvParser;
-    impl CSVToEntityParser<CsvInvoiceDTO, Invoice> for CsvParser {
-        fn transform_csv(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
+    impl CsvEntityParser<CsvInvoiceDTO, Invoice> for CsvParser {
+        fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let factory: InvoiceDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }

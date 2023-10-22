@@ -24,12 +24,12 @@ use crate::{
         },
         InfrastructureError,
     },
-    interface_adapters::mappers::CSVToEntityParser,
+    interface_adapters::mappers::CsvEntityParser,
 };
 
 use super::{
     helpers::{
-        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
         language::CanFetchLanguages,
         localized_item::ImportLocalizedItem,
         model::CanPersistIntoDatabaseUseCase,
@@ -87,8 +87,8 @@ impl ImportOrderLineUseCase {
 }
 
 impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCase {}
-impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
-    fn transform_csv(&self, csv: CsvOrderLineDTO) -> Result<OrderLine, MappingError> {
+impl CsvEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
+    fn transform_csv_row_to_entity(&self, csv: CsvOrderLineDTO) -> Result<OrderLine, MappingError> {
         let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
         raw_fields.and_then(|fields| {
             let mut connection = HasTargetConnection::get_pooled_connection();
@@ -126,7 +126,7 @@ impl CanPersistIntoDatabaseUseCase<OrderLine, (OrderLineModel, Vec<OrderLineLang
         }
     }
 }
-impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, (OrderLineModel, Vec<OrderLineLangModel>)>
+impl ImportEntityCsvUseCase<CsvOrderLineDTO, OrderLine, (OrderLineModel, Vec<OrderLineLangModel>)>
     for ImportOrderLineUseCase
 {
     fn get_csv_type(&self) -> CsvType {
@@ -218,8 +218,11 @@ mod tests {
     }
 
     impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {}
-    impl CSVToEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCaseTest {
-        fn transform_csv(&self, csv: CsvOrderLineDTO) -> Result<OrderLine, MappingError> {
+    impl CsvEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCaseTest {
+        fn transform_csv_row_to_entity(
+            &self,
+            csv: CsvOrderLineDTO,
+        ) -> Result<OrderLine, MappingError> {
             let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
             // todo!()
             raw_fields.and_then(|fields| {
@@ -258,8 +261,12 @@ mod tests {
         }
     }
 
-    impl ImportCsvUseCase<CsvOrderLineDTO, OrderLine, (OrderLineModel, Vec<OrderLineLangModel>)>
-        for ImportOrderLineUseCaseTest
+    impl
+        ImportEntityCsvUseCase<
+            CsvOrderLineDTO,
+            OrderLine,
+            (OrderLineModel, Vec<OrderLineLangModel>),
+        > for ImportOrderLineUseCaseTest
     {
         fn get_csv_type(&self) -> CsvType {
             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)

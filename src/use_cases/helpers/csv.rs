@@ -5,7 +5,7 @@ use crate::{
         database::models::CanUpsertModel,
         InfrastructureError,
     },
-    interface_adapters::mappers::CSVToEntityParser,
+    interface_adapters::mappers::CsvEntityParser,
     use_cases::UseCaseError,
 };
 use log::debug;
@@ -14,8 +14,8 @@ use std::fmt::Debug;
 
 use super::model::CanPersistIntoDatabaseUseCase;
 
-pub(crate) trait ImportCsvUseCase<CSV, DE, M>:
-    CanReadCsvUseCase<CSV> + CSVToEntityParser<CSV, DE> + CanPersistIntoDatabaseUseCase<DE, M>
+pub(crate) trait ImportEntityCsvUseCase<CSV, DE, M>:
+    CanReadCsvUseCase<CSV> + CsvEntityParser<CSV, DE> + CanPersistIntoDatabaseUseCase<DE, M>
 where
     CSV: CsvDTO + for<'a> Deserialize<'a> + Debug,
     DE: DomainEntity + Into<M>,

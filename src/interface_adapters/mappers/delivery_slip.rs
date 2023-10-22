@@ -58,15 +58,18 @@ mod tests {
             csv_reader::delivery_slip::tests::csv_delivery_slip_dto_fixtures,
             database::models::delivery_slip::tests::delivery_slip_model_fixtures,
         },
-        interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
+        interface_adapters::mappers::{convert_domain_entity_to_model, CsvEntityParser},
         tests::load_unit_test_env,
     };
 
     use super::*;
 
     struct CsvParser;
-    impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
-        fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
+    impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
+        fn transform_csv_row_to_entity(
+            &self,
+            csv: CsvDeliverySlipDTO,
+        ) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }
