@@ -1,6 +1,6 @@
-use crate::domain::language::Language;
+use crate::domain::{language::Language, DomainError};
 
-use super::Translation;
+use super::{locale::Locale, Translation};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct LocalizedItem {
@@ -20,6 +20,12 @@ impl LocalizedItem {
     pub fn name(&self) -> &Translation {
         &self.name
     }
+}
+
+pub trait LocalizedItemFactory {
+    fn make_from_language(&self, language: &Language) -> Result<LocalizedItem, DomainError>;
+    fn get_language_locale(&self) -> &Locale;
+    fn get_entity_id(&self) -> u32;
 }
 
 pub mod tests {

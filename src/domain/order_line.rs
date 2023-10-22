@@ -3,7 +3,11 @@ use chrono::NaiveDate;
 use super::{
     language::Language,
     order::Order,
-    vo::{locale::Locale, localized_item::LocalizedItem, Reference, Translation},
+    vo::{
+        locale::Locale,
+        localized_item::{LocalizedItem, LocalizedItemFactory},
+        Reference, Translation,
+    },
     DomainEntity, DomainError,
 };
 
@@ -111,8 +115,8 @@ pub struct OrderLineLocalizedItemFactory {
     pub name: Translation,
 }
 
-impl OrderLineLocalizedItemFactory {
-    pub fn make_from_language(&self, language: &Language) -> Result<LocalizedItem, DomainError> {
+impl LocalizedItemFactory for OrderLineLocalizedItemFactory {
+    fn make_from_language(&self, language: &Language) -> Result<LocalizedItem, DomainError> {
         if language.locale() != &self.locale {
             return Err(DomainError::ValidationError(format!(
                 "Language locale {} does not match item locale {}",
@@ -122,6 +126,14 @@ impl OrderLineLocalizedItemFactory {
         }
         // BIG REFACTORING TODO: Use &Language instead of Language
         Ok(LocalizedItem::new(language.clone(), self.name.clone()))
+    }
+
+    fn get_language_locale(&self) -> &Locale {
+        &self.locale
+    }
+
+    fn get_entity_id(&self) -> u32 {
+        self.orderline_id
     }
 }
 

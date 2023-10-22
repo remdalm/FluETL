@@ -1,0 +1,1 @@
+INSERT INTO `language_list` (`locale`, `id`) VALUES ('en_US', 1),('fr_FR', 2),('es_ES', 3),('de_DE', 4),('it_IT', 5);

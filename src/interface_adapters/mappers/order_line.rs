@@ -73,16 +73,19 @@ impl From<OrderLine> for (OrderLineModel, Vec<OrderLineLangModel>) {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use crate::{
         domain::{
             order::Order,
             order_line::{tests::order_line_fixtures, OrderLineDomainFactory},
+            vo::localized_item::{tests::localized_item_fixtures, LocalizedItem},
         },
         infrastructure::{
             csv_reader::order_line::tests::csv_order_line_dto_fixtures,
             database::models::{
                 order::{bench::order_model_fixtures, OrderModel},
-                order_line::tests::order_line_model_fixtures,
+                order_line::tests::{order_line_lang_model_fixtures, order_line_model_fixtures},
             },
         },
         interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
@@ -98,9 +101,16 @@ mod tests {
             raw_fields.and_then(|fields| {
                 let order_model = mock_fetching_order(&fields.order_id);
                 let order: Order = order_model.try_into()?;
-                OrderLineDomainFactory::new_from_order(order, &fields)
-                    .make()
-                    .map_err(MappingError::Domain)
+                let mut factory = OrderLineDomainFactory::new_from_order(order, &fields);
+                order_line_items_hashmap_fixture()
+                    .contains_key(&fields.orderline_id)
+                    .then(|| {
+                        factory.item_names = order_line_items_hashmap_fixture()
+                            .get(&fields.orderline_id)
+                            .unwrap()
+                            .to_owned();
+                    });
+                factory.make().map_err(MappingError::Domain)
             })
         }
     }
@@ -112,6 +122,20 @@ mod tests {
             .find(|om| om.id_order == *order_id)
             .unwrap();
         order_model.clone()
+    }
+
+    fn order_line_items_hashmap_fixture() -> HashMap<u32, Vec<LocalizedItem>> {
+        let mut order_line_items = HashMap::new();
+        order_line_items.insert(
+            1,
+            vec![
+                localized_item_fixtures()[0].clone(),
+                localized_item_fixtures()[1].clone(),
+            ],
+        );
+        order_line_items.insert(2, vec![localized_item_fixtures()[2].clone()]);
+        order_line_items.insert(3, Vec::new());
+        order_line_items
     }
 
     #[test]
@@ -149,12 +173,15 @@ mod tests {
     #[test]
     fn test_convert_order_lines_to_models() {
         let models_fixtures = order_line_model_fixtures();
+        let model_lang_fixtures = order_line_lang_model_fixtures();
         let order_line_fixtures = order_line_fixtures();
 
-        let results: Vec<OrderLineModel> =
+        let results: Vec<(OrderLineModel, Vec<OrderLineLangModel>)> =
             convert_domain_entity_to_model(order_line_fixtures.to_vec());
 
-        assert_eq!(&results[0], &models_fixtures[0]);
-        assert_eq!(&results[1], &models_fixtures[1]);
+        assert_eq!(&results[0].0, &models_fixtures[0]);
+        assert_eq!(&results[1].0, &models_fixtures[1]);
+        assert_eq!(&results[0].1, &model_lang_fixtures[0]);
+        assert_eq!(&results[1].1, &model_lang_fixtures[1]);
     }
 }

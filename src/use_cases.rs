@@ -4,13 +4,13 @@ use log::debug;
 use serde::Deserialize;
 
 use crate::{
-    domain::{language::Language, DomainEntity, DomainError},
+    domain::{DomainEntity, DomainError},
     infrastructure::{
         csv_reader::{make_csv_file_reader, CsvDTO, CsvType},
         database::{
             batch::Batch,
             connection::{HasConnection, HasLegacyStagingConnection, HasTargetConnection},
-            models::{language::LanguageModel, CanSelectAllModel, CanUpsertModel, Model},
+            models::{CanSelectAllModel, CanUpsertModel, Model},
         },
         InfrastructureError,
     },
@@ -19,6 +19,7 @@ use crate::{
     },
 };
 
+mod helpers;
 pub(crate) mod import_delivery_slip;
 pub(crate) mod import_invoice;
 pub(crate) mod import_mapping_client;
@@ -170,19 +171,6 @@ where
 
     fn set_batch<'a>(&'a self, _models: &'a [M]) -> Option<Batch<M>> {
         None
-    }
-}
-
-pub(crate) trait CanFetchLanguages {
-    fn fetch_languages() -> Result<Vec<Language>, UseCaseError> {
-        LanguageModel::select_all(&mut HasLegacyStagingConnection::get_pooled_connection())
-            .map_err(|e| UseCaseError::Infrastructure(InfrastructureError::DatabaseError(e)))
-            .and_then(|models| {
-                models
-                    .into_iter()
-                    .map(|m| m.try_into().map_err(UseCaseError::Mapping))
-                    .collect()
-            })
     }
 }
 

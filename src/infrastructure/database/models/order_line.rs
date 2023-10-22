@@ -7,27 +7,24 @@ use diesel::result::Error as DieselError;
 use super::{CanUpsertModel, Model};
 
 #[derive(
-    Queryable, Identifiable, Insertable, AsChangeset, Associations, PartialEq, Debug, Clone,
+    Selectable,
+    Queryable,
+    Identifiable,
+    Insertable,
+    AsChangeset,
+    Associations,
+    PartialEq,
+    Debug,
+    Clone,
 )]
 #[diesel(table_name = schema::target::order_line_lang)]
-#[belongs_to(OrderLineModel, foreign_key = "id_order_line")]
+#[diesel(belongs_to(OrderLineModel, foreign_key = id_order_line))]
 #[diesel(primary_key(id_order_line, id_lang))]
 pub struct OrderLineLangModel {
     pub id_order_line: u32,
     pub id_lang: u32,
     pub product_name: String,
 }
-
-// impl Model for OrderLineLangModel {}
-
-// impl CanUpsertModel for OrderLineLangModel {
-//     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-//         diesel::replace_into(schema::target::order_line_lang::table)
-//             .values(self)
-//             .execute(connection)
-//             .map(|_| ())
-//     }
-// }
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::order_line)]
@@ -71,12 +68,22 @@ impl CanUpsertModel for (OrderLineModel, Vec<OrderLineLangModel>) {
 }
 
 pub fn batch_upsert(
-    models: &[OrderLineModel],
+    models: &[(OrderLineModel, Vec<OrderLineLangModel>)],
     connection: &mut DbConnection,
 ) -> Result<(), DieselError> {
-    let query = diesel::replace_into(schema::target::order_line::table).values(models);
+    let order_lines: Vec<&OrderLineModel> = models.iter().map(|tuple| &tuple.0).collect();
+    let order_line_langs: Vec<&OrderLineLangModel> =
+        models.iter().flat_map(|tuple| tuple.1.iter()).collect();
 
-    query.execute(connection).map(|_| ())
+    let _ = diesel::replace_into(schema::target::order_line::table)
+        .values(order_lines)
+        .execute(connection)
+        .map(|_| ());
+
+    diesel::replace_into(schema::target::order_line_lang::table)
+        .values(order_line_langs)
+        .execute(connection)
+        .map(|_| ())
 }
 
 #[cfg(test)]
@@ -125,6 +132,29 @@ pub mod tests {
         ]
     }
 
+    pub fn order_line_lang_model_fixtures() -> [Vec<OrderLineLangModel>; 3] {
+        [
+            vec![
+                OrderLineLangModel {
+                    id_order_line: 1,
+                    id_lang: 1,
+                    product_name: "Bottle".to_string(),
+                },
+                OrderLineLangModel {
+                    id_order_line: 1,
+                    id_lang: 2,
+                    product_name: "Bouteille".to_string(),
+                },
+            ],
+            vec![OrderLineLangModel {
+                id_order_line: 2,
+                id_lang: 1,
+                product_name: "Plate".to_string(),
+            }],
+            Vec::new(),
+        ]
+    }
+
     impl SingleRowInsertable<schema::target::order_line::table, DbConnection> for OrderLineModel {
         fn target_client_table(&self) -> schema::target::order_line::table {
             schema::target::order_line::table
@@ -151,6 +181,16 @@ pub mod tests {
         schema::target::order_line::dsl::order_line
             .load::<OrderLineModel>(connection)
             .expect("Error loading updated OrderLineModel")
+    }
+
+    pub fn read_order_line_items(
+        connection: &mut DbConnection,
+        order_line: &OrderLineModel,
+    ) -> Vec<OrderLineLangModel> {
+        OrderLineLangModel::belonging_to(&order_line)
+            .select(OrderLineLangModel::as_select())
+            .load(connection)
+            .expect("Error loading updated OrderLineLangModel")
     }
 
     #[test]
