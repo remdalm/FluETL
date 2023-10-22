@@ -1,9 +1,13 @@
 use crate::{
     domain::mapping_client::MappingClient,
     infrastructure::database::models::mapping_client::{MappingClientModel, MappingClientSource},
+    interface_adapters::mappers::ModelToEntityParser,
 };
 
-use super::*;
+use super::{
+    helpers::model::{CanPersistIntoDatabaseUseCase, CanReadAllModelUseCase, ImportModelUseCase},
+    *,
+};
 
 pub struct ImportMappingClientUseCase;
 

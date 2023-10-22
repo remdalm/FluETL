@@ -28,8 +28,13 @@ use crate::{
 };
 
 use super::{
-    helpers::{language::CanFetchLanguages, localized_item::ImportLocalizedItem},
-    CanPersistIntoDatabaseUseCase, CanReadCsvUseCase, ImportCsvUseCase, UseCaseError,
+    helpers::{
+        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        language::CanFetchLanguages,
+        localized_item::ImportLocalizedItem,
+        model::CanPersistIntoDatabaseUseCase,
+    },
+    UseCaseError,
 };
 
 struct ImportOrderLineItemNamesUseCase;

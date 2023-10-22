@@ -1,9 +1,16 @@
 use crate::{
     domain::order::{Order, OrderDomainFactory},
     infrastructure::{csv_reader::order::CsvOrderDTO, database::models::order::OrderModel},
+    interface_adapters::mappers::CSVToEntityParser,
 };
 
-use super::*;
+use super::{
+    helpers::{
+        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        model::CanPersistIntoDatabaseUseCase,
+    },
+    *,
+};
 
 pub struct ImportOrderUseCase;
 impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCase {}
@@ -34,6 +41,11 @@ mod tests {
         infrastructure::{
             csv_reader::CsvType,
             database::models::order::{bench::order_model_fixtures, tests::read_orders},
+        },
+        interface_adapters::mappers::CSVToEntityParser,
+        use_cases::helpers::{
+            csv::{CanReadCsvUseCase, ImportCsvUseCase},
+            model::CanPersistIntoDatabaseUseCase,
         },
     };
 

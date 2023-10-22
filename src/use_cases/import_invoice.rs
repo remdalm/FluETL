@@ -7,9 +7,16 @@ use crate::{
             models::invoice::{batch_upsert, InvoiceModel},
         },
     },
+    interface_adapters::mappers::CSVToEntityParser,
 };
 
-use super::*;
+use super::{
+    helpers::{
+        csv::{CanReadCsvUseCase, ImportCsvUseCase},
+        model::CanPersistIntoDatabaseUseCase,
+    },
+    *,
+};
 
 #[derive(Default)]
 pub struct ImportInvoiceUseCase {
