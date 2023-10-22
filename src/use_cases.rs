@@ -1,15 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    domain::DomainError,
-    infrastructure::{
-        csv_reader::CsvType,
-        database::{
-            batch::Batch,
-            connection::{HasConnection, HasLegacyStagingConnection, HasTargetConnection},
-        },
-        InfrastructureError,
-    },
+    domain::DomainError, infrastructure::InfrastructureError,
     interface_adapters::mappers::MappingError,
 };
 

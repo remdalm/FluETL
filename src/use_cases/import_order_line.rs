@@ -24,7 +24,7 @@ use crate::{
         },
         InfrastructureError,
     },
-    interface_adapters::mappers::{CSVToEntityParser, MappingError},
+    interface_adapters::mappers::CSVToEntityParser,
 };
 
 use super::{
@@ -34,7 +34,7 @@ use super::{
         localized_item::ImportLocalizedItem,
         model::CanPersistIntoDatabaseUseCase,
     },
-    UseCaseError,
+    *,
 };
 
 struct ImportOrderLineItemNamesUseCase;

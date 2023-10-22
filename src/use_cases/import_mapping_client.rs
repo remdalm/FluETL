@@ -1,12 +1,14 @@
 use crate::{
     domain::mapping_client::MappingClient,
-    infrastructure::database::models::mapping_client::{MappingClientModel, MappingClientSource},
+    infrastructure::database::{
+        connection::{HasLegacyStagingConnection, HasTargetConnection},
+        models::mapping_client::{MappingClientModel, MappingClientSource},
+    },
     interface_adapters::mappers::ModelToEntityParser,
 };
 
-use super::{
-    helpers::model::{CanPersistIntoDatabaseUseCase, CanReadAllModelUseCase, ImportModelUseCase},
-    *,
+use super::helpers::model::{
+    CanPersistIntoDatabaseUseCase, CanReadAllModelUseCase, ImportModelUseCase,
 };
 
 pub struct ImportMappingClientUseCase;

@@ -1,9 +1,10 @@
 use crate::{
     domain::invoice::{Invoice, InvoiceDomainFactory},
     infrastructure::{
-        csv_reader::invoice::CsvInvoiceDTO,
+        csv_reader::{invoice::CsvInvoiceDTO, CsvType},
         database::{
-            batch::Config,
+            batch::{Batch, Config},
+            connection::{HasConnection, HasTargetConnection},
             models::invoice::{batch_upsert, InvoiceModel},
         },
     },

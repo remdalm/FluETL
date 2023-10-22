@@ -1,9 +1,10 @@
 use crate::{
     domain::delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
     infrastructure::{
-        csv_reader::delivery_slip::CsvDeliverySlipDTO,
+        csv_reader::{delivery_slip::CsvDeliverySlipDTO, CsvType},
         database::{
-            batch::Config,
+            batch::{Batch, Config},
+            connection::{HasConnection, HasTargetConnection},
             models::delivery_slip::{batch_upsert, DeliverySlipModel},
         },
     },

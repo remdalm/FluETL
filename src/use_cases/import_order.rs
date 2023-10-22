@@ -1,6 +1,9 @@
 use crate::{
     domain::order::{Order, OrderDomainFactory},
-    infrastructure::{csv_reader::order::CsvOrderDTO, database::models::order::OrderModel},
+    infrastructure::{
+        csv_reader::{order::CsvOrderDTO, CsvType},
+        database::{connection::HasTargetConnection, models::order::OrderModel},
+    },
     interface_adapters::mappers::CSVToEntityParser,
 };
 
