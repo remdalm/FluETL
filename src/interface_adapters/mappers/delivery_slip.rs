@@ -43,7 +43,7 @@ impl From<DeliverySlip> for DeliverySlipModel {
             shipping_date: delivery_slip.shipping_date().copied(),
             po_ref: delivery_slip.po_ref().map(|s| s.to_string()),
             carrier_name: delivery_slip.carrier_name().map(|s| s.to_string()),
-            status: delivery_slip.status().map(|s| s.to_string()),
+            status: delivery_slip.status().map(|s| s.as_str().to_string()),
             tracking_number: delivery_slip.trackingno().map(|s| s.to_string()),
             tracking_link: delivery_slip.tracking_link().map(|tl| tl.to_string()),
         }

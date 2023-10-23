@@ -105,7 +105,7 @@ fn assert_delivery_slip_table(connection: &mut DbConnection) {
             shipping_date: Some(NaiveDate::from_ymd_opt(2023, 3, 1).unwrap()),
             po_ref: Some("ABC / DEF".to_string()),
             carrier_name: Some("UPS".to_string()),
-            status: Some("1".to_string()),
+            status: Some("NA".to_string()),
             tracking_number: Some("250238315641646373".to_string()),
             tracking_link: Some("https://tracking1.com/123".to_string())
         }
@@ -133,7 +133,7 @@ fn assert_delivery_slip_table(connection: &mut DbConnection) {
             shipping_date: Some(NaiveDate::from_ymd_opt(2023, 3, 1).unwrap()),
             po_ref: Some("ACALOG201138802".to_string()),
             carrier_name: Some("Carrier 1".to_string()),
-            status: Some("1".to_string()),
+            status: Some("UN".to_string()),
             tracking_number: Some("TrackingNo3".to_string()),
             tracking_link: None
         }
