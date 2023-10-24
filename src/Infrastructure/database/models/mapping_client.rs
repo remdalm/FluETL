@@ -16,13 +16,11 @@ pub struct MappingClientModel {
 impl Model for MappingClientModel {}
 impl CanUpsertModel for MappingClientModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::mapping_client_contact::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(
+            schema::target::mapping_client_contact::table,
+            self,
+            connection
+        )
     }
 }
 

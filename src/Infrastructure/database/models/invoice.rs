@@ -36,28 +36,15 @@ pub struct InvoiceModel {
 impl Model for InvoiceModel {}
 impl CanUpsertModel for InvoiceModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::invoice::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::invoice::table, self, connection)
     }
 }
 
 impl Model for (InvoiceModel, Vec<InvoiceLangModel>) {}
 impl CanUpsertModel for (InvoiceModel, Vec<InvoiceLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::replace_into(schema::target::invoice::table)
-            .values(&self.0)
-            .execute(connection)
-            .map(|_| ())?;
-
-        diesel::replace_into(schema::target::invoice_lang::table)
-            .values(&self.1)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::invoice::table, &self.0, connection)?;
+        super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
     }
 }
 
@@ -69,15 +56,12 @@ pub fn batch_upsert(
     let invoice_langs: Vec<&InvoiceLangModel> =
         models.iter().flat_map(|tuple| tuple.1.iter()).collect();
 
-    let _ = diesel::replace_into(schema::target::invoice::table)
-        .values(invoices)
-        .execute(connection)
-        .map(|_| ());
-
-    diesel::replace_into(schema::target::invoice_lang::table)
-        .values(invoice_langs)
-        .execute(connection)
-        .map(|_| ())
+    super::upsert!(schema::target::invoice::table, invoices, connection)?;
+    super::upsert!(
+        schema::target::invoice_lang::table,
+        invoice_langs,
+        connection
+    )
 }
 
 #[cfg(test)]

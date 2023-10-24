@@ -77,3 +77,13 @@ where
 
     fn target_client_table(&self) -> T;
 }
+
+macro_rules! upsert {
+    ($table:path, $model:expr, $connection:expr) => {
+        diesel::replace_into($table)
+            .values($model)
+            .execute($connection)
+            .map(|_| ())
+    };
+}
+use upsert;

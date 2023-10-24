@@ -42,28 +42,15 @@ pub struct OrderLineModel {
 impl Model for OrderLineModel {}
 impl CanUpsertModel for OrderLineModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::order_line::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::order_line::table, self, connection)
     }
 }
 
 impl Model for (OrderLineModel, Vec<OrderLineLangModel>) {}
 impl CanUpsertModel for (OrderLineModel, Vec<OrderLineLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::replace_into(schema::target::order_line::table)
-            .values(&self.0)
-            .execute(connection)
-            .map(|_| ())?;
-
-        diesel::replace_into(schema::target::order_line_lang::table)
-            .values(&self.1)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::order_line::table, &self.0, connection)?;
+        super::upsert!(schema::target::order_line_lang::table, &self.1, connection)
     }
 }
 
@@ -74,16 +61,12 @@ pub fn batch_upsert(
     let order_lines: Vec<&OrderLineModel> = models.iter().map(|tuple| &tuple.0).collect();
     let order_line_langs: Vec<&OrderLineLangModel> =
         models.iter().flat_map(|tuple| tuple.1.iter()).collect();
-
-    let _ = diesel::replace_into(schema::target::order_line::table)
-        .values(order_lines)
-        .execute(connection)
-        .map(|_| ());
-
-    diesel::replace_into(schema::target::order_line_lang::table)
-        .values(order_line_langs)
-        .execute(connection)
-        .map(|_| ())
+    super::upsert!(schema::target::order_line::table, order_lines, connection)?;
+    super::upsert!(
+        schema::target::order_line_lang::table,
+        order_line_langs,
+        connection
+    )
 }
 
 #[cfg(test)]

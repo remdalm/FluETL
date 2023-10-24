@@ -23,13 +23,7 @@ pub struct OrderModel {
 impl Model for OrderModel {}
 impl CanUpsertModel for OrderModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::order::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::order::table, self, connection)
     }
 }
 
@@ -44,13 +38,6 @@ impl SingleRowUpdatable<schema::target::order::table, DbConnection> for OrderMod
         schema::target::order::table
     }
 }
-
-// pub(crate) trait CanFetchOrderModel: HasTargetConnection {
-//     fn fetch_order(&self, order_id: &u32) -> Result<OrderModel, InfrastructureError> {
-//         OrderModel::select_by_id(&mut self.get_pooled_connection(), order_id)
-//             .map_err(|e| InfrastructureError::DatabaseError(e))
-//     }
-// }
 
 impl OrderModel {
     pub fn select_by_id(

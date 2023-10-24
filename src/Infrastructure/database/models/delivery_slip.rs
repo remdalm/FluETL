@@ -24,13 +24,7 @@ pub struct DeliverySlipModel {
 impl Model for DeliverySlipModel {}
 impl CanUpsertModel for DeliverySlipModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::delivery_slip::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::delivery_slip::table, self, connection)
     }
 }
 
