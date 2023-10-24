@@ -49,6 +49,7 @@ impl CanUpsertModel for OrderLineModel {
 impl Model for (OrderLineModel, Vec<OrderLineLangModel>) {}
 impl CanUpsertModel for (OrderLineModel, Vec<OrderLineLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        // No need for transaction as order_line_lang domain is not important
         super::upsert!(schema::target::order_line::table, &self.0, connection)?;
         super::upsert!(schema::target::order_line_lang::table, &self.1, connection)
     }

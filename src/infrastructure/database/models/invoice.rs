@@ -43,8 +43,10 @@ impl CanUpsertModel for InvoiceModel {
 impl Model for (InvoiceModel, Vec<InvoiceLangModel>) {}
 impl CanUpsertModel for (InvoiceModel, Vec<InvoiceLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        super::upsert!(schema::target::invoice::table, &self.0, connection)?;
-        super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
+        connection.transaction(|connection| {
+            super::upsert!(schema::target::invoice::table, &self.0, connection)?;
+            super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
+        })
     }
 }
 
@@ -55,13 +57,14 @@ pub fn batch_upsert(
     let invoices: Vec<&InvoiceModel> = models.iter().map(|tuple| &tuple.0).collect();
     let invoice_langs: Vec<&InvoiceLangModel> =
         models.iter().flat_map(|tuple| tuple.1.iter()).collect();
-
-    super::upsert!(schema::target::invoice::table, invoices, connection)?;
-    super::upsert!(
-        schema::target::invoice_lang::table,
-        invoice_langs,
-        connection
-    )
+    connection.transaction(|connection| {
+        super::upsert!(schema::target::invoice::table, invoices, connection)?;
+        super::upsert!(
+            schema::target::invoice_lang::table,
+            invoice_langs,
+            connection
+        )
+    })
 }
 
 #[cfg(test)]
