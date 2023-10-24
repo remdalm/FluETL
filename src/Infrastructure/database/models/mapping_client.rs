@@ -95,6 +95,7 @@ pub mod bench {
 #[cfg(test)]
 pub mod tests {
     use diesel::result::Error as DieselError;
+    use serial_test::serial;
 
     use crate::infrastructure::database::connection::tests::{
         get_test_pooled_connection, reset_test_database,
@@ -188,6 +189,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_to_insert() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -216,6 +218,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_to_update() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -245,6 +248,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_read_source() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);

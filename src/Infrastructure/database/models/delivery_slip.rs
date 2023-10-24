@@ -45,6 +45,8 @@ pub fn batch_upsert(
 
 #[cfg(test)]
 pub mod tests {
+    use serial_test::serial;
+
     use crate::infrastructure::database::{
         connection::tests::{get_test_pooled_connection, reset_test_database},
         models::SingleRowInsertable,
@@ -114,6 +116,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_delivery_slip_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -134,6 +137,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_delivery_slip_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
