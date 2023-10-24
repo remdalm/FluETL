@@ -34,6 +34,8 @@ impl ImportModelUseCase<MappingClientSource, MappingClient, MappingClientModel>
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
     use crate::{
         infrastructure::database::connection::tests::{
@@ -65,6 +67,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_order_use_case() {
         // Arrange
         let mut connection = get_test_pooled_connection();

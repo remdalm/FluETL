@@ -110,6 +110,8 @@ impl ImportEntityCsvUseCase<CsvInvoiceDTO, Invoice, (InvoiceModel, Vec<InvoiceLa
 mod tests {
     use std::path::PathBuf;
 
+    use serial_test::serial;
+
     use super::*;
     use crate::infrastructure::database::connection::DbConnection;
     use crate::{
@@ -219,6 +221,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_invoice_use_case() {
         // Arrange
         let mut connection = get_test_pooled_connection();
@@ -232,6 +235,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_batch_invoice_use_case() {
         // Arrange
         let mut connection = get_test_pooled_connection();

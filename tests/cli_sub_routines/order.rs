@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use chrono::NaiveTime;
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
+use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
@@ -11,11 +12,13 @@ use crate::setup_database_connection;
 // test fluetl import order --env-file=.env.test
 // ****************** //
 #[test]
+#[serial]
 fn import_order_once() {
     import_order(0..1);
 }
 
 #[test]
+#[serial]
 fn import_order_10_times() {
     import_order(0..10);
 }

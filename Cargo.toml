@@ -25,6 +25,7 @@ url = "2.4.1"
 [dev-dependencies]
 criterion = "0.5.1"
 diesel_migrations = { version = "2.1.0", features = ["mysql"] }
+serial_test = "2.0.0"
 tempfile = "3.7.1"
 
 [[bench]]

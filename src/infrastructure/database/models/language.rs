@@ -26,6 +26,8 @@ impl CanSelectAllModel for LanguageModel {
 
 #[cfg(test)]
 pub mod tests {
+    use serial_test::serial;
+
     use super::*;
 
     use crate::infrastructure::database::connection::tests::{
@@ -59,6 +61,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_read_source() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);

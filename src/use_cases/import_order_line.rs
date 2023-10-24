@@ -137,6 +137,8 @@ impl ImportEntityCsvUseCase<CsvOrderLineDTO, OrderLine, (OrderLineModel, Vec<Ord
 mod tests {
     use std::path::PathBuf;
 
+    use serial_test::serial;
+
     use super::*;
     use crate::{
         domain::vo::localized_item::tests::localized_item_fixtures,
@@ -282,6 +284,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_order_line_use_case() {
         // Arrange
         let mut connection = get_test_pooled_connection();
@@ -314,6 +317,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_batch_order_line_use_case() {
         // Arrange
         let mut connection = get_test_pooled_connection();

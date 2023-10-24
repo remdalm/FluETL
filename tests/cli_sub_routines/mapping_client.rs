@@ -1,4 +1,5 @@
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
+use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
@@ -11,11 +12,13 @@ use crate::setup_database_connection;
 // ******************
 
 #[test]
+#[serial]
 fn import_mapping_client_once() {
     import_mapping_client(0..1);
 }
 
 #[test]
+#[serial]
 fn import_mapping_client_10_times() {
     import_mapping_client(0..10);
 }

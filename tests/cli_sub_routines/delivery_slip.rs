@@ -1,6 +1,7 @@
 use chrono::NaiveDate;
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
 use fluetl::infrastructure::database::connection::DbConnection;
+use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
@@ -11,11 +12,13 @@ use crate::setup_database_connection;
 // test fluetl import delivery-slip --env-file=.env.test
 // ****************** //
 #[test]
+#[serial]
 fn import_delivery_slip_once() {
     import_delivery_slip(0..1);
 }
 
 #[test]
+#[serial]
 fn import_delivery_slip_10_times() {
     import_delivery_slip(0..10);
 }
@@ -47,6 +50,7 @@ fn import_delivery_slip(repeat: Range<i32>) {
 // test fluetl import delivery-slip -b -s2 --env-file=.env.test
 // ****************** //
 #[test]
+#[serial]
 fn import_delivery_slip_batch() {
     // Arrange
     let mut connection = setup_database_connection();

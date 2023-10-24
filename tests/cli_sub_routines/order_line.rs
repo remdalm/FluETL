@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 use diesel::{sql_query, QueryableByName, RunQueryDsl};
+use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
@@ -13,11 +14,13 @@ use crate::setup_database_connection;
 // test fluetl import orderline --env-file=.env.test
 // ****************** //
 #[test]
+#[serial]
 fn import_order_line_once() {
     import_order_line(0..1);
 }
 
 #[test]
+#[serial]
 fn import_order_line_10_times() {
     import_order_line(0..10);
 }
@@ -59,6 +62,7 @@ fn import_order_line(repeat: Range<i32>) {
 // test fluetl import orderline -b -s2 --env-file=.env.test
 // ****************** //
 #[test]
+#[serial]
 fn import_order_line_batch() {
     // Arrange
     let mut connection = setup_database_connection();

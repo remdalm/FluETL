@@ -122,6 +122,7 @@ pub mod tests {
         models::order::bench::order_model_fixtures,
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
+    use serial_test::serial;
 
     pub fn insert_order(
         connection: &mut DbConnection,
@@ -144,6 +145,7 @@ pub mod tests {
     use super::*;
 
     #[test]
+    #[serial]
     fn test_insert_order() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -163,6 +165,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_update_order() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -193,6 +196,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_select_order_by_id() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -214,6 +218,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_insert_duplicated_key() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -235,6 +240,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_order_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -253,6 +259,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_order_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
