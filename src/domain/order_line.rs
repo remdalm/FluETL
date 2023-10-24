@@ -124,7 +124,7 @@ impl LocalizedItemFactory for OrderLineLocalizedItemFactory {
                 self.locale.as_str()
             )));
         }
-        // BIG REFACTORING TODO: Use &Language instead of Language
+        // TODO: Use &Language instead of Language??
         Ok(LocalizedItem::new(language.clone(), self.name.clone()))
     }
 

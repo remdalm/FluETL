@@ -16,6 +16,7 @@ pub(crate) mod order_line;
 pub enum CsvType {
     DeliverySlip,
     Invoice,
+    InvoiceDocumentType,
     Order,
     OrderLine,
     OrderLineItem,
@@ -27,6 +28,7 @@ impl CsvType {
         match self {
             CsvType::DeliverySlip => env::var("DELIVERY_SLIPS_CSV_PATH"),
             CsvType::Invoice => env::var("INVOICES_CSV_PATH"),
+            CsvType::InvoiceDocumentType => env::var("INVOICE_DOCUMENT_TYPES_CSV_PATH"),
             CsvType::Order => env::var("ORDERS_CSV_PATH"),
             CsvType::OrderLine => env::var("ORDER_LINES_CSV_PATH"),
             CsvType::OrderLineItem => env::var("ORDER_LINE_ITEMS_CSV_PATH"),

@@ -3,12 +3,16 @@ use rust_decimal::Decimal;
 
 use super::{
     dto::date_dto::DateDTO,
-    new_type::filled_string::FilledString,
-    vo::{file_name::FileName, price::Price, Reference},
+    language::Language,
+    vo::{
+        file_name::FileName,
+        locale::Locale,
+        localized_item::{LocalizedItem, LocalizedItemFactory},
+        price::Price,
+        Reference, Translation,
+    },
     DomainEntity, DomainError,
 };
-
-pub(crate) type InvoiceType = FilledString;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Invoice {
@@ -19,7 +23,8 @@ pub struct Invoice {
     file_name: Option<FileName>,
     date: NaiveDate,
     po_ref: Option<String>,
-    type_: InvoiceType,
+    invoice_type_id: u32,
+    invoice_types: Vec<LocalizedItem>,
     total_tax_excl: Price,
     total_tax_incl: Price,
 }
@@ -55,8 +60,12 @@ impl Invoice {
         self.po_ref.as_deref()
     }
 
-    pub fn type_(&self) -> &str {
-        self.type_.as_str()
+    pub fn invoice_type_id(&self) -> u32 {
+        self.invoice_type_id
+    }
+
+    pub fn invoice_types(&self) -> &[LocalizedItem] {
+        &self.invoice_types
     }
 
     pub fn total_tax_excl(&self) -> Decimal {
@@ -76,7 +85,8 @@ pub struct InvoiceDomainFactory {
     pub file_name: Option<String>,
     pub date_dto: DateDTO,
     pub po_ref: Option<String>,
-    pub type_: String,
+    pub invoice_type_id: u32,
+    pub invoice_types: Vec<LocalizedItem>,
     pub total_tax_excl: String,
     pub total_tax_incl: String,
 }
@@ -91,15 +101,46 @@ impl InvoiceDomainFactory {
             file_name: self.file_name.map(FileName::try_from).transpose()?,
             date: self.date_dto.unwrap()?,
             po_ref: self.po_ref,
-            type_: InvoiceType::new(self.type_)?,
+            invoice_type_id: self.invoice_type_id,
+            invoice_types: self.invoice_types,
             total_tax_excl: Price::try_from(self.total_tax_excl)?,
             total_tax_incl: Price::try_from(self.total_tax_incl)?,
         })
     }
 }
 
+#[derive(Debug)]
+pub struct InvoiceLocalizedTypeFactory {
+    pub invoice_type_id: u32,
+    pub locale: Locale,
+    pub name: Translation,
+}
+
+impl LocalizedItemFactory for InvoiceLocalizedTypeFactory {
+    fn make_from_language(&self, language: &Language) -> Result<LocalizedItem, DomainError> {
+        if language.locale() != &self.locale {
+            return Err(DomainError::ValidationError(format!(
+                "Language locale {} does not match item locale {}",
+                language.locale().as_str(),
+                self.locale.as_str()
+            )));
+        }
+        Ok(LocalizedItem::new(language.clone(), self.name.clone()))
+    }
+
+    fn get_language_locale(&self) -> &Locale {
+        &self.locale
+    }
+
+    fn get_entity_id(&self) -> u32 {
+        self.invoice_type_id
+    }
+}
+
 #[cfg(test)]
 pub mod tests {
+    use crate::domain::vo::localized_item::tests::localized_item_fixtures;
+
     use super::*;
     pub fn invoice_fixtures() -> [Invoice; 2] {
         [
@@ -111,7 +152,11 @@ pub mod tests {
                 file_name: Some(FileName::try_from("INV-1.pdf".to_string()).unwrap()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
                 po_ref: Some("PO-1".to_string()),
-                type_: InvoiceType::new("Invoice 123".to_string()).unwrap(),
+                invoice_type_id: 1,
+                invoice_types: vec![
+                    localized_item_fixtures()[0].clone(),
+                    localized_item_fixtures()[1].clone(),
+                ],
                 total_tax_excl: Price::try_from("100.0".to_string()).unwrap(),
                 total_tax_incl: Price::try_from("120.00".to_string()).unwrap(),
             },
@@ -123,7 +168,8 @@ pub mod tests {
                 file_name: Some(FileName::try_from("INV-3.pdf".to_string()).unwrap()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 3).unwrap(),
                 po_ref: None,
-                type_: InvoiceType::new("Invoice 456".to_string()).unwrap(),
+                invoice_type_id: 2,
+                invoice_types: vec![localized_item_fixtures()[2].clone()],
                 total_tax_excl: Price::try_from("-300.0".to_string()).unwrap(),
                 total_tax_incl: Price::try_from("360.0".to_string()).unwrap(),
             },

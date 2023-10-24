@@ -1,4 +1,4 @@
-invoice_id;c_bpartner_id;client_name;invoice_ref;file_name;date;po_ref;invoice_type;total_tax_excl;total_tax_incl
-1;1;Client 1;INV-1;INV-1.pdf;2020-01-01;PO-1;Invoice 123;100.00;120.0
-2;2;Client 2;INV-2;INV -2.pdf;2020-01-02;PO-2;INVOICE;200.0;240.00
-3;1;Client 1;INV-3;INV-3.pdf;2020-01-03;;Invoice 456;-300.0;360.00
+invoice_id;c_bpartner_id;client_name;invoice_ref;file_name;date;po_ref;c_doctype_id;total_tax_excl;total_tax_incl
+1;1;Client 1;INV-1;INV-1.pdf;2020-01-01;PO-1;1;100.00;120.0
+2;2;Client 2;INV-2;INV -2.pdf;2020-01-02;PO-2;2;200.0;240.00
+3;1;Client 1;INV-3;INV-3.pdf;2020-01-03;;2;-300.0;360.00

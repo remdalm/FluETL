@@ -114,7 +114,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_delivery_slip_when_no_conflit() {
+    fn test_upsert_delivery_slip_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
@@ -134,7 +134,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_delivery_slip_when_conflit() {
+    fn test_upsert_delivery_slip_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 

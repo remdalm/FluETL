@@ -3,10 +3,12 @@ use std::env;
 use crate::{
     domain::{
         dto::date_dto::{DateDTO, StringDateDTO},
-        invoice::{Invoice, InvoiceDomainFactory},
+        invoice::{Invoice, InvoiceDomainFactory, InvoiceLocalizedTypeFactory},
+        vo::{locale::Locale, Translation},
     },
     infrastructure::{
-        csv_reader::invoice::CsvInvoiceDTO, database::models::invoice::InvoiceModel,
+        csv_reader::invoice::{CsvInvoiceDTO, CsvInvoiceLocalizedItemDTO},
+        database::models::invoice::{InvoiceLangModel, InvoiceModel},
         InfrastructureError,
     },
 };
@@ -29,37 +31,70 @@ impl TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
             file_name: convert_string_to_option_string(dto.file_name),
             date_dto,
             po_ref: convert_string_to_option_string(dto.po_ref),
-            type_: dto.invoice_type,
+            invoice_type_id: parse_string_to_u32("c_doctype_id", &dto.c_doctype_id)?,
+            invoice_types: Vec::new(),
             total_tax_excl: dto.total_tax_excl,
             total_tax_incl: dto.total_tax_incl,
         })
     }
 }
 
-impl From<Invoice> for InvoiceModel {
+impl TryFrom<CsvInvoiceLocalizedItemDTO> for InvoiceLocalizedTypeFactory {
+    type Error = MappingError;
+    fn try_from(
+        dto: CsvInvoiceLocalizedItemDTO,
+    ) -> Result<InvoiceLocalizedTypeFactory, MappingError> {
+        Ok(InvoiceLocalizedTypeFactory {
+            locale: Locale::try_from(dto.ad_language.as_str())?,
+            name: Translation::new(dto.item_name)?,
+            invoice_type_id: parse_string_to_u32("c_doctype_id", &dto.c_doctype_id)?,
+        })
+    }
+}
+
+impl From<Invoice> for (InvoiceModel, Vec<InvoiceLangModel>) {
     fn from(invoice: Invoice) -> Self {
-        Self {
-            id_invoice: invoice.invoice_id(),
-            id_client: invoice.client_id(),
-            client_name: invoice.client_name().map(|s| s.to_string()),
-            invoice_ref: invoice.invoice_ref().to_string(),
-            file_name: invoice.file_name(),
-            date: *invoice.date(),
-            po_ref: invoice.po_ref().map(|s| s.to_string()),
-            type_: invoice.type_().to_string(),
-            total_tax_excl: invoice.total_tax_excl(),
-            total_tax_incl: invoice.total_tax_incl(),
-        }
+        let invoice_types: Vec<InvoiceLangModel> = invoice
+            .invoice_types()
+            .iter()
+            .map(|item_name| InvoiceLangModel {
+                id_invoice_type: invoice.invoice_type_id(),
+                id_lang: item_name.language().id(),
+                name: item_name.name().as_str().to_string(),
+            })
+            .collect();
+        (
+            InvoiceModel {
+                id_invoice: invoice.invoice_id(),
+                id_client: invoice.client_id(),
+                client_name: invoice.client_name().map(|s| s.to_string()),
+                invoice_ref: invoice.invoice_ref().to_string(),
+                file_name: invoice.file_name(),
+                date: *invoice.date(),
+                po_ref: invoice.po_ref().map(|s| s.to_string()),
+                id_invoice_type: invoice.invoice_type_id(),
+                total_tax_excl: invoice.total_tax_excl(),
+                total_tax_incl: invoice.total_tax_incl(),
+            },
+            invoice_types,
+        )
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use crate::{
-        domain::invoice::tests::invoice_fixtures,
+        domain::{
+            invoice::tests::invoice_fixtures,
+            vo::localized_item::{tests::localized_item_fixtures, LocalizedItem},
+        },
         infrastructure::{
             csv_reader::invoice::tests::csv_invoice_dto_fixtures,
-            database::models::invoice::tests::invoice_model_fixtures,
+            database::models::invoice::tests::{
+                invoice_lang_model_fixtures, invoice_model_fixtures,
+            },
         },
         interface_adapters::mappers::{
             convert_domain_entity_to_model, CsvEntityParser, MappingError,
@@ -72,9 +107,37 @@ mod tests {
     struct CsvParser;
     impl CsvEntityParser<CsvInvoiceDTO, Invoice> for CsvParser {
         fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
-            let factory: InvoiceDomainFactory = csv.try_into()?;
+            let mut factory: InvoiceDomainFactory = csv.try_into()?;
+            invoice_types_hashmap_fixture()
+                .contains_key(&factory.invoice_type_id)
+                .then(|| {
+                    factory.invoice_types = invoice_types_hashmap_fixture()
+                        .get(&factory.invoice_type_id)
+                        .unwrap()
+                        .to_owned();
+                });
             factory.make().map_err(MappingError::Domain)
         }
+    }
+
+    fn invoice_types_hashmap_fixture() -> HashMap<u32, Vec<LocalizedItem>> {
+        let mut invoice_type = HashMap::new();
+        invoice_type.insert(
+            1,
+            vec![
+                localized_item_fixtures()[0].clone(),
+                localized_item_fixtures()[1].clone(),
+            ],
+        );
+        invoice_type.insert(2, vec![localized_item_fixtures()[2].clone()]);
+        invoice_type.insert(
+            3,
+            vec![
+                localized_item_fixtures()[0].clone(),
+                localized_item_fixtures()[1].clone(),
+            ],
+        );
+        invoice_type
     }
 
     #[test]
@@ -96,11 +159,15 @@ mod tests {
     #[test]
     fn test_convert_invoices_to_models() {
         let models_fixtures = invoice_model_fixtures();
+        let model_lang_fixtures = invoice_lang_model_fixtures();
         let invoice_fixtures = invoice_fixtures();
 
-        let results: Vec<InvoiceModel> = convert_domain_entity_to_model(invoice_fixtures.to_vec());
+        let results: Vec<(InvoiceModel, Vec<InvoiceLangModel>)> =
+            convert_domain_entity_to_model(invoice_fixtures.to_vec());
 
-        assert_eq!(&results[0], &models_fixtures[0]);
-        assert_eq!(&results[1], &models_fixtures[1]);
+        assert_eq!(&results[0].0, &models_fixtures[0]);
+        assert_eq!(&results[1].0, &models_fixtures[1]);
+        assert_eq!(&results[0].1, &model_lang_fixtures[0]);
+        assert_eq!(&results[1].1, &model_lang_fixtures[1]);
     }
 }

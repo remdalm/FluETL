@@ -33,11 +33,18 @@ diesel::table! {
         file_name -> Nullable<Varchar>,
         #[max_length = 255]
         po_ref -> Nullable<Varchar>,
-        #[sql_name = "type"]
-        #[max_length = 128]
-        type_ -> Varchar,
+        id_invoice_type -> Unsigned<Integer>,
         total_tax_excl -> Decimal,
         total_tax_incl -> Decimal,
+    }
+}
+
+diesel::table! {
+    invoice_lang (id_invoice_type, id_lang) {
+        id_invoice_type -> Unsigned<Integer>,
+        id_lang -> Unsigned<Integer>,
+        #[max_length = 255]
+        name -> Varchar,
     }
 }
 
@@ -95,6 +102,7 @@ diesel::joinable!(order_line_lang -> order_line (id_order_line));
 diesel::allow_tables_to_appear_in_same_query!(
     delivery_slip,
     invoice,
+    invoice_lang,
     mapping_client_contact,
     order,
     order_line,
