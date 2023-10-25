@@ -5,8 +5,8 @@ use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
-use crate::reset_test_database;
 use crate::setup_database_connection;
+use crate::{panic_if_stdout_contains_error, reset_test_database};
 
 // ****************** //
 // test fluetl import delivery-slip --env-file=.env.test
@@ -37,6 +37,7 @@ fn import_delivery_slip(repeat: Range<i32>) {
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
+            panic_if_stdout_contains_error(&stdout);
             println!("Command executed successfully:\n{}", stdout);
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -69,6 +70,7 @@ fn import_delivery_slip_batch() {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
+        panic_if_stdout_contains_error(&stdout);
         println!("Command executed successfully:\n{}", stdout);
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);

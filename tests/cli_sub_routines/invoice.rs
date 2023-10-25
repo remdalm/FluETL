@@ -6,9 +6,9 @@ use std::process::Command;
 
 use fluetl::infrastructure::database::connection::DbConnection;
 
-use crate::insert_raw_sql;
 use crate::reset_test_database;
 use crate::setup_database_connection;
+use crate::{insert_raw_sql, panic_if_stdout_contains_error};
 
 // ****************** //
 // test fluetl import invoice --env-file=.env.test
@@ -48,6 +48,7 @@ fn import_invoice(repeat: Range<i32>) {
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
+            panic_if_stdout_contains_error(&stdout);
             println!("Command executed successfully:\n{}", stdout);
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -84,6 +85,7 @@ fn import_invoice_batch() {
 
     if output.status.success() {
         let stdout = String::from_utf8_lossy(&output.stdout);
+        panic_if_stdout_contains_error(&stdout);
         println!("Command executed successfully:\n{}", stdout);
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);

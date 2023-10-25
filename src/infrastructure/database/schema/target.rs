@@ -40,15 +40,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    invoice_lang (id_invoice_type, id_lang) {
-        id_invoice_type -> Unsigned<Integer>,
-        id_lang -> Unsigned<Integer>,
-        #[max_length = 255]
-        name -> Varchar,
-    }
-}
-
-diesel::table! {
     invoice_type_lang (id_invoice_type, id_lang) {
         id_invoice_type -> Unsigned<Integer>,
         id_lang -> Unsigned<Integer>,
@@ -111,7 +102,6 @@ diesel::joinable!(order_line_lang -> order_line (id_order_line));
 diesel::allow_tables_to_appear_in_same_query!(
     delivery_slip,
     invoice,
-    invoice_lang,
     invoice_type_lang,
     mapping_client_contact,
     order,

@@ -68,3 +68,38 @@ fn reset_test_database(connection: &mut DbConnection) {
     teardown_test_database(connection);
     setup_test_database(connection);
 }
+
+/// function to identify if the stdout contains an meaningful error and panic if so
+/// TODO: better distinction between error and warning to avoid having a list of possible errors
+fn panic_if_stdout_contains_error(stdout: &str) {
+    let exception = ["DomainError", "MappingError", "ValidationError"];
+    // let list = ["ForeignKeyViolation"];
+    // if list.iter().any(|v| stdout.contains(v)) {
+    //     panic!("Command executed successfully but with error:\n{}", stdout)
+    // }
+    let mut total_exception = 0;
+    exception.iter().for_each(|v| {
+        total_exception += count_occurrences(stdout, v);
+    });
+    let total_error = count_occurrences(stdout, "Error");
+    if stdout.contains("Error") && total_exception != total_error {
+        panic!("Command executed successfully but with error:\n{}", stdout)
+    }
+}
+
+fn count_occurrences(text: &str, expression: &str) -> usize {
+    // Safety check to avoid infinite loop
+    if expression.is_empty() {
+        return 0;
+    }
+
+    let mut count = 0;
+    let mut start = 0;
+
+    while let Some(pos) = text[start..].find(expression) {
+        count += 1;
+        start = start + pos + expression.len();
+    }
+
+    count
+}

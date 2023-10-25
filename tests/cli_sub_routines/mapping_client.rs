@@ -3,9 +3,9 @@ use serial_test::serial;
 use std::ops::Range;
 use std::process::Command;
 
-use crate::insert_raw_sql;
 use crate::reset_test_database;
 use crate::setup_database_connection;
+use crate::{insert_raw_sql, panic_if_stdout_contains_error};
 
 // ****************** //
 // test fluetl --env-file=.env.test import mapping-client
@@ -40,6 +40,7 @@ fn import_mapping_client(repeat: Range<i32>) {
 
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
+            panic_if_stdout_contains_error(&stdout);
             println!("Command executed successfully:\n{}", stdout);
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
