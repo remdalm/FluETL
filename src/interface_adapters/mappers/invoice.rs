@@ -31,7 +31,6 @@ impl TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
             file_name: convert_string_to_option_string(dto.file_name),
             date_dto,
             po_ref: convert_string_to_option_string(dto.po_ref),
-            invoice_type_id: parse_string_to_u32("c_doctype_id", &dto.c_doctype_id)?,
             invoice_types: Vec::new(),
             total_tax_excl: dto.total_tax_excl,
             total_tax_incl: dto.total_tax_incl,
@@ -46,8 +45,8 @@ impl TryFrom<CsvInvoiceLocalizedItemDTO> for InvoiceLocalizedTypeFactory {
     ) -> Result<InvoiceLocalizedTypeFactory, MappingError> {
         Ok(InvoiceLocalizedTypeFactory {
             locale: Locale::try_from(dto.ad_language.as_str())?,
-            name: Translation::new(dto.name)?,
-            invoice_type_id: parse_string_to_u32("c_doctype_id", &dto.c_doctype_id)?,
+            type_name: Translation::new(dto.invoice_type)?,
+            invoice_id: parse_string_to_u32("c_invoice_id", &dto.c_invoice_id)?,
         })
     }
 }
@@ -57,10 +56,10 @@ impl From<Invoice> for (InvoiceModel, Vec<InvoiceLangModel>) {
         let invoice_types: Vec<InvoiceLangModel> = invoice
             .invoice_types()
             .iter()
-            .map(|item_name| InvoiceLangModel {
-                id_invoice_type: invoice.invoice_type_id(),
-                id_lang: item_name.language().id(),
-                name: item_name.name().as_str().to_string(),
+            .map(|localized_item| InvoiceLangModel {
+                id_invoice: invoice.invoice_id(),
+                id_lang: localized_item.language().id(),
+                type_name: localized_item.name().as_str().to_string(),
             })
             .collect();
         (
@@ -72,7 +71,6 @@ impl From<Invoice> for (InvoiceModel, Vec<InvoiceLangModel>) {
                 file_name: invoice.file_name(),
                 date: *invoice.date(),
                 po_ref: invoice.po_ref().map(|s| s.to_string()),
-                id_invoice_type: invoice.invoice_type_id(),
                 total_tax_excl: invoice.total_tax_excl(),
                 total_tax_incl: invoice.total_tax_incl(),
             },
@@ -109,10 +107,10 @@ mod tests {
         fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let mut factory: InvoiceDomainFactory = csv.try_into()?;
             invoice_types_hashmap_fixture()
-                .contains_key(&factory.invoice_type_id)
+                .contains_key(&factory.invoice_id)
                 .then(|| {
                     factory.invoice_types = invoice_types_hashmap_fixture()
-                        .get(&factory.invoice_type_id)
+                        .get(&factory.invoice_id)
                         .unwrap()
                         .to_owned();
                 });
@@ -129,9 +127,9 @@ mod tests {
                 localized_item_fixtures()[1].clone(),
             ],
         );
-        invoice_type.insert(2, vec![localized_item_fixtures()[2].clone()]);
+        invoice_type.insert(3, vec![localized_item_fixtures()[2].clone()]);
         invoice_type.insert(
-            3,
+            2,
             vec![
                 localized_item_fixtures()[0].clone(),
                 localized_item_fixtures()[1].clone(),

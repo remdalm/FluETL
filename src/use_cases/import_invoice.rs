@@ -67,11 +67,11 @@ impl CsvEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCase {
     fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
         let mut factory: InvoiceDomainFactory = csv.try_into()?;
         self.invoice_types
-            .contains_key(&factory.invoice_type_id)
+            .contains_key(&factory.invoice_id)
             .then(|| {
                 factory.invoice_types = self
                     .invoice_types
-                    .get(&factory.invoice_type_id)
+                    .get(&factory.invoice_id)
                     .unwrap()
                     .to_owned();
             });
@@ -140,7 +140,7 @@ mod tests {
             Ok(vec![
                 (1, localized_item_fixtures()[0].clone()),
                 (1, localized_item_fixtures()[1].clone()),
-                (2, localized_item_fixtures()[2].clone()),
+                (3, localized_item_fixtures()[2].clone()),
             ])
         }
         fn source(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, UseCaseError> {
@@ -148,7 +148,7 @@ mod tests {
             let csv_path = root_path
                 .join("tests")
                 .join("fixtures")
-                .join("invoice_document_types_for_unit_test.csv");
+                .join("invoice_lang_for_unit_test.csv");
 
             self.read(CsvType::Test(csv_path))
         }
@@ -174,11 +174,11 @@ mod tests {
         fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let mut factory: InvoiceDomainFactory = csv.try_into()?;
             self.invoice_types
-                .contains_key(&factory.invoice_type_id)
+                .contains_key(&factory.invoice_id)
                 .then(|| {
                     factory.invoice_types = self
                         .invoice_types
-                        .get(&factory.invoice_type_id)
+                        .get(&factory.invoice_id)
                         .unwrap()
                         .to_owned();
                 });

@@ -6,15 +6,24 @@ use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 use rust_decimal::Decimal;
 
-#[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
-#[diesel(table_name = schema::target::invoice_type_lang)]
-// Seem not to work, probably because it is not a proper one to many relationship
-// #[diesel(belongs_to(InvoiceModel, foreign_key = id_invoice_type))]
-#[diesel(primary_key(id_invoice_type, id_lang))]
+#[derive(
+    Queryable,
+    Selectable,
+    Identifiable,
+    Insertable,
+    Associations,
+    AsChangeset,
+    PartialEq,
+    Debug,
+    Clone,
+)]
+#[diesel(table_name = schema::target::invoice_lang)]
+#[diesel(belongs_to(InvoiceModel, foreign_key = id_invoice))]
+#[diesel(primary_key(id_invoice, id_lang))]
 pub struct InvoiceLangModel {
-    pub id_invoice_type: u32,
+    pub id_invoice: u32,
     pub id_lang: u32,
-    pub name: String,
+    pub type_name: String,
 }
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
@@ -28,7 +37,6 @@ pub struct InvoiceModel {
     pub date: NaiveDate,
     pub file_name: Option<String>,
     pub po_ref: Option<String>,
-    pub id_invoice_type: u32,
     pub total_tax_excl: Decimal,
     pub total_tax_incl: Decimal,
 }
@@ -45,11 +53,7 @@ impl CanUpsertModel for (InvoiceModel, Vec<InvoiceLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
         connection.transaction(|connection| {
             super::upsert!(schema::target::invoice::table, &self.0, connection)?;
-            super::upsert!(
-                schema::target::invoice_type_lang::table,
-                &self.1,
-                connection
-            )
+            super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
         })
     }
 }
@@ -64,7 +68,7 @@ pub fn batch_upsert(
     connection.transaction(|connection| {
         super::upsert!(schema::target::invoice::table, invoices, connection)?;
         super::upsert!(
-            schema::target::invoice_type_lang::table,
+            schema::target::invoice_lang::table,
             invoice_langs,
             connection
         )
@@ -93,7 +97,6 @@ pub mod tests {
                 file_name: Some("INV-1.pdf".to_string()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
                 po_ref: Some("PO-1".to_string()),
-                id_invoice_type: 1,
                 total_tax_excl: Decimal::new(10000, 2),
                 total_tax_incl: Decimal::new(12000, 2),
             },
@@ -105,44 +108,31 @@ pub mod tests {
                 file_name: Some("INV-3.pdf".to_string()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 3).unwrap(),
                 po_ref: None,
-                id_invoice_type: 2,
                 total_tax_excl: Decimal::new(-30000, 2),
                 total_tax_incl: Decimal::new(36000, 2),
             },
         ]
     }
 
-    pub fn invoice_lang_model_fixtures() -> [Vec<InvoiceLangModel>; 3] {
+    pub fn invoice_lang_model_fixtures() -> [Vec<InvoiceLangModel>; 2] {
         [
             vec![
                 InvoiceLangModel {
-                    id_invoice_type: 1,
+                    id_invoice: 1,
                     id_lang: 1,
-                    name: "Bottle".to_string(),
+                    type_name: "Bottle".to_string(),
                 },
                 InvoiceLangModel {
-                    id_invoice_type: 1,
+                    id_invoice: 1,
                     id_lang: 2,
-                    name: "Bouteille".to_string(),
+                    type_name: "Bouteille".to_string(),
                 },
             ],
             vec![InvoiceLangModel {
-                id_invoice_type: 2,
+                id_invoice: 3,
                 id_lang: 1,
-                name: "Plate".to_string(),
+                type_name: "Plate".to_string(),
             }],
-            vec![
-                InvoiceLangModel {
-                    id_invoice_type: 2,
-                    id_lang: 1,
-                    name: "Bottle".to_string(),
-                },
-                InvoiceLangModel {
-                    id_invoice_type: 2,
-                    id_lang: 2,
-                    name: "Bouteille".to_string(),
-                },
-            ],
         ]
     }
 
@@ -174,20 +164,12 @@ pub mod tests {
         connection: &mut DbConnection,
         invoice: &InvoiceModel,
     ) -> Vec<InvoiceLangModel> {
-        use schema::target::invoice_type_lang::dsl::*;
-
-        invoice_type_lang
-            .filter(id_invoice_type.eq(&invoice.id_invoice_type))
+        InvoiceLangModel::belonging_to(&invoice)
+            .select(InvoiceLangModel::as_select())
             .load(connection)
-            .expect("Error loading updated InvoiceModel")
-        // let query = InvoiceLangModel::belonging_to(&invoice);
-
+            .expect("Error loading updated InvoiceLangModel")
         // let debugged_query = debug_query::<Mysql, _>(&query);
         // let sql = debugged_query.to_string();
-
-        // query
-        //     .load(connection)
-        //     .expect("Error loading updated InvoiceLangModel")
     }
 
     pub fn batch_tuple_fixtures() -> Vec<(InvoiceModel, Vec<InvoiceLangModel>)> {
@@ -317,7 +299,10 @@ pub mod tests {
         let mut invoices = batch_tuple_fixtures().clone();
         invoices.push((
             InvoiceModel {
-                id_invoice: 1, // this id will cause a foreign key violation or similar
+                id_invoice: 1,
+                invoice_ref:
+                    "I'm more than 32 characters and because of me the transaction must rollback"
+                        .to_string(),
                 ..invoice_model_fixtures()[1].clone()
             },
             invoice_lang_model_fixtures()[0].clone(),

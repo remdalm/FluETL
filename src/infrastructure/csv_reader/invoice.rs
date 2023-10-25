@@ -11,7 +11,6 @@ pub struct CsvInvoiceDTO {
     pub file_name: String,
     pub date: String,
     pub po_ref: String,
-    pub c_doctype_id: String,
     pub total_tax_excl: String,
     pub total_tax_incl: String,
 }
@@ -19,9 +18,9 @@ pub struct CsvInvoiceDTO {
 impl CsvDTO for CsvInvoiceDTO {}
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct CsvInvoiceLocalizedItemDTO {
-    pub c_doctype_id: String,
+    pub c_invoice_id: String,
     pub ad_language: String,
-    pub name: String,
+    pub invoice_type: String,
 }
 
 impl CsvDTO for CsvInvoiceLocalizedItemDTO {}
@@ -39,7 +38,6 @@ pub mod tests {
                 file_name: "INV-1.pdf".to_string(),
                 date: "2020-01-01".to_string(),
                 po_ref: "PO-1".to_string(),
-                c_doctype_id: "1".to_string(),
                 total_tax_excl: "100.00".to_string(),
                 total_tax_incl: "120.0".to_string(),
             },
@@ -51,7 +49,6 @@ pub mod tests {
                 file_name: "INV -2.pdf".to_string(), // Note the space in the file name
                 date: "2020-01-02".to_string(),
                 po_ref: "PO-2".to_string(),
-                c_doctype_id: "2".to_string(),
                 total_tax_excl: "200.0".to_string(),
                 total_tax_incl: "240.00".to_string(),
             },
@@ -63,7 +60,6 @@ pub mod tests {
                 file_name: "INV-3.pdf".to_string(),
                 date: "2020-01-03".to_string(),
                 po_ref: String::new(),
-                c_doctype_id: "2".to_string(),
                 total_tax_excl: "-300.0".to_string(),
                 total_tax_incl: "360.00".to_string(),
             },

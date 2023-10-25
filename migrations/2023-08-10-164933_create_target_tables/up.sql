@@ -81,36 +81,28 @@ CREATE TABLE `delivery_slip`
 
 /** INVOICE */
 DROP TABLE IF EXISTS `invoice`;
-CREATE TABLE `invoice`
-(
-    `id_invoice`      int(10) unsigned NOT NULL,
-    `id_client`       int(10) unsigned NOT NULL,
-    `client_name`     varchar(255) DEFAULT NULL,
-    `invoice_ref`     varchar(32)      NOT NULL,
-    `date`            date             NOT NULL,
-    `file_name`       varchar(255) DEFAULT NULL,
-    `po_ref`          varchar(255) DEFAULT NULL,
-    `id_invoice_type` int(10) unsigned NOT NULL,
-    `total_tax_excl`  decimal(10, 2)   NOT NULL,
-    `total_tax_incl`  decimal(10, 2)   NOT NULL,
-    PRIMARY KEY (`id_invoice`),
-    KEY `IDX_90651744E173B1B8` (`id_client`),
-    KEY `IDX_90651744ADDA403E` (`id_invoice_type`)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
+CREATE TABLE `invoice` (
+  `id_invoice` int(10) unsigned NOT NULL,
+  `id_client` int(10) unsigned NOT NULL,
+  `client_name` varchar(255) DEFAULT NULL,
+  `invoice_ref` varchar(32) NOT NULL,
+  `date` date NOT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `po_ref` varchar(255) DEFAULT NULL,
+  `total_tax_excl` decimal(10,2) NOT NULL,
+  `total_tax_incl` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id_invoice`),
+  KEY `IDX_90651744E173B1B8` (`id_client`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-DROP TABLE IF EXISTS `invoice_type_lang`;
-CREATE TABLE `invoice_type_lang`
-(
-    `id_invoice_type` int(10) unsigned NOT NULL,
-    `id_lang`         int(10) unsigned NOT NULL,
-    `name`            varchar(255)     NOT NULL,
-    PRIMARY KEY (`id_invoice_type`, `id_lang`),
-    KEY `IDX_83A9B0F6ADDA403E` (`id_invoice_type`),
-    KEY `IDX_83A9B0F6BA299860` (`id_lang`),
-    CONSTRAINT `FK_83A9B0F6ADDA403E` FOREIGN KEY (`id_invoice_type`) REFERENCES `invoice` (`id_invoice_type`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `invoice_lang`;
+CREATE TABLE `invoice_lang` (
+  `id_invoice` int(10) unsigned NOT NULL,
+  `id_lang` int(10) unsigned NOT NULL,
+  `type_name` varchar(255) NOT NULL,
+  PRIMARY KEY (`id_invoice`,`id_lang`),
+  KEY `IDX_33CCE6074EF8BE34` (`id_invoice`),
+  KEY `IDX_33CCE607BA299860` (`id_lang`),
+  CONSTRAINT `FK_33CCE6074EF8BE34` FOREIGN KEY (`id_invoice`) REFERENCES `invoice` (`id_invoice`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

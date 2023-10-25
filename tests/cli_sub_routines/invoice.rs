@@ -126,7 +126,6 @@ fn assert_invoice_results(connection: &mut DbConnection) {
             date: NaiveDate::from_ymd_opt(2020, 11, 18).unwrap(),
             file_name: Some("690156201118A1000003209.pdf".to_string()),
             po_ref: Some("WEB143".to_string()),
-            id_invoice_type: 1000048,
             total_tax_excl: "18.54".to_string(),
             total_tax_incl: "22.25".to_string()
         }
@@ -142,7 +141,6 @@ fn assert_invoice_results(connection: &mut DbConnection) {
             date: NaiveDate::from_ymd_opt(2020, 11, 18).unwrap(),
             file_name: Some("666849201118A1000001209.pdf".to_string()),
             po_ref: Some("W043783".to_string()),
-            id_invoice_type: 1000049,
             total_tax_excl: "36.88".to_string(),
             total_tax_incl: "44.26".to_string()
         }
@@ -158,35 +156,35 @@ fn assert_invoice_results(connection: &mut DbConnection) {
             date: NaiveDate::from_ymd_opt(2020, 11, 4).unwrap(),
             file_name: None,
             po_ref: None,
-            id_invoice_type: 1000050,
             total_tax_excl: "-54.09".to_string(),
             total_tax_incl: "-64.91".to_string()
         }
     );
 
     // Assert Invoice Lang Table
-    let invoice_type_query_results = sql_query("SELECT * FROM `invoice_type_lang`")
+    let invoice_type_query_results = sql_query("SELECT * FROM `invoice_lang`")
         .load::<InvoiceTypePlaceholder>(connection)
-        .expect("Failed to query invoice_type_lang table");
+        .expect("Failed to query invoice_lang table");
 
     let invoice_type_query_result_sample_1 =
-        sql_query("SELECT * FROM `invoice_type_lang` WHERE id_invoice_type = 1000048")
+        sql_query("SELECT * FROM `invoice_lang` WHERE id_invoice = 1000060")
             .load::<InvoiceTypePlaceholder>(connection)
-            .expect("Failed to query invoice_type_lang table");
+            .expect("Failed to query invoice_lang table");
 
-    assert_eq!(invoice_type_query_results.len(), 5);
+    // id 1000060 => 2 languages, 1000058 => 2 , 1000056 => 1 , 1000055 => Invalid, 1000053 => 2
+    assert_eq!(invoice_type_query_results.len(), 7);
     assert_eq!(
         invoice_type_query_result_sample_1,
         vec![
             InvoiceTypePlaceholder {
-                id_invoice_type: 1000048,
+                id_invoice: 1000060,
                 id_lang: 1,
-                name: "Web order".to_string()
+                type_name: "Credit Note - Entry error".to_string()
             },
             InvoiceTypePlaceholder {
-                id_invoice_type: 1000048,
+                id_invoice: 1000060,
                 id_lang: 2,
-                name: "Commande WEB".to_string()
+                type_name: "Avoir pour erreur de saisie".to_string()
             },
         ]
     );
@@ -208,8 +206,6 @@ struct InvoicePlaceholder {
     pub file_name: Option<String>,
     #[diesel(sql_type = diesel::sql_types::Nullable<diesel::sql_types::VarChar>)]
     pub po_ref: Option<String>,
-    #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
-    pub id_invoice_type: u32,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
     pub total_tax_excl: String,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
@@ -219,9 +215,9 @@ struct InvoicePlaceholder {
 #[derive(QueryableByName, Debug, PartialEq)]
 struct InvoiceTypePlaceholder {
     #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
-    pub id_invoice_type: u32,
+    pub id_invoice: u32,
     #[diesel(sql_type = diesel::sql_types::Unsigned<diesel::sql_types::Integer>)]
     pub id_lang: u32,
     #[diesel(sql_type = diesel::sql_types::Varchar)]
-    pub name: String,
+    pub type_name: String,
 }
