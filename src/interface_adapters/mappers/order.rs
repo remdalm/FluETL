@@ -35,7 +35,6 @@ impl TryFrom<CsvOrderDTO> for OrderDomainFactory {
             origin: convert_string_to_option_string(dto.origin),
             completion,
             order_status: convert_string_to_option_string(dto.order_status),
-            delivery_status: convert_string_to_option_string(dto.delivery_status),
         })
     }
 }
@@ -54,8 +53,7 @@ impl From<Order> for OrderModel {
                 chrono::NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             ),
             origin: order.origin().map(|s| s.to_string()),
-            order_status: order.order_status().map(|s| s.to_string()),
-            delivery_status: order.delivery_status().map(|s| s.to_string()),
+            order_status: order.order_status().map(|s| s.as_str().to_string()),
         }
     }
 }
@@ -73,7 +71,6 @@ impl TryFrom<OrderModel> for Order {
             origin: order_model.origin,
             completion: order_model.completion.map(Completion::from),
             order_status: order_model.order_status,
-            delivery_status: order_model.delivery_status,
         }
         .make()
         .map_err(MappingError::Domain)
@@ -89,7 +86,7 @@ mod tests {
             database::models::order::bench::order_model_fixtures,
         },
         interface_adapters::mappers::{
-            convert_domain_entity_to_model, CSVToEntityParser, MappingError, ModelToEntityParser,
+            convert_domain_entity_to_model, CsvEntityParser, MappingError, ModelToEntityParser,
         },
         tests::load_unit_test_env,
     };
@@ -99,8 +96,8 @@ mod tests {
     struct ModelParser;
     struct CsvParser;
     impl ModelToEntityParser<OrderModel, Order> for ModelParser {}
-    impl CSVToEntityParser<CsvOrderDTO, Order> for CsvParser {
-        fn transform_csv(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
+    impl CsvEntityParser<CsvOrderDTO, Order> for CsvParser {
+        fn transform_csv_row_to_entity(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }

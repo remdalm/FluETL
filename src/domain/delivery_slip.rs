@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 
 use super::{
-    vo::{tracking_link::TrackingLink, Reference},
+    vo::{status::Status, tracking_link::TrackingLink, Reference},
     DomainEntity, DomainError,
 };
 
@@ -14,7 +14,7 @@ pub struct DeliverySlip {
     po_ref: Option<String>,
     carrier_name: Option<String>,
     trackingno: Option<String>,
-    status: Option<String>,
+    status: Option<Status>,
     tracking_link: Option<TrackingLink>,
 }
 
@@ -49,8 +49,8 @@ impl DeliverySlip {
         self.trackingno.as_deref()
     }
 
-    pub fn status(&self) -> Option<&str> {
-        self.status.as_deref()
+    pub fn status(&self) -> Option<&Status> {
+        self.status.as_ref()
     }
 
     pub fn tracking_link(&self) -> Option<&TrackingLink> {
@@ -85,7 +85,7 @@ impl DeliverySlipDomainFactory {
             po_ref: self.po_ref,
             carrier_name: self.carrier_name,
             trackingno: self.trackingno,
-            status: self.status,
+            status: self.status.map(|s| Status::from(s.as_str())),
             tracking_link,
         })
     }
@@ -104,7 +104,7 @@ pub mod tests {
                 po_ref: Some("PoRef1".to_string()),
                 carrier_name: Some("Carrier1".to_string()),
                 trackingno: Some("TrackingNo1".to_string()),
-                status: Some("1".to_string()),
+                status: Some(Status::Completed),
                 tracking_link: Some(
                     TrackingLink::try_from("https://tracking1.com/123".to_string()).unwrap(),
                 ),
@@ -117,7 +117,7 @@ pub mod tests {
                 po_ref: Some("PoRef2".to_string()),
                 carrier_name: Some("Carrier2".to_string()),
                 trackingno: Some("TrackingNo2".to_string()),
-                status: Some("2".to_string()),
+                status: Some(Status::Invalid),
                 tracking_link: None,
             },
             DeliverySlip {

@@ -17,6 +17,7 @@ elsa = "1.9.0"
 lazy_static = "1.4.0"
 log = "0.4.20"
 log4rs = { version = "1.2.0", features = ["gzip", "background_rotation"] }
+regex = "1.10.2"
 rust_decimal = { version = "1.32.0", features = ["db-diesel2-mysql"] }
 serde = { version = "1.0.183", features = ["derive"] }
 url = "2.4.1"
@@ -24,6 +25,7 @@ url = "2.4.1"
 [dev-dependencies]
 criterion = "0.5.1"
 diesel_migrations = { version = "2.1.0", features = ["mysql"] }
+serial_test = "2.0.0"
 tempfile = "3.7.1"
 
 [[bench]]

@@ -1,7 +1,5 @@
 use crate::domain::DomainError;
 
-const ERROR_STRING: &str = "The field should contain at least one alphanumeric characters";
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct FilledString(String);
 
@@ -10,13 +8,20 @@ impl FilledString {
         if value.chars().any(|c| c.is_alphanumeric()) {
             Ok(Self(value))
         } else {
-            Err(DomainError::ValidationError(ERROR_STRING.to_string()))
+            Err(DomainError::ValidationError(error_string(&value)))
         }
     }
 
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+
+fn error_string(s: &str) -> String {
+    format!(
+        "FilledString: The string '{}' should contain at least one alphanumeric characters",
+        s
+    )
 }
 
 #[cfg(test)]
@@ -34,33 +39,36 @@ mod tests {
     #[test]
     fn test_new_filled_string_with_empty_string() {
         // Test creating a FilledString with an empty string
-        let filled_string = FilledString::new("".to_string());
+        let tested_value: &str = "";
+        let filled_string = FilledString::new(tested_value.to_string());
         assert!(filled_string.is_err());
         assert_eq!(
             filled_string.unwrap_err(),
-            DomainError::ValidationError(ERROR_STRING.to_string())
+            DomainError::ValidationError(error_string(tested_value))
         );
     }
 
     #[test]
     fn test_new_filled_string_with_space() {
         // Test creating a FilledString with a space
-        let filled_string = FilledString::new(" ".to_string());
+        let tested_value: &str = " ";
+        let filled_string = FilledString::new(tested_value.to_string());
         assert!(filled_string.is_err());
         assert_eq!(
             filled_string.unwrap_err(),
-            DomainError::ValidationError(ERROR_STRING.to_string())
+            DomainError::ValidationError(error_string(tested_value))
         );
     }
 
     #[test]
     fn test_new_filled_string_with_non_alphanumeric_string() {
         // Test creating a FilledString with a non-alphanumeric string
-        let filled_string = FilledString::new("!@#$%^&*()".to_string());
+        let tested_value: &str = "!@#$%^&*()";
+        let filled_string = FilledString::new(tested_value.to_string());
         assert!(filled_string.is_err());
         assert_eq!(
             filled_string.unwrap_err(),
-            DomainError::ValidationError(ERROR_STRING.to_string())
+            DomainError::ValidationError(error_string(tested_value))
         );
     }
 }

@@ -8,6 +8,9 @@ RUSTFLAGS="-L/opt/homebrew/opt/mysql-client/lib" cargo install diesel_cli --no-d
 ### Make schema.rs
 ```bash
 diesel print-schema --database-url [MY_DATABASE_URL] > src/infrastructure/database/schema/[MY_DATABASE_NAME].rs
+
+# Example with --only-tables Regex
+diesel print-schema -o "staging_customer$|language_list$" --database-url mysql://root:toor@127.0.0.1:3307/etl > [MY_DATABASE_URL]
 ```
 
 ### Init first migration

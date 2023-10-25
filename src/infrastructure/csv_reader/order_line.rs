@@ -7,7 +7,6 @@ pub struct CsvOrderLineDTO {
     pub c_orderline_id: String,
     pub c_order_id: String,
     pub item_ref: String,
-    pub item_name: String,
     pub qty_ordered: String,
     pub qty_reserved: String,
     pub qty_delivered: String,
@@ -15,6 +14,15 @@ pub struct CsvOrderLineDTO {
 }
 
 impl CsvDTO for CsvOrderLineDTO {}
+
+#[derive(Debug, Deserialize, PartialEq, Clone)]
+pub struct CsvOrderLineLocalizedItemDTO {
+    pub c_orderline_id: String,
+    pub ad_language: String,
+    pub item_name: String,
+}
+
+impl CsvDTO for CsvOrderLineLocalizedItemDTO {}
 
 pub mod tests {
     use super::*;
@@ -25,7 +33,6 @@ pub mod tests {
                 c_orderline_id: 1.to_string(),
                 c_order_id: 1.to_string(),
                 item_ref: "ItemRef1".to_string(),
-                item_name: "ItemName1".to_string(),
                 qty_ordered: "10".to_string(),
                 qty_reserved: "5".to_string(),
                 qty_delivered: "5".to_string(),
@@ -35,7 +42,6 @@ pub mod tests {
                 c_orderline_id: 2.to_string(),
                 c_order_id: 1.to_string(),
                 item_ref: "ItemRef2".to_string(),
-                item_name: "ItemName2".to_string(),
                 qty_ordered: "20".to_string(),
                 qty_reserved: "10".to_string(),
                 qty_delivered: "10".to_string(),
@@ -45,7 +51,6 @@ pub mod tests {
                 c_orderline_id: 3.to_string(),
                 c_order_id: 2.to_string(),
                 item_ref: "ItemRef3".to_string(),
-                item_name: String::new(),
                 qty_ordered: "30".to_string(),
                 qty_reserved: "15".to_string(),
                 qty_delivered: "15".to_string(),

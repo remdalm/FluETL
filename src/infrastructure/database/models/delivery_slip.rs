@@ -24,13 +24,7 @@ pub struct DeliverySlipModel {
 impl Model for DeliverySlipModel {}
 impl CanUpsertModel for DeliverySlipModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::delivery_slip::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::delivery_slip::table, self, connection)
     }
 }
 
@@ -45,6 +39,8 @@ pub fn batch_upsert(
 
 #[cfg(test)]
 pub mod tests {
+    use serial_test::serial;
+
     use crate::infrastructure::database::{
         connection::tests::{get_test_pooled_connection, reset_test_database},
         models::SingleRowInsertable,
@@ -60,7 +56,7 @@ pub mod tests {
                 shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 1).unwrap()),
                 po_ref: Some("PoRef1".to_string()),
                 carrier_name: Some("Carrier1".to_string()),
-                status: Some("1".to_string()),
+                status: Some("CO".to_string()),
                 tracking_number: Some("TrackingNo1".to_string()),
                 tracking_link: Some("https://tracking1.com/123".to_string()),
             },
@@ -71,7 +67,7 @@ pub mod tests {
                 shipping_date: Some(NaiveDate::from_ymd_opt(2023, 8, 2).unwrap()),
                 po_ref: Some("PoRef2".to_string()),
                 carrier_name: Some("Carrier2".to_string()),
-                status: Some("2".to_string()),
+                status: Some("IN".to_string()),
                 tracking_number: Some("TrackingNo2".to_string()),
                 tracking_link: None,
             },
@@ -114,7 +110,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_delivery_slip_when_no_conflit() {
+    #[serial]
+    fn test_upsert_delivery_slip_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
@@ -134,7 +131,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_delivery_slip_when_conflit() {
+    #[serial]
+    fn test_upsert_delivery_slip_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 

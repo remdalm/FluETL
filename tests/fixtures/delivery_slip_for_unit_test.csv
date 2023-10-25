@@ -1,4 +1,4 @@
 m_inout_id;c_bpartner_id;documentno;shipping_date;po_ref;carrier_name;trackingno;status;tracking_link
-1;1;Doc1;2023-08-01;PoRef1;Carrier1;TrackingNo1;1;https://tracking1.com/123
-2;2;Doc2;2023-08-02;PoRef2;Carrier2;TrackingNo2;2;http:://tracking2.com
+1;1;Doc1;2023-08-01;PoRef1;Carrier1;TrackingNo1;CO;https://tracking1.com/123
+2;2;Doc2;2023-08-02;PoRef2;Carrier2;TrackingNo2;IN;http:://tracking2.com
 3;1;Doc3;;;;;;

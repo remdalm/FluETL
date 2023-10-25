@@ -19,3 +19,10 @@ CREATE TABLE `staging_customer` (
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `id_source_contact` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE `language_list` (
+  `locale` varchar(5) NOT NULL,
+  `id` int(11) NOT NULL,
+  PRIMARY KEY (`locale`),
+  UNIQUE KEY `id_target_language` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

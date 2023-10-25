@@ -18,19 +18,12 @@ pub struct OrderModel {
     pub origin: Option<String>,
     pub completion: Option<u32>,
     pub order_status: Option<String>,
-    pub delivery_status: Option<String>,
 }
 
 impl Model for OrderModel {}
 impl CanUpsertModel for OrderModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::order::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::order::table, self, connection)
     }
 }
 
@@ -45,13 +38,6 @@ impl SingleRowUpdatable<schema::target::order::table, DbConnection> for OrderMod
         schema::target::order::table
     }
 }
-
-// pub(crate) trait CanFetchOrderModel: HasTargetConnection {
-//     fn fetch_order(&self, order_id: &u32) -> Result<OrderModel, InfrastructureError> {
-//         OrderModel::select_by_id(&mut self.get_pooled_connection(), order_id)
-//             .map_err(|e| InfrastructureError::DatabaseError(e))
-//     }
-// }
 
 impl OrderModel {
     pub fn select_by_id(
@@ -82,8 +68,7 @@ pub mod bench {
                     NaiveDate::from_ymd_opt(2023, 8, 1).unwrap(),
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
-                order_status: Some("done".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some("CO".to_string()),
             },
             OrderModel {
                 id_order: 2,
@@ -97,8 +82,7 @@ pub mod bench {
                     NaiveDate::from_ymd_opt(2023, 8, 2).unwrap(),
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
-                order_status: Some("failed".to_string()),
-                delivery_status: Some("done".to_string()),
+                order_status: Some("IN".to_string()),
             },
             OrderModel {
                 id_order: 3,
@@ -113,7 +97,6 @@ pub mod bench {
                     NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
                 ),
                 order_status: None,
-                delivery_status: Some("done".to_string()),
             },
         ]
     }
@@ -126,6 +109,7 @@ pub mod tests {
         models::order::bench::order_model_fixtures,
     };
     use diesel::result::{DatabaseErrorKind, Error as DieselError};
+    use serial_test::serial;
 
     pub fn insert_order(
         connection: &mut DbConnection,
@@ -148,6 +132,7 @@ pub mod tests {
     use super::*;
 
     #[test]
+    #[serial]
     fn test_insert_order() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -167,6 +152,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_update_order() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -197,6 +183,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_select_order_by_id() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -218,6 +205,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_insert_duplicated_key() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -239,7 +227,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_order_when_no_conflit() {
+    #[serial]
+    fn test_upsert_order_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
@@ -257,7 +246,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_order_when_conflit() {
+    #[serial]
+    fn test_upsert_order_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 

@@ -2,6 +2,7 @@ use chrono::NaiveDate;
 
 use crate::domain::DomainError;
 
+#[derive(Debug)]
 pub struct DateDTO {
     string_date: Option<StringDateDTO>,
     naive_date: Option<NaiveDate>,
@@ -41,6 +42,7 @@ impl From<StringDateDTO> for DateDTO {
     }
 }
 
+#[derive(Debug)]
 pub struct StringDateDTO {
     value: String,
     fmt: String,

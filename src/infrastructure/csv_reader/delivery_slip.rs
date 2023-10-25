@@ -30,7 +30,7 @@ pub mod tests {
                 po_ref: "PoRef1".to_string(),
                 carrier_name: "Carrier1".to_string(),
                 trackingno: "TrackingNo1".to_string(),
-                status: "1".to_string(),
+                status: "CO".to_string(),
                 tracking_link: "https://tracking1.com/123".to_string(),
             },
             CsvDeliverySlipDTO {
@@ -41,7 +41,7 @@ pub mod tests {
                 po_ref: "PoRef2".to_string(),
                 carrier_name: "Carrier2".to_string(),
                 trackingno: "TrackingNo2".to_string(),
-                status: "2".to_string(),
+                status: "IN".to_string(),
                 tracking_link: "http:://tracking2.com".to_string(),
             },
             CsvDeliverySlipDTO {

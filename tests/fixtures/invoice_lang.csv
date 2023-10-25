@@ -1,0 +1,10 @@
+c_invoice_id;ad_language;invoice_type
+1000053;en_US;Web order
+1000053;fr_FR;Commande WEB
+1000055;fr_FR;Commande WEB
+1000055;en_US;Web order
+1000056;en_US;Credit Note - After-sales warranty
+1000058;en_US;Web order
+1000058;fr_FR;Commande WEB
+1000060;fr_FR;Avoir pour erreur de saisie
+1000060;en_US;Credit Note - Entry error

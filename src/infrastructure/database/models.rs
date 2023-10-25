@@ -10,6 +10,7 @@ use super::connection::DbConnection;
 
 pub(crate) mod delivery_slip;
 pub(crate) mod invoice;
+pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
@@ -76,3 +77,13 @@ where
 
     fn target_client_table(&self) -> T;
 }
+
+macro_rules! upsert {
+    ($table:path, $model:expr, $connection:expr) => {
+        diesel::replace_into($table)
+            .values($model)
+            .execute($connection)
+            .map(|_| ())
+    };
+}
+use upsert;

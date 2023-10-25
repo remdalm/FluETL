@@ -16,13 +16,11 @@ pub struct MappingClientModel {
 impl Model for MappingClientModel {}
 impl CanUpsertModel for MappingClientModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::mapping_client_contact::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(
+            schema::target::mapping_client_contact::table,
+            self,
+            connection
+        )
     }
 }
 
@@ -95,6 +93,7 @@ pub mod bench {
 #[cfg(test)]
 pub mod tests {
     use diesel::result::Error as DieselError;
+    use serial_test::serial;
 
     use crate::infrastructure::database::connection::tests::{
         get_test_pooled_connection, reset_test_database,
@@ -188,6 +187,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_to_insert() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -216,6 +216,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_to_update() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
@@ -245,6 +246,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_read_source() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);

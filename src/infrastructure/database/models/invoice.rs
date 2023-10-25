@@ -6,6 +6,26 @@ use diesel::prelude::*;
 use diesel::result::Error as DieselError;
 use rust_decimal::Decimal;
 
+#[derive(
+    Queryable,
+    Selectable,
+    Identifiable,
+    Insertable,
+    Associations,
+    AsChangeset,
+    PartialEq,
+    Debug,
+    Clone,
+)]
+#[diesel(table_name = schema::target::invoice_lang)]
+#[diesel(belongs_to(InvoiceModel, foreign_key = id_invoice))]
+#[diesel(primary_key(id_invoice, id_lang))]
+pub struct InvoiceLangModel {
+    pub id_invoice: u32,
+    pub id_lang: u32,
+    pub type_name: String,
+}
+
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::invoice)]
 #[diesel(primary_key(id_invoice))]
@@ -17,7 +37,6 @@ pub struct InvoiceModel {
     pub date: NaiveDate,
     pub file_name: Option<String>,
     pub po_ref: Option<String>,
-    pub type_: String,
     pub total_tax_excl: Decimal,
     pub total_tax_incl: Decimal,
 }
@@ -25,31 +44,47 @@ pub struct InvoiceModel {
 impl Model for InvoiceModel {}
 impl CanUpsertModel for InvoiceModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::invoice::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::invoice::table, self, connection)
+    }
+}
+
+impl Model for (InvoiceModel, Vec<InvoiceLangModel>) {}
+impl CanUpsertModel for (InvoiceModel, Vec<InvoiceLangModel>) {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        connection.transaction(|connection| {
+            super::upsert!(schema::target::invoice::table, &self.0, connection)?;
+            super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
+        })
     }
 }
 
 pub fn batch_upsert(
-    models: &[InvoiceModel],
+    models: &[(InvoiceModel, Vec<InvoiceLangModel>)],
     connection: &mut DbConnection,
 ) -> Result<(), DieselError> {
-    let query = diesel::replace_into(schema::target::invoice::table).values(models);
-
-    query.execute(connection).map(|_| ())
+    let invoices: Vec<&InvoiceModel> = models.iter().map(|tuple| &tuple.0).collect();
+    let invoice_langs: Vec<&InvoiceLangModel> =
+        models.iter().flat_map(|tuple| tuple.1.iter()).collect();
+    connection.transaction(|connection| {
+        super::upsert!(schema::target::invoice::table, invoices, connection)?;
+        super::upsert!(
+            schema::target::invoice_lang::table,
+            invoice_langs,
+            connection
+        )
+    })
 }
 
 #[cfg(test)]
 pub mod tests {
+    use serial_test::serial;
+
     use crate::infrastructure::database::{
         connection::tests::{get_test_pooled_connection, reset_test_database},
         models::SingleRowInsertable,
     };
+    // use diesel::debug_query;
+    // use diesel::mysql::Mysql;
 
     use super::*;
     pub fn invoice_model_fixtures() -> [InvoiceModel; 2] {
@@ -62,7 +97,6 @@ pub mod tests {
                 file_name: Some("INV-1.pdf".to_string()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 1).unwrap(),
                 po_ref: Some("PO-1".to_string()),
-                type_: "Invoice 123".to_string(),
                 total_tax_excl: Decimal::new(10000, 2),
                 total_tax_incl: Decimal::new(12000, 2),
             },
@@ -74,10 +108,31 @@ pub mod tests {
                 file_name: Some("INV-3.pdf".to_string()),
                 date: NaiveDate::from_ymd_opt(2020, 1, 3).unwrap(),
                 po_ref: None,
-                type_: "Invoice 456".to_string(),
                 total_tax_excl: Decimal::new(-30000, 2),
                 total_tax_incl: Decimal::new(36000, 2),
             },
+        ]
+    }
+
+    pub fn invoice_lang_model_fixtures() -> [Vec<InvoiceLangModel>; 2] {
+        [
+            vec![
+                InvoiceLangModel {
+                    id_invoice: 1,
+                    id_lang: 1,
+                    type_name: "Bottle".to_string(),
+                },
+                InvoiceLangModel {
+                    id_invoice: 1,
+                    id_lang: 2,
+                    type_name: "Bouteille".to_string(),
+                },
+            ],
+            vec![InvoiceLangModel {
+                id_invoice: 3,
+                id_lang: 1,
+                type_name: "Plate".to_string(),
+            }],
         ]
     }
 
@@ -105,35 +160,64 @@ pub mod tests {
             .expect("Error loading updated InvoiceModel")
     }
 
+    pub fn read_invoice_types(
+        connection: &mut DbConnection,
+        invoice: &InvoiceModel,
+    ) -> Vec<InvoiceLangModel> {
+        InvoiceLangModel::belonging_to(&invoice)
+            .select(InvoiceLangModel::as_select())
+            .load(connection)
+            .expect("Error loading updated InvoiceLangModel")
+        // let debugged_query = debug_query::<Mysql, _>(&query);
+        // let sql = debugged_query.to_string();
+    }
+
+    pub fn batch_tuple_fixtures() -> Vec<(InvoiceModel, Vec<InvoiceLangModel>)> {
+        vec![
+            (
+                invoice_model_fixtures()[0].clone(),
+                invoice_lang_model_fixtures()[0].clone(),
+            ),
+            (
+                invoice_model_fixtures()[1].clone(),
+                invoice_lang_model_fixtures()[1].clone(),
+            ),
+        ]
+    }
+
     #[test]
-    fn test_upsert_invoice_when_no_conflit() {
+    #[serial]
+    fn test_upsert_invoice_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
         insert_invoice(&mut connection, true, &invoice_model_fixtures()[0])
-            .expect("Failed to upsert delivery slip");
+            .expect("Failed to upsert invoice");
 
         let result = schema::target::invoice::dsl::invoice
             .filter(schema::target::invoice::id_invoice.eq(&invoice_model_fixtures()[0].id_invoice))
             .load::<InvoiceModel>(&mut connection)
-            .expect("Error loading inserted DeloverySlipModel");
+            .expect("Error loading inserted InvoiceLangModel");
 
         assert_eq!(result.len(), 1);
         assert_eq!(result[0], invoice_model_fixtures()[0]);
     }
 
     #[test]
-    fn test_upsert_invoice_when_conflit() {
+    #[serial]
+    fn test_upsert_invoice_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
         let mut invoice_models = invoice_model_fixtures();
 
-        insert_invoice(&mut connection, false, &invoice_models[0]).expect("Failed to insert order");
+        insert_invoice(&mut connection, false, &invoice_models[0])
+            .expect("Failed to insert invoice");
 
         invoice_models[0].total_tax_incl = Decimal::new(121, 2);
 
-        insert_invoice(&mut connection, true, &invoice_models[0]).expect("Failed to upsert order");
+        insert_invoice(&mut connection, true, &invoice_models[0])
+            .expect("Failed to upsert invoice");
 
         let result = schema::target::invoice::dsl::invoice
             .filter(schema::target::invoice::id_invoice.eq(1))
@@ -148,5 +232,88 @@ pub mod tests {
                 ..invoice_model_fixtures()[0].clone()
             }
         );
+    }
+
+    #[test]
+    #[serial]
+    fn test_upsert_invoice_multiple_languages() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        let invoice = &invoice_model_fixtures()[0];
+        let langs = &invoice_lang_model_fixtures()[0];
+
+        let model_with_langs = (invoice.clone(), langs.clone());
+
+        model_with_langs
+            .upsert(&mut connection)
+            .expect("Failed to upsert invoice with multiple languages");
+
+        // Check if the invoice is inserted
+        let saved_invoice: Vec<InvoiceModel> = schema::target::invoice::dsl::invoice
+            .filter(schema::target::invoice::id_invoice.eq(invoice.id_invoice))
+            .load(&mut connection)
+            .expect("Error loading invoice");
+
+        assert_eq!(saved_invoice.len(), 1);
+        assert_eq!(saved_invoice[0], *invoice);
+
+        // Check if the languages are inserted
+        let saved_langs: Vec<InvoiceLangModel> = read_invoice_types(&mut connection, invoice);
+
+        assert_eq!(saved_langs.len(), langs.len());
+        for lang in langs {
+            assert!(saved_langs.contains(lang));
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn test_batch_upsert() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        let invoices = batch_tuple_fixtures().clone();
+
+        batch_upsert(&invoices, &mut connection).expect("Failed to batch upsert");
+
+        let saved_invoices = read_invoices(&mut connection);
+        assert_eq!(saved_invoices.len(), 2);
+        assert!(saved_invoices.contains(&invoice_model_fixtures()[0]));
+        assert!(saved_invoices.contains(&invoice_model_fixtures()[1]));
+
+        assert!(read_invoice_types(&mut connection, &saved_invoices[0])
+            .iter()
+            .any(|invoice_type| invoice_lang_model_fixtures()[0].contains(invoice_type)));
+        assert!(read_invoice_types(&mut connection, &saved_invoices[1])
+            .iter()
+            .any(|invoice_type| invoice_lang_model_fixtures()[1].contains(invoice_type)));
+    }
+
+    #[test]
+    #[serial]
+    fn test_batch_upsert_transaction_rollback() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+
+        let mut invoices = batch_tuple_fixtures().clone();
+        invoices.push((
+            InvoiceModel {
+                id_invoice: 1,
+                invoice_ref:
+                    "I'm more than 32 characters and because of me the transaction must rollback"
+                        .to_string(),
+                ..invoice_model_fixtures()[1].clone()
+            },
+            invoice_lang_model_fixtures()[0].clone(),
+        ));
+
+        let res = batch_upsert(&invoices, &mut connection);
+        // We expect an error because one of the invoices has an invalid id
+        assert!(res.is_err());
+
+        // Check that no invoices were inserted due to transaction rollback
+        let saved_invoices = read_invoices(&mut connection);
+        assert_eq!(saved_invoices.len(), 0);
     }
 }

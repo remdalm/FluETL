@@ -6,6 +6,26 @@ use diesel::result::Error as DieselError;
 
 use super::{CanUpsertModel, Model};
 
+#[derive(
+    Selectable,
+    Queryable,
+    Identifiable,
+    Insertable,
+    AsChangeset,
+    Associations,
+    PartialEq,
+    Debug,
+    Clone,
+)]
+#[diesel(table_name = schema::target::order_line_lang)]
+#[diesel(belongs_to(OrderLineModel, foreign_key = id_order_line))]
+#[diesel(primary_key(id_order_line, id_lang))]
+pub struct OrderLineLangModel {
+    pub id_order_line: u32,
+    pub id_lang: u32,
+    pub product_name: String,
+}
+
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::order_line)]
 #[diesel(primary_key(id_order_line))]
@@ -13,7 +33,6 @@ pub struct OrderLineModel {
     pub id_order_line: u32,
     pub id_order: u32,
     pub product_ref: String,
-    pub product_name: Option<String>,
     pub qty_ordered: u32,
     pub qty_reserved: u32,
     pub qty_delivered: u32,
@@ -23,28 +42,38 @@ pub struct OrderLineModel {
 impl Model for OrderLineModel {}
 impl CanUpsertModel for OrderLineModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
-        diesel::insert_into(schema::target::order_line::table)
-            .values(self)
-            .on_conflict(diesel::dsl::DuplicatedKeys)
-            .do_update()
-            .set(self)
-            .execute(connection)
-            .map(|_| ())
+        super::upsert!(schema::target::order_line::table, self, connection)
+    }
+}
+
+impl Model for (OrderLineModel, Vec<OrderLineLangModel>) {}
+impl CanUpsertModel for (OrderLineModel, Vec<OrderLineLangModel>) {
+    fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
+        // No need for transaction as order_line_lang domain is not important
+        super::upsert!(schema::target::order_line::table, &self.0, connection)?;
+        super::upsert!(schema::target::order_line_lang::table, &self.1, connection)
     }
 }
 
 pub fn batch_upsert(
-    models: &[OrderLineModel],
+    models: &[(OrderLineModel, Vec<OrderLineLangModel>)],
     connection: &mut DbConnection,
 ) -> Result<(), DieselError> {
-    let query = diesel::replace_into(schema::target::order_line::table).values(models);
-
-    query.execute(connection).map(|_| ())
+    let order_lines: Vec<&OrderLineModel> = models.iter().map(|tuple| &tuple.0).collect();
+    let order_line_langs: Vec<&OrderLineLangModel> =
+        models.iter().flat_map(|tuple| tuple.1.iter()).collect();
+    super::upsert!(schema::target::order_line::table, order_lines, connection)?;
+    super::upsert!(
+        schema::target::order_line_lang::table,
+        order_line_langs,
+        connection
+    )
 }
 
 #[cfg(test)]
 pub mod tests {
     use diesel::result::DatabaseErrorKind;
+    use serial_test::serial;
 
     use crate::infrastructure::database::{
         connection::tests::{get_test_pooled_connection, reset_test_database},
@@ -62,7 +91,6 @@ pub mod tests {
                 id_order_line: 1,
                 id_order: 1,
                 product_ref: "ItemRef1".to_string(),
-                product_name: Some("ItemName1".to_string()),
                 qty_ordered: 10,
                 qty_reserved: 5,
                 qty_delivered: 5,
@@ -72,7 +100,6 @@ pub mod tests {
                 id_order_line: 2,
                 id_order: 1,
                 product_ref: "ItemRef2".to_string(),
-                product_name: Some("ItemName2".to_string()),
                 qty_ordered: 20,
                 qty_reserved: 10,
                 qty_delivered: 10,
@@ -82,12 +109,34 @@ pub mod tests {
                 id_order_line: 3,
                 id_order: 2,
                 product_ref: "ItemRef3".to_string(),
-                product_name: None,
                 qty_ordered: 30,
                 qty_reserved: 15,
                 qty_delivered: 15,
                 due_date: None,
             },
+        ]
+    }
+
+    pub fn order_line_lang_model_fixtures() -> [Vec<OrderLineLangModel>; 3] {
+        [
+            vec![
+                OrderLineLangModel {
+                    id_order_line: 1,
+                    id_lang: 1,
+                    product_name: "Bottle".to_string(),
+                },
+                OrderLineLangModel {
+                    id_order_line: 1,
+                    id_lang: 2,
+                    product_name: "Bouteille".to_string(),
+                },
+            ],
+            vec![OrderLineLangModel {
+                id_order_line: 2,
+                id_lang: 1,
+                product_name: "Plate".to_string(),
+            }],
+            Vec::new(),
         ]
     }
 
@@ -119,8 +168,19 @@ pub mod tests {
             .expect("Error loading updated OrderLineModel")
     }
 
+    pub fn read_order_line_items(
+        connection: &mut DbConnection,
+        order_line: &OrderLineModel,
+    ) -> Vec<OrderLineLangModel> {
+        OrderLineLangModel::belonging_to(&order_line)
+            .select(OrderLineLangModel::as_select())
+            .load(connection)
+            .expect("Error loading updated OrderLineLangModel")
+    }
+
     #[test]
-    fn test_upsert_order_line_when_no_conflit() {
+    #[serial]
+    fn test_upsert_order_line_when_no_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
@@ -141,7 +201,8 @@ pub mod tests {
     }
 
     #[test]
-    fn test_upsert_order_line_when_conflit() {
+    #[serial]
+    fn test_upsert_order_line_when_conflict() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
@@ -172,6 +233,7 @@ pub mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_upsert_order_line_when_no_() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);

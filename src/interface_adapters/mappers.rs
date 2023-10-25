@@ -1,5 +1,6 @@
 pub(crate) mod delivery_slip;
 pub(crate) mod invoice;
+pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
@@ -59,7 +60,7 @@ where
     }
 }
 
-pub trait CSVToEntityParser<CSV, DE>
+pub trait CsvEntityParser<CSV, DE>
 where
     CSV: CsvDTO,
     DE: DomainEntity,
@@ -67,15 +68,15 @@ where
     fn parse_all(&self, csv_dtos: Vec<CSV>) -> Vec<Result<DE, MappingError>> {
         csv_dtos
             .into_iter()
-            .map(|s| self.transform_csv(s))
+            .map(|s| self.transform_csv_row_to_entity(s))
             .collect()
     }
 
     fn parse(&self, csv_dto: CSV) -> Result<DE, MappingError> {
-        self.transform_csv(csv_dto)
+        self.transform_csv_row_to_entity(csv_dto)
     }
 
-    fn transform_csv(&self, csv: CSV) -> Result<DE, MappingError>;
+    fn transform_csv_row_to_entity(&self, csv: CSV) -> Result<DE, MappingError>;
 }
 
 pub trait ModelToEntityParser<M, DE>

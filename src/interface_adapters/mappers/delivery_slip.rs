@@ -43,7 +43,7 @@ impl From<DeliverySlip> for DeliverySlipModel {
             shipping_date: delivery_slip.shipping_date().copied(),
             po_ref: delivery_slip.po_ref().map(|s| s.to_string()),
             carrier_name: delivery_slip.carrier_name().map(|s| s.to_string()),
-            status: delivery_slip.status().map(|s| s.to_string()),
+            status: delivery_slip.status().map(|s| s.as_str().to_string()),
             tracking_number: delivery_slip.trackingno().map(|s| s.to_string()),
             tracking_link: delivery_slip.tracking_link().map(|tl| tl.to_string()),
         }
@@ -58,15 +58,18 @@ mod tests {
             csv_reader::delivery_slip::tests::csv_delivery_slip_dto_fixtures,
             database::models::delivery_slip::tests::delivery_slip_model_fixtures,
         },
-        interface_adapters::mappers::{convert_domain_entity_to_model, CSVToEntityParser},
+        interface_adapters::mappers::{convert_domain_entity_to_model, CsvEntityParser},
         tests::load_unit_test_env,
     };
 
     use super::*;
 
     struct CsvParser;
-    impl CSVToEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
-        fn transform_csv(&self, csv: CsvDeliverySlipDTO) -> Result<DeliverySlip, MappingError> {
+    impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for CsvParser {
+        fn transform_csv_row_to_entity(
+            &self,
+            csv: CsvDeliverySlipDTO,
+        ) -> Result<DeliverySlip, MappingError> {
             let factory: DeliverySlipDomainFactory = csv.try_into()?;
             factory.make().map_err(MappingError::Domain)
         }
