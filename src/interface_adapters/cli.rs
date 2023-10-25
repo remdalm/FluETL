@@ -117,12 +117,16 @@ pub fn main_using_clap() {
             EntitySubCommand::Invoice(arg) => {
                 init(arg.env_file);
                 info!("Importing invoices...");
-                let mut handler = ImportInvoiceUseCase::default();
-                if arg.batch {
-                    info!("Batch mode enabled - batch size: {}", arg.batch_size);
-                    handler.set_batch(arg.batch_size);
+                let result = ImportInvoiceUseCase::new().map(|mut handler| {
+                    if arg.batch {
+                        info!("Batch mode enabled - batch size: {}", arg.batch_size);
+                        handler.set_batch(arg.batch_size);
+                    }
+                    error_logger(handler.execute());
+                });
+                if let Err(e) = result {
+                    error_logger(Some(e));
                 }
-                error_logger(handler.execute());
                 info!("Done");
             }
         },

@@ -4,7 +4,7 @@ use super::*;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
 pub struct CsvInvoiceDTO {
-    pub invoice_id: String,
+    pub c_invoice_id: String,
     pub c_bpartner_id: String,
     pub client_name: String,
     pub invoice_ref: String,
@@ -21,7 +21,7 @@ impl CsvDTO for CsvInvoiceDTO {}
 pub struct CsvInvoiceLocalizedItemDTO {
     pub c_doctype_id: String,
     pub ad_language: String,
-    pub item_name: String,
+    pub name: String,
 }
 
 impl CsvDTO for CsvInvoiceLocalizedItemDTO {}
@@ -32,7 +32,7 @@ pub mod tests {
     pub fn csv_invoice_dto_fixtures() -> [CsvInvoiceDTO; 3] {
         [
             CsvInvoiceDTO {
-                invoice_id: "1".to_string(),
+                c_invoice_id: "1".to_string(),
                 c_bpartner_id: "1".to_string(),
                 client_name: "Client 1".to_string(),
                 invoice_ref: "INV-1".to_string(),
@@ -44,7 +44,7 @@ pub mod tests {
                 total_tax_incl: "120.0".to_string(),
             },
             CsvInvoiceDTO {
-                invoice_id: "2".to_string(),
+                c_invoice_id: "2".to_string(),
                 c_bpartner_id: "2".to_string(),
                 client_name: "Client 2".to_string(),
                 invoice_ref: "INV-2".to_string(),
@@ -56,7 +56,7 @@ pub mod tests {
                 total_tax_incl: "240.00".to_string(),
             },
             CsvInvoiceDTO {
-                invoice_id: "3".to_string(),
+                c_invoice_id: "3".to_string(),
                 c_bpartner_id: "1".to_string(),
                 client_name: "Client 1".to_string(),
                 invoice_ref: "INV-3".to_string(),

@@ -84,8 +84,8 @@ CREATE TABLE `invoice` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
-DROP TABLE IF EXISTS `invoice_lang`;
-CREATE TABLE `invoice_lang` (
+DROP TABLE IF EXISTS `invoice_type_lang`;
+CREATE TABLE `invoice_type_lang` (
   `id_invoice_type` int(10) unsigned NOT NULL,
   `id_lang` int(10) unsigned NOT NULL,
   `name` varchar(255) NOT NULL,

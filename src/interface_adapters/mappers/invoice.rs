@@ -24,7 +24,7 @@ impl TryFrom<CsvInvoiceDTO> for InvoiceDomainFactory {
         let date_dto = DateDTO::from(StringDateDTO::new(dto.date, date_format));
 
         Ok(InvoiceDomainFactory {
-            invoice_id: parse_string_to_u32("invoice_id", &dto.invoice_id)?,
+            invoice_id: parse_string_to_u32("invoice_id", &dto.c_invoice_id)?,
             client_id: parse_string_to_u32("c_bpartner_id", &dto.c_bpartner_id)?,
             client_name: convert_string_to_option_string(dto.client_name),
             invoice_ref: dto.invoice_ref,
@@ -46,7 +46,7 @@ impl TryFrom<CsvInvoiceLocalizedItemDTO> for InvoiceLocalizedTypeFactory {
     ) -> Result<InvoiceLocalizedTypeFactory, MappingError> {
         Ok(InvoiceLocalizedTypeFactory {
             locale: Locale::try_from(dto.ad_language.as_str())?,
-            name: Translation::new(dto.item_name)?,
+            name: Translation::new(dto.name)?,
             invoice_type_id: parse_string_to_u32("c_doctype_id", &dto.c_doctype_id)?,
         })
     }

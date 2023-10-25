@@ -7,7 +7,7 @@ use diesel::result::Error as DieselError;
 use rust_decimal::Decimal;
 
 #[derive(Queryable, Identifiable, Insertable, AsChangeset, PartialEq, Debug, Clone)]
-#[diesel(table_name = schema::target::invoice_lang)]
+#[diesel(table_name = schema::target::invoice_type_lang)]
 // Seem not to work, probably because it is not a proper one to many relationship
 // #[diesel(belongs_to(InvoiceModel, foreign_key = id_invoice_type))]
 #[diesel(primary_key(id_invoice_type, id_lang))]
@@ -45,7 +45,11 @@ impl CanUpsertModel for (InvoiceModel, Vec<InvoiceLangModel>) {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
         connection.transaction(|connection| {
             super::upsert!(schema::target::invoice::table, &self.0, connection)?;
-            super::upsert!(schema::target::invoice_lang::table, &self.1, connection)
+            super::upsert!(
+                schema::target::invoice_type_lang::table,
+                &self.1,
+                connection
+            )
         })
     }
 }
@@ -60,7 +64,7 @@ pub fn batch_upsert(
     connection.transaction(|connection| {
         super::upsert!(schema::target::invoice::table, invoices, connection)?;
         super::upsert!(
-            schema::target::invoice_lang::table,
+            schema::target::invoice_type_lang::table,
             invoice_langs,
             connection
         )
@@ -170,9 +174,9 @@ pub mod tests {
         connection: &mut DbConnection,
         invoice: &InvoiceModel,
     ) -> Vec<InvoiceLangModel> {
-        use schema::target::invoice_lang::dsl::*;
+        use schema::target::invoice_type_lang::dsl::*;
 
-        invoice_lang
+        invoice_type_lang
             .filter(id_invoice_type.eq(&invoice.id_invoice_type))
             .load(connection)
             .expect("Error loading updated InvoiceModel")
