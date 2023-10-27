@@ -95,6 +95,13 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    product_substitute (id_product, id_substitute) {
+        id_product -> Unsigned<Integer>,
+        id_substitute -> Unsigned<Integer>,
+    }
+}
+
 diesel::joinable!(invoice_lang -> invoice (id_invoice));
 diesel::joinable!(order_line -> order (id_order));
 diesel::joinable!(order_line_lang -> order_line (id_order_line));
@@ -107,4 +114,5 @@ diesel::allow_tables_to_appear_in_same_query!(
     order,
     order_line,
     order_line_lang,
+    product_substitute,
 );

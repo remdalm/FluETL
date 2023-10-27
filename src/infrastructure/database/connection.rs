@@ -86,7 +86,7 @@ impl HasConnection for HasLegacyStagingConnection {
 #[cfg(test)]
 pub(crate) mod tests {
     use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-    pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+    pub const TEST_MIGRATIONS: EmbeddedMigrations = embed_migrations!("tests/migrations");
     use super::*;
     lazy_static! {
         // Define a static connection pool
@@ -123,14 +123,14 @@ pub(crate) mod tests {
     // Function to set up the test database using the initial migration's up.sql
     pub fn setup_test_database(connection: &mut DbConnection) {
         connection
-            .run_pending_migrations(MIGRATIONS)
+            .run_pending_migrations(TEST_MIGRATIONS)
             .expect("Failed to run pending migrations");
     }
 
     // Function to clean up the test database
     pub fn teardown_test_database(connection: &mut DbConnection) {
         connection
-            .revert_all_migrations(MIGRATIONS)
+            .revert_all_migrations(TEST_MIGRATIONS)
             .expect("Failed to reverse pending migrations");
     }
 

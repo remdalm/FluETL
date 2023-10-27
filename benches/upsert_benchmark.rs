@@ -11,7 +11,7 @@ use fluetl::{
 };
 
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+pub const TEST_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 // Define benchmark functions
 pub fn benchmark_upsert_recommended(c: &mut Criterion) {
@@ -82,14 +82,14 @@ fn setup_database_connection() -> DbConnection {
 // Function to set up the test database using the initial migration's up.sql
 fn setup_test_database(connection: &mut DbConnection) {
     connection
-        .run_pending_migrations(MIGRATIONS)
+        .run_pending_migrations(TEST_MIGRATIONS)
         .expect("Failed to run pending migrations");
 }
 
 // Function to clean up the test database
 fn teardown_test_database(connection: &mut DbConnection) {
     connection
-        .revert_all_migrations(MIGRATIONS)
+        .revert_all_migrations(TEST_MIGRATIONS)
         .expect("Failed to reverse pending migrations");
 }
 
