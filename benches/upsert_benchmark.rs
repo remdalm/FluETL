@@ -11,7 +11,7 @@ use fluetl::{
 };
 
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-pub const TEST_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+pub const TEST_MIGRATIONS: EmbeddedMigrations = embed_migrations!("tests/migrations");
 
 // Define benchmark functions
 pub fn benchmark_upsert_recommended(c: &mut Criterion) {
