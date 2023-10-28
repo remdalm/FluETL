@@ -32,9 +32,7 @@ pub fn batch_upsert(
     models: &[DeliverySlipModel],
     connection: &mut DbConnection,
 ) -> Result<(), DieselError> {
-    let query = diesel::replace_into(schema::target::delivery_slip::table).values(models);
-
-    query.execute(connection).map(|_| ())
+    super::upsert!(schema::target::delivery_slip::table, models, connection)
 }
 
 #[cfg(test)]

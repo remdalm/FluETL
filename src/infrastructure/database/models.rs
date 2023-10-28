@@ -14,6 +14,7 @@ pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
+pub(crate) mod product_substitute;
 
 pub use order::OrderModel;
 
@@ -28,6 +29,16 @@ where
     Self: Sized,
 {
     fn select_all(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError>;
+}
+
+pub trait CanDeleteModel: Model
+where
+    Self: Sized,
+{
+    fn delete_list(
+        connection: &mut DbConnection,
+        associations_to_delete: &[Self],
+    ) -> Option<Vec<DieselError>>;
 }
 
 pub trait SingleRowInsertable<T, Conn>
