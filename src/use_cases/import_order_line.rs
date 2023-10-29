@@ -12,7 +12,7 @@ use crate::{
     infrastructure::{
         csv_reader::{
             order_line::{CsvOrderLineDTO, CsvOrderLineLocalizedItemDTO},
-            CsvType,
+            CanReadCSV, CsvType,
         },
         database::{
             batch::{Batch, Config},
@@ -29,22 +29,24 @@ use crate::{
 
 use super::{
     helpers::{
-        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
-        language::CanFetchLanguages,
-        localized_item::ImportLocalizedItem,
-        model::CanPersistIntoDatabaseUseCase,
+        csv::ImportFromSingleEntityBasedCsvUseCase, language::CanFetchLanguages,
+        localized_item::ImportLocalizedItem, model::CanPersistIntoDatabaseUseCase,
     },
     *,
 };
 
 struct ImportOrderLineItemNamesUseCase;
-impl CanReadCsvUseCase<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCase {}
+impl CanReadCSV<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCase {
+    fn find_all(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, InfrastructureError> {
+        self.read(CsvType::OrderLineItem)
+    }
+}
 impl CanFetchLanguages for ImportOrderLineItemNamesUseCase {}
 impl ImportLocalizedItem<OrderLineLocalizedItemFactory, CsvOrderLineLocalizedItemDTO>
     for ImportOrderLineItemNamesUseCase
 {
     fn source(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, UseCaseError> {
-        self.read(CsvType::OrderLineItem)
+        self.find_all().map_err(|e| e.into())
     }
 }
 
@@ -86,7 +88,11 @@ impl ImportOrderLineUseCase {
     }
 }
 
-impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCase {}
+impl CanReadCSV<CsvOrderLineDTO> for ImportOrderLineUseCase {
+    fn find_all(&self) -> Result<Vec<CsvOrderLineDTO>, InfrastructureError> {
+        self.read(CsvType::OrderLine)
+    }
+}
 impl CsvEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCase {
     fn transform_csv_row_to_entity(&self, csv: CsvOrderLineDTO) -> Result<OrderLine, MappingError> {
         let raw_fields: Result<OrderLinePrimaryFields, MappingError> = csv.try_into();
@@ -126,12 +132,13 @@ impl CanPersistIntoDatabaseUseCase<OrderLine, (OrderLineModel, Vec<OrderLineLang
         }
     }
 }
-impl ImportEntityCsvUseCase<CsvOrderLineDTO, OrderLine, (OrderLineModel, Vec<OrderLineLangModel>)>
-    for ImportOrderLineUseCase
+impl
+    ImportFromSingleEntityBasedCsvUseCase<
+        CsvOrderLineDTO,
+        OrderLine,
+        (OrderLineModel, Vec<OrderLineLangModel>),
+    > for ImportOrderLineUseCase
 {
-    fn get_csv_type(&self) -> CsvType {
-        CsvType::OrderLine
-    }
 }
 #[cfg(test)]
 mod tests {
@@ -160,7 +167,16 @@ mod tests {
     };
 
     struct ImportOrderLineItemNamesUseCaseTest;
-    impl CanReadCsvUseCase<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCaseTest {}
+    impl CanReadCSV<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, InfrastructureError> {
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("order_lines_items_for_unit_test.csv");
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CanFetchLanguages for ImportOrderLineItemNamesUseCaseTest {}
     impl ImportLocalizedItem<OrderLineLocalizedItemFactory, CsvOrderLineLocalizedItemDTO>
         for ImportOrderLineItemNamesUseCaseTest
@@ -174,13 +190,7 @@ mod tests {
             ])
         }
         fn source(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, UseCaseError> {
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("order_lines_items_for_unit_test.csv");
-
-            self.read(CsvType::Test(csv_path))
+            self.find_all().map_err(|e| e.into())
         }
     }
 
@@ -219,7 +229,16 @@ mod tests {
         }
     }
 
-    impl CanReadCsvUseCase<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {}
+    impl CanReadCSV<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvOrderLineDTO>, InfrastructureError> {
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("order_lines_for_unit_test.csv");
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CsvEntityParser<CsvOrderLineDTO, OrderLine> for ImportOrderLineUseCaseTest {
         fn transform_csv_row_to_entity(
             &self,
@@ -264,23 +283,12 @@ mod tests {
     }
 
     impl
-        ImportEntityCsvUseCase<
+        ImportFromSingleEntityBasedCsvUseCase<
             CsvOrderLineDTO,
             OrderLine,
             (OrderLineModel, Vec<OrderLineLangModel>),
         > for ImportOrderLineUseCaseTest
     {
-        fn get_csv_type(&self) -> CsvType {
-            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
-
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("order_lines_for_unit_test.csv");
-
-            CsvType::Test(csv_path)
-        }
     }
 
     #[test]

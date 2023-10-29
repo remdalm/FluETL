@@ -8,9 +8,9 @@ use super::InfrastructureError;
 
 pub(crate) mod delivery_slip;
 pub(crate) mod invoice;
-pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
+pub(crate) mod product;
 
 #[allow(dead_code)]
 pub enum CsvType {
@@ -20,6 +20,7 @@ pub enum CsvType {
     Order,
     OrderLine,
     OrderLineItem,
+    ProductSubstitute,
     Test(PathBuf),
 }
 
@@ -32,6 +33,7 @@ impl CsvType {
             CsvType::Order => env::var("ORDERS_CSV_PATH"),
             CsvType::OrderLine => env::var("ORDER_LINES_CSV_PATH"),
             CsvType::OrderLineItem => env::var("ORDER_LINE_ITEMS_CSV_PATH"),
+            CsvType::ProductSubstitute => env::var("PRODUCT_SUBSTITUTES_CSV_PATH"),
             CsvType::Test(path) => Ok(path
                 .to_str()
                 .expect("CsvType::Test cannot be cast into &str")
@@ -104,4 +106,18 @@ pub fn make_csv_file_reader(
     }
 
     Ok(CsvFileReader::new(PathBuf::from(file_path), delimiter))
+}
+
+pub trait CanReadCSV<T>
+where
+    T: CsvDTO + for<'a> Deserialize<'a>,
+{
+    fn read(&self, csv_type: CsvType) -> Result<Vec<T>, InfrastructureError> {
+        let csv_reader = make_csv_file_reader(csv_type, b';')?;
+
+        let csv_data: Vec<T> = csv_reader.read().map_err(InfrastructureError::CsvError)?;
+        Ok(csv_data)
+    }
+
+    fn find_all(&self) -> Result<Vec<T>, InfrastructureError>;
 }

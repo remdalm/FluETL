@@ -1,22 +1,23 @@
 use crate::{
     domain::order::{Order, OrderDomainFactory},
     infrastructure::{
-        csv_reader::{order::CsvOrderDTO, CsvType},
+        csv_reader::{order::CsvOrderDTO, CanReadCSV, CsvType},
         database::{connection::HasTargetConnection, models::order::OrderModel},
     },
     interface_adapters::mappers::CsvEntityParser,
 };
 
 use super::{
-    helpers::{
-        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
-        model::CanPersistIntoDatabaseUseCase,
-    },
+    helpers::{csv::ImportFromSingleEntityBasedCsvUseCase, model::CanPersistIntoDatabaseUseCase},
     *,
 };
 
 pub struct ImportOrderUseCase;
-impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCase {}
+impl CanReadCSV<CsvOrderDTO> for ImportOrderUseCase {
+    fn find_all(&self) -> Result<Vec<CsvOrderDTO>, InfrastructureError> {
+        self.read(CsvType::Order)
+    }
+}
 impl CsvEntityParser<CsvOrderDTO, Order> for ImportOrderUseCase {
     fn transform_csv_row_to_entity(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
         let factory: OrderDomainFactory = csv.try_into()?;
@@ -26,11 +27,7 @@ impl CsvEntityParser<CsvOrderDTO, Order> for ImportOrderUseCase {
 impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCase {
     type DbConnection = HasTargetConnection;
 }
-impl ImportEntityCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {
-    fn get_csv_type(&self) -> CsvType {
-        CsvType::Order
-    }
-}
+impl ImportFromSingleEntityBasedCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCase {}
 
 #[cfg(test)]
 mod tests {
@@ -49,13 +46,21 @@ mod tests {
         },
         interface_adapters::mappers::CsvEntityParser,
         use_cases::helpers::{
-            csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
-            model::CanPersistIntoDatabaseUseCase,
+            csv::ImportFromSingleEntityBasedCsvUseCase, model::CanPersistIntoDatabaseUseCase,
         },
     };
 
     pub struct ImportOrderUseCaseTest;
-    impl CanReadCsvUseCase<CsvOrderDTO> for ImportOrderUseCaseTest {}
+    impl CanReadCSV<CsvOrderDTO> for ImportOrderUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvOrderDTO>, InfrastructureError> {
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("order_for_unit_test.csv");
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CsvEntityParser<CsvOrderDTO, Order> for ImportOrderUseCaseTest {
         fn transform_csv_row_to_entity(&self, csv: CsvOrderDTO) -> Result<Order, MappingError> {
             let factory: OrderDomainFactory = csv.try_into()?;
@@ -65,18 +70,9 @@ mod tests {
     impl CanPersistIntoDatabaseUseCase<Order, OrderModel> for ImportOrderUseCaseTest {
         type DbConnection = HasTestConnection;
     }
-    impl ImportEntityCsvUseCase<CsvOrderDTO, Order, OrderModel> for ImportOrderUseCaseTest {
-        fn get_csv_type(&self) -> CsvType {
-            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
-
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("order_for_unit_test.csv");
-
-            CsvType::Test(csv_path)
-        }
+    impl ImportFromSingleEntityBasedCsvUseCase<CsvOrderDTO, Order, OrderModel>
+        for ImportOrderUseCaseTest
+    {
     }
 
     #[test]

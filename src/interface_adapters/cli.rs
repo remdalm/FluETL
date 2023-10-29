@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use crate::{
     infrastructure::logger,
     use_cases::{
-        helpers::{csv::ImportEntityCsvUseCase, model::ImportModelUseCase},
+        helpers::{csv::ImportFromSingleEntityBasedCsvUseCase, model::ImportModelUseCase},
         ImportDeliverySlipUseCase, ImportInvoiceUseCase, ImportMappingClientUseCase,
         ImportOrderLineUseCase, ImportOrderUseCase, UseCaseError,
     },

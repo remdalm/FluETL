@@ -1,7 +1,7 @@
 use crate::{
     domain::delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
     infrastructure::{
-        csv_reader::{delivery_slip::CsvDeliverySlipDTO, CsvType},
+        csv_reader::{delivery_slip::CsvDeliverySlipDTO, CanReadCSV, CsvType},
         database::{
             batch::{Batch, Config},
             connection::{HasConnection, HasTargetConnection},
@@ -12,10 +12,7 @@ use crate::{
 };
 
 use super::{
-    helpers::{
-        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
-        model::CanPersistIntoDatabaseUseCase,
-    },
+    helpers::{csv::ImportFromSingleEntityBasedCsvUseCase, model::CanPersistIntoDatabaseUseCase},
     *,
 };
 
@@ -32,7 +29,11 @@ impl ImportDeliverySlipUseCase {
     }
 }
 
-impl CanReadCsvUseCase<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {}
+impl CanReadCSV<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {
+    fn find_all(&self) -> Result<Vec<CsvDeliverySlipDTO>, InfrastructureError> {
+        self.read(CsvType::DeliverySlip)
+    }
+}
 impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCase {
     fn transform_csv_row_to_entity(
         &self,
@@ -60,12 +61,9 @@ impl CanPersistIntoDatabaseUseCase<DeliverySlip, DeliverySlipModel> for ImportDe
         }
     }
 }
-impl ImportEntityCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
+impl ImportFromSingleEntityBasedCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
     for ImportDeliverySlipUseCase
 {
-    fn get_csv_type(&self) -> CsvType {
-        CsvType::DeliverySlip
-    }
 }
 
 #[cfg(test)]
@@ -91,7 +89,19 @@ mod tests {
     pub struct ImportDeliverySlipUseCaseTest {
         pub use_batch: bool,
     }
-    impl CanReadCsvUseCase<CsvDeliverySlipDTO> for ImportDeliverySlipUseCaseTest {}
+    impl CanReadCSV<CsvDeliverySlipDTO> for ImportDeliverySlipUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvDeliverySlipDTO>, InfrastructureError> {
+            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
+
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("delivery_slip_for_unit_test.csv");
+
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CsvEntityParser<CsvDeliverySlipDTO, DeliverySlip> for ImportDeliverySlipUseCaseTest {
         fn transform_csv_row_to_entity(
             &self,
@@ -120,20 +130,9 @@ mod tests {
             None
         }
     }
-    impl ImportEntityCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
+    impl ImportFromSingleEntityBasedCsvUseCase<CsvDeliverySlipDTO, DeliverySlip, DeliverySlipModel>
         for ImportDeliverySlipUseCaseTest
     {
-        fn get_csv_type(&self) -> CsvType {
-            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
-
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("delivery_slip_for_unit_test.csv");
-
-            CsvType::Test(csv_path)
-        }
     }
 
     #[test]

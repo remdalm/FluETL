@@ -8,7 +8,7 @@ use crate::{
     infrastructure::{
         csv_reader::{
             invoice::{CsvInvoiceDTO, CsvInvoiceLocalizedItemDTO},
-            CsvType,
+            CanReadCSV, CsvType,
         },
         database::{
             batch::{Batch, Config},
@@ -21,22 +21,24 @@ use crate::{
 
 use super::{
     helpers::{
-        csv::{CanReadCsvUseCase, ImportEntityCsvUseCase},
-        language::CanFetchLanguages,
-        localized_item::ImportLocalizedItem,
-        model::CanPersistIntoDatabaseUseCase,
+        csv::ImportFromSingleEntityBasedCsvUseCase, language::CanFetchLanguages,
+        localized_item::ImportLocalizedItem, model::CanPersistIntoDatabaseUseCase,
     },
     *,
 };
 
 struct ImportInvoiceTypesUseCase;
-impl CanReadCsvUseCase<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypesUseCase {}
+impl CanReadCSV<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypesUseCase {
+    fn find_all(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, InfrastructureError> {
+        self.read(CsvType::InvoiceDocumentType)
+    }
+}
 impl CanFetchLanguages for ImportInvoiceTypesUseCase {}
 impl ImportLocalizedItem<InvoiceLocalizedTypeFactory, CsvInvoiceLocalizedItemDTO>
     for ImportInvoiceTypesUseCase
 {
     fn source(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, UseCaseError> {
-        self.read(CsvType::InvoiceDocumentType)
+        self.find_all().map_err(|e| e.into())
     }
 }
 
@@ -62,7 +64,11 @@ impl ImportInvoiceUseCase {
     }
 }
 
-impl CanReadCsvUseCase<CsvInvoiceDTO> for ImportInvoiceUseCase {}
+impl CanReadCSV<CsvInvoiceDTO> for ImportInvoiceUseCase {
+    fn find_all(&self) -> Result<Vec<CsvInvoiceDTO>, InfrastructureError> {
+        self.read(CsvType::Invoice)
+    }
+}
 impl CsvEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCase {
     fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
         let mut factory: InvoiceDomainFactory = csv.try_into()?;
@@ -98,12 +104,13 @@ impl CanPersistIntoDatabaseUseCase<Invoice, (InvoiceModel, Vec<InvoiceLangModel>
         }
     }
 }
-impl ImportEntityCsvUseCase<CsvInvoiceDTO, Invoice, (InvoiceModel, Vec<InvoiceLangModel>)>
-    for ImportInvoiceUseCase
+impl
+    ImportFromSingleEntityBasedCsvUseCase<
+        CsvInvoiceDTO,
+        Invoice,
+        (InvoiceModel, Vec<InvoiceLangModel>),
+    > for ImportInvoiceUseCase
 {
-    fn get_csv_type(&self) -> CsvType {
-        CsvType::Invoice
-    }
 }
 
 #[cfg(test)]
@@ -130,7 +137,16 @@ mod tests {
     };
 
     struct ImportInvoiceTypeUseCaseTest;
-    impl CanReadCsvUseCase<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypeUseCaseTest {}
+    impl CanReadCSV<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypeUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, InfrastructureError> {
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("invoice_lang_for_unit_test.csv");
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CanFetchLanguages for ImportInvoiceTypeUseCaseTest {}
     impl ImportLocalizedItem<InvoiceLocalizedTypeFactory, CsvInvoiceLocalizedItemDTO>
         for ImportInvoiceTypeUseCaseTest
@@ -144,13 +160,7 @@ mod tests {
             ])
         }
         fn source(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, UseCaseError> {
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("invoice_lang_for_unit_test.csv");
-
-            self.read(CsvType::Test(csv_path))
+            self.find_all().map_err(|e| e.into())
         }
     }
 
@@ -169,7 +179,19 @@ mod tests {
             })
         }
     }
-    impl CanReadCsvUseCase<CsvInvoiceDTO> for ImportInvoiceUseCaseTest {}
+    impl CanReadCSV<CsvInvoiceDTO> for ImportInvoiceUseCaseTest {
+        fn find_all(&self) -> Result<Vec<CsvInvoiceDTO>, InfrastructureError> {
+            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
+
+            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+            let csv_path = root_path
+                .join("tests")
+                .join("fixtures")
+                .join("invoice_for_unit_test.csv");
+
+            self.read(CsvType::Test(csv_path))
+        }
+    }
     impl CsvEntityParser<CsvInvoiceDTO, Invoice> for ImportInvoiceUseCaseTest {
         fn transform_csv_row_to_entity(&self, csv: CsvInvoiceDTO) -> Result<Invoice, MappingError> {
             let mut factory: InvoiceDomainFactory = csv.try_into()?;
@@ -204,20 +226,13 @@ mod tests {
             None
         }
     }
-    impl ImportEntityCsvUseCase<CsvInvoiceDTO, Invoice, (InvoiceModel, Vec<InvoiceLangModel>)>
-        for ImportInvoiceUseCaseTest
+    impl
+        ImportFromSingleEntityBasedCsvUseCase<
+            CsvInvoiceDTO,
+            Invoice,
+            (InvoiceModel, Vec<InvoiceLangModel>),
+        > for ImportInvoiceUseCaseTest
     {
-        fn get_csv_type(&self) -> CsvType {
-            // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
-
-            let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-            let csv_path = root_path
-                .join("tests")
-                .join("fixtures")
-                .join("invoice_for_unit_test.csv");
-
-            CsvType::Test(csv_path)
-        }
     }
 
     #[test]
