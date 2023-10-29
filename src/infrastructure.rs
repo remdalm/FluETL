@@ -1,6 +1,9 @@
+use std::{error::Error, fmt};
+
 pub(crate) mod csv_reader;
 pub mod database;
 pub(crate) mod logger;
+pub(crate) mod repository;
 
 #[derive(Debug)]
 pub enum InfrastructureError {
@@ -9,4 +12,13 @@ pub enum InfrastructureError {
     EnvVarError(std::env::VarError),
     DatabaseError(diesel::result::Error),
     InconsistentDataError(String),
+    NotImplementedError(String),
 }
+
+impl fmt::Display for InfrastructureError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for InfrastructureError {}

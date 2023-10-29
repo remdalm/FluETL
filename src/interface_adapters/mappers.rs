@@ -4,6 +4,10 @@ pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
+pub(crate) mod product;
+
+use std::error::Error;
+use std::fmt;
 
 use chrono::NaiveDate;
 
@@ -19,6 +23,14 @@ pub enum MappingError {
     Parsing(String),
     Cache,
 }
+
+impl fmt::Display for MappingError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Error for MappingError {}
 
 pub trait GenericMapperParser<S, D> {
     fn parse_all(&self, sources: Vec<S>) -> Vec<Result<D, MappingError>>
