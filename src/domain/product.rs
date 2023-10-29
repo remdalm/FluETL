@@ -45,6 +45,13 @@ impl Product {
         self.substitutes.push(substitute_id);
         Ok(())
     }
+
+    pub fn add_substitutes(&mut self, substitute_ids: &[ProductId]) -> Result<(), DomainError> {
+        for substitute_id in substitute_ids {
+            self.add_substitute(*substitute_id)?;
+        }
+        Ok(())
+    }
 }
 
 impl DomainEntity for Product {}

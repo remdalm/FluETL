@@ -6,8 +6,12 @@ use crate::{
     infrastructure::logger,
     use_cases::{
         helpers::{csv::ImportFromSingleEntityBasedCsvUseCase, model::ImportModelUseCase},
-        ImportDeliverySlipUseCase, ImportInvoiceUseCase, ImportMappingClientUseCase,
-        ImportOrderLineUseCase, ImportOrderUseCase, UseCaseError,
+        import_delivery_slip::ImportDeliverySlipUseCase,
+        import_invoice::ImportInvoiceUseCase,
+        import_mapping_client::ImportMappingClientUseCase,
+        import_order::ImportOrderUseCase,
+        import_order_line::ImportOrderLineUseCase,
+        UseCaseError,
     },
 };
 
@@ -179,6 +183,9 @@ fn error_logger(errors: Option<Vec<UseCaseError>>) {
                 }
                 UseCaseError::Mapping(e) => {
                     error!("MappingError: {:?}", e);
+                }
+                UseCaseError::Unknown(e) => {
+                    error!("Error: {:?}", e);
                 }
             }
         }

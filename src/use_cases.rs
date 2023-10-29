@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{error::Error, fmt::Debug};
 
 use crate::{
     domain::DomainError, infrastructure::InfrastructureError,
@@ -11,18 +11,18 @@ pub(crate) mod import_invoice;
 pub(crate) mod import_mapping_client;
 pub(crate) mod import_order;
 pub(crate) mod import_order_line;
+pub(crate) mod import_product;
 
-pub use import_delivery_slip::ImportDeliverySlipUseCase;
-pub use import_invoice::ImportInvoiceUseCase;
-pub use import_mapping_client::ImportMappingClientUseCase;
-pub use import_order::ImportOrderUseCase;
-pub use import_order_line::ImportOrderLineUseCase;
+pub trait ExecutableUseCase {
+    fn execute(&self) -> Option<Vec<UseCaseError>>;
+}
 
 #[derive(Debug)]
 pub enum UseCaseError {
     Domain(DomainError),
     Infrastructure(InfrastructureError),
     Mapping(MappingError),
+    Unknown(Box<dyn Error>),
 }
 
 impl From<MappingError> for UseCaseError {
@@ -46,5 +46,22 @@ impl From<diesel::result::Error> for UseCaseError {
 impl From<InfrastructureError> for UseCaseError {
     fn from(error: InfrastructureError) -> Self {
         UseCaseError::Infrastructure(error)
+    }
+}
+
+impl From<Box<dyn Error>> for UseCaseError {
+    fn from(error: Box<dyn Error>) -> Self {
+        match error {
+            e if e.is::<DomainError>() => {
+                UseCaseError::Domain(*e.downcast::<DomainError>().unwrap())
+            }
+            e if e.is::<InfrastructureError>() => {
+                UseCaseError::Infrastructure(*e.downcast::<InfrastructureError>().unwrap())
+            }
+            e if e.is::<MappingError>() => {
+                UseCaseError::Mapping(*e.downcast::<MappingError>().unwrap())
+            }
+            _ => UseCaseError::Unknown(error),
+        }
     }
 }
