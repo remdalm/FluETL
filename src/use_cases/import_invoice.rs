@@ -11,7 +11,7 @@ use crate::{
             CanReadCSV, CsvType,
         },
         database::{
-            batch::{Batch, Config},
+            batch::{Batch, BatchConfig},
             connection::{HasConnection, HasTargetConnection},
             models::invoice::{batch_upsert, InvoiceLangModel, InvoiceModel},
         },
@@ -95,7 +95,7 @@ impl CanPersistIntoDatabaseUseCase<Invoice, (InvoiceModel, Vec<InvoiceLangModel>
         if self.batch {
             Some(Batch::new(
                 models,
-                Some(Config::new(self.batch_size)),
+                Some(BatchConfig::new(self.batch_size)),
                 batch_upsert,
                 HasTargetConnection::get_pooled_connection(),
             ))

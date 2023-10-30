@@ -79,8 +79,7 @@ pub trait ProductReadRepository {
 }
 
 pub trait ProductMutateRepository {
-    fn save(&self, product: &Product) -> Result<(), Box<dyn std::error::Error>>;
-    fn save_all(&self, products: &[Product]) -> Result<(), Box<dyn std::error::Error>>;
+    fn save_substitutes(&self, products: &[Product]) -> Option<Vec<Box<dyn std::error::Error>>>;
 }
 
 #[cfg(test)]
@@ -95,7 +94,7 @@ pub mod tests {
             },
             Product {
                 id: ProductId::new(2),
-                substitutes: vec![ProductId::new(2)],
+                substitutes: vec![ProductId::new(1)],
             },
         ]
     }

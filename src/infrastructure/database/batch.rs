@@ -1,18 +1,19 @@
-use super::connection::DbConnection;
+use super::connection::{DbConnection, HasConnection};
 use diesel::result::Error as DieselError;
 use std::cell::RefCell;
 
-pub(crate) struct Config {
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct BatchConfig {
     max_batch_size: usize,
 }
 
-impl Config {
+impl BatchConfig {
     pub fn new(max_batch_size: usize) -> Self {
         Self { max_batch_size }
     }
 }
 
-impl Default for Config {
+impl Default for BatchConfig {
     fn default() -> Self {
         Self {
             max_batch_size: 100,
@@ -22,7 +23,7 @@ impl Default for Config {
 
 pub(crate) struct Batch<'a, M> {
     models: &'a [M],
-    config: Config,
+    config: BatchConfig,
     cb: fn(&[M], &mut DbConnection) -> Result<(), DieselError>,
     connection: RefCell<DbConnection>,
 }
@@ -30,7 +31,7 @@ pub(crate) struct Batch<'a, M> {
 impl<'a, M> Batch<'a, M> {
     pub fn new(
         models: &'a [M],
-        config: Option<Config>,
+        config: Option<BatchConfig>,
         cb: fn(&[M], &mut DbConnection) -> Result<(), DieselError>,
         connection: DbConnection,
     ) -> Self {
@@ -54,5 +55,22 @@ impl<'a, M> Batch<'a, M> {
         }
 
         Option::from(errors).filter(|e| !e.is_empty())
+    }
+}
+
+pub(crate) trait CanMakeBatchTransaction<M> {
+    type DbConnection: HasConnection;
+    fn make_batch<'a>(
+        &self,
+        models: &'a [M],
+        config: Option<BatchConfig>,
+        f: fn(models: &[M], connection: &mut DbConnection) -> Result<(), DieselError>,
+    ) -> Batch<'a, M> {
+        Batch::new(
+            models,
+            config,
+            f,
+            Self::DbConnection::get_pooled_connection(),
+        )
     }
 }

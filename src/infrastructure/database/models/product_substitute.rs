@@ -1,4 +1,5 @@
-use crate::infrastructure::database::connection::DbConnection;
+use crate::infrastructure::database::batch::CanMakeBatchTransaction;
+use crate::infrastructure::database::connection::{DbConnection, HasTargetConnection};
 use crate::infrastructure::database::schema;
 use diesel::prelude::*;
 use diesel::result::Error as DieselError;
@@ -9,28 +10,28 @@ use super::{CanDeleteModel, CanSelectAllModel, CanUpsertModel, Model};
 #[derive(Queryable, Insertable, Identifiable, PartialEq, Debug, Clone)]
 #[diesel(table_name = schema::target::product_substitute)]
 #[diesel(primary_key(id_product, id_substitute))]
-pub struct ProductSubstitute {
+pub struct ProductSubstituteModel {
     pub id_product: u32,
     pub id_substitute: u32,
 }
 
-impl Model for ProductSubstitute {}
-impl CanUpsertModel for ProductSubstitute {
+impl Model for ProductSubstituteModel {}
+impl CanUpsertModel for ProductSubstituteModel {
     fn upsert(&self, connection: &mut DbConnection) -> Result<(), DieselError> {
         super::upsert!(schema::target::product_substitute::table, self, connection)
     }
 }
 
-impl CanSelectAllModel for ProductSubstitute {
+impl CanSelectAllModel for ProductSubstituteModel {
     fn select_all(connection: &mut DbConnection) -> Result<Vec<Self>, DieselError> {
-        schema::target::product_substitute::table.load::<ProductSubstitute>(connection)
+        schema::target::product_substitute::table.load::<ProductSubstituteModel>(connection)
     }
 }
 
-impl CanDeleteModel for ProductSubstitute {
+impl CanDeleteModel for ProductSubstituteModel {
     fn delete_list(
         connection: &mut DbConnection,
-        associations_to_delete: &[ProductSubstitute],
+        associations_to_delete: &[ProductSubstituteModel],
     ) -> Option<Vec<DieselError>> {
         if associations_to_delete.is_empty() {
             debug!("No associations to delete");
@@ -61,8 +62,8 @@ impl CanDeleteModel for ProductSubstitute {
     }
 }
 
-pub fn batch_upsert(
-    models: &[ProductSubstitute],
+pub fn product_substitute_batch_upsert(
+    models: &[ProductSubstituteModel],
     connection: &mut DbConnection,
 ) -> Result<(), DieselError> {
     connection.transaction(|connection| {
@@ -74,8 +75,14 @@ pub fn batch_upsert(
     })
 }
 
+pub struct ProductModelDataSource;
+
+impl CanMakeBatchTransaction<ProductSubstituteModel> for ProductModelDataSource {
+    type DbConnection = HasTargetConnection;
+}
+
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use serial_test::serial;
 
     use crate::infrastructure::database::connection::tests::{
@@ -84,19 +91,19 @@ mod tests {
 
     use super::*;
 
-    fn product_substitute_model_fixture() -> [ProductSubstitute; 3] {
+    pub fn product_substitute_model_fixture() -> [ProductSubstituteModel; 3] {
         [
-            ProductSubstitute {
-                id_product: 1,
-                id_substitute: 1,
-            },
-            ProductSubstitute {
+            ProductSubstituteModel {
                 id_product: 1,
                 id_substitute: 2,
             },
-            ProductSubstitute {
+            ProductSubstituteModel {
+                id_product: 1,
+                id_substitute: 3,
+            },
+            ProductSubstituteModel {
                 id_product: 2,
-                id_substitute: 2,
+                id_substitute: 1,
             },
         ]
     }
@@ -106,7 +113,7 @@ mod tests {
     fn test_upsert_successful() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
-        let product_substitute = ProductSubstitute {
+        let product_substitute = ProductSubstituteModel {
             id_product: 1,
             id_substitute: 2,
         };
@@ -122,9 +129,9 @@ mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        batch_upsert(&product_substitute_model_fixture(), &mut connection)
+        product_substitute_batch_upsert(&product_substitute_model_fixture(), &mut connection)
             .expect("Failed to insert fixtures");
-        let result = ProductSubstitute::select_all(&mut connection);
+        let result = ProductSubstituteModel::select_all(&mut connection);
 
         assert!(result.is_ok_and(|models| models == product_substitute_model_fixture().to_vec()));
     }
@@ -136,7 +143,7 @@ mod tests {
         reset_test_database(&mut connection);
         let associations_to_delete = [];
 
-        let result = ProductSubstitute::delete_list(&mut connection, &associations_to_delete);
+        let result = ProductSubstituteModel::delete_list(&mut connection, &associations_to_delete);
 
         assert!(result.is_none());
     }
@@ -147,27 +154,19 @@ mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
 
-        let associations_to_delete = [ProductSubstitute {
-            id_product: 1,
-            id_substitute: 2,
-        }];
-        batch_upsert(&product_substitute_model_fixture(), &mut connection)
+        let associations_to_delete = [product_substitute_model_fixture()[1].clone()];
+        product_substitute_batch_upsert(&product_substitute_model_fixture(), &mut connection)
             .expect("Failed to insert fixtures");
 
-        let result = ProductSubstitute::delete_list(&mut connection, &associations_to_delete);
+        let result = ProductSubstituteModel::delete_list(&mut connection, &associations_to_delete);
 
         assert!(result.is_none());
         assert_eq!(
-            ProductSubstitute::select_all(&mut connection).expect("Failed to select all"),
+            ProductSubstituteModel::select_all(&mut connection)
+                .expect("Failed to select all ProductSubstituteModel"),
             [
-                ProductSubstitute {
-                    id_product: 1,
-                    id_substitute: 1,
-                },
-                ProductSubstitute {
-                    id_product: 2,
-                    id_substitute: 2,
-                },
+                product_substitute_model_fixture()[0].clone(),
+                product_substitute_model_fixture()[2].clone()
             ]
         );
     }
@@ -179,12 +178,12 @@ mod tests {
         reset_test_database(&mut connection);
         let models = product_substitute_model_fixture();
 
-        let result = batch_upsert(&models, &mut connection);
+        let result = product_substitute_batch_upsert(&models, &mut connection);
 
         assert!(result.is_ok());
 
         assert_eq!(
-            ProductSubstitute::select_all(&mut connection).unwrap(),
+            ProductSubstituteModel::select_all(&mut connection).unwrap(),
             product_substitute_model_fixture().to_vec()
         );
     }

@@ -1,33 +1,55 @@
-use std::error::Error;
-
 use log::debug;
 
 use crate::{
-    domain::product::ProductReadRepository,
+    domain::product::{ProductMutateRepository, ProductReadRepository},
     infrastructure::{
-        csv_reader::product::ProductCsvDataSourceReader, repository::product::CsvProductRepository,
+        csv_reader::product::ProductCsvDataSourceReader,
+        database::{
+            connection::{HasConnection, HasTargetConnection},
+            models::product_substitute::ProductModelDataSource,
+        },
+        repository::product::{CsvProductRepository, TargetDbProductRepository},
     },
 };
 
 use super::{ExecutableUseCase, UseCaseError};
 
-pub struct ImportProductSubstitutesUseCase {
+#[derive(Default)]
+pub struct ImportProductUseCase {
     batch: bool,
-    batch_size: usize,
+    batch_size: Option<usize>, //TODO: be consistent between usize or Option<usize>
+}
+
+impl ImportProductUseCase {
+    pub fn execute(&self) -> Option<Vec<UseCaseError>> {
+        // Product Orchestration happens here
+        let substitute_importer = ImportProductSubstitutesUseCase::new(self.batch, self.batch_size);
+
+        substitute_importer.execute()
+    }
+
+    pub fn set_batch(&mut self, batch_size: usize) {
+        self.batch = batch_size > 1;
+        self.batch_size = Some(batch_size);
+    }
+}
+
+struct ImportProductSubstitutesUseCase {
     csv_repository: CsvProductRepository<ProductCsvDataSourceReader>,
+    db_target_repository: TargetDbProductRepository<ProductModelDataSource>,
 }
 
 impl ImportProductSubstitutesUseCase {
-    pub fn new() -> Self {
+    pub fn new(use_batch: bool, batch_size: Option<usize>) -> Self {
         Self {
-            batch: false,
-            batch_size: 0,
             csv_repository: CsvProductRepository::new(ProductCsvDataSourceReader),
+            db_target_repository: TargetDbProductRepository::new(
+                ProductModelDataSource,
+                use_batch,
+                batch_size,
+                HasTargetConnection::get_pooled_connection(),
+            ),
         }
-    }
-    pub fn set_batch(&mut self, batch_size: usize) {
-        self.batch = true;
-        self.batch_size = batch_size;
     }
 }
 
@@ -48,6 +70,13 @@ impl ExecutableUseCase for ImportProductSubstitutesUseCase {
                 }
             }
         });
+
+        if let Some(db_errors) = self
+            .db_target_repository
+            .save_substitutes(products.as_slice())
+        {
+            errors.extend(db_errors);
+        }
 
         if errors.is_empty() {
             None

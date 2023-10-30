@@ -11,6 +11,7 @@ use crate::{
         import_mapping_client::ImportMappingClientUseCase,
         import_order::ImportOrderUseCase,
         import_order_line::ImportOrderLineUseCase,
+        import_product::ImportProductUseCase,
         UseCaseError,
     },
 };
@@ -52,6 +53,9 @@ pub enum EntitySubCommand {
 
     /// Import Invoices from CSV file defined in env file argument
     Invoice(MandatoryArgs),
+
+    /// Import Products from CSV file defined in env file argument
+    Product(ProductArgs),
 }
 
 #[derive(Debug, Args)]
@@ -67,6 +71,22 @@ pub struct MandatoryArgs {
     /// Batch chunks size
     #[arg(short = 's', long, default_value = "100")]
     batch_size: usize,
+}
+
+#[derive(Debug, Args)]
+pub struct ClearArgs {
+    /// Sets env file
+    #[arg(long)]
+    clear: bool,
+}
+
+#[derive(Debug, Args)]
+pub struct ProductArgs {
+    #[clap(flatten)]
+    mandatory: MandatoryArgs,
+
+    #[clap(flatten)]
+    clear: ClearArgs,
 }
 
 pub fn main_using_clap() {
@@ -131,6 +151,26 @@ pub fn main_using_clap() {
                 if let Err(e) = result {
                     error_logger(Some(e));
                 }
+                info!("Done");
+            }
+            EntitySubCommand::Product(arg) => {
+                init(arg.mandatory.env_file);
+                info!("Importing Product...");
+
+                let mut handler = ImportProductUseCase::default();
+                if arg.mandatory.batch {
+                    info!(
+                        "Batch mode enabled - batch size: {}",
+                        arg.mandatory.batch_size
+                    );
+                    handler.set_batch(arg.mandatory.batch_size);
+                }
+                let mut errors = handler.execute();
+
+                if arg.clear.clear {
+                    info!("Clearing product table...");
+                }
+                error_logger(errors);
                 info!("Done");
             }
         },

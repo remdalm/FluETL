@@ -1,9 +1,17 @@
-use std::{collections::HashMap, error::Error};
+use std::{cell::RefCell, collections::HashMap, error::Error};
 
 use crate::{
-    domain::product::{Product, ProductId, ProductReadRepository},
+    domain::product::{Product, ProductId, ProductMutateRepository, ProductReadRepository},
     infrastructure::{
         csv_reader::{product::CsvProductSubstituteDTO, CanReadCSV},
+        database::{
+            batch::{BatchConfig, CanMakeBatchTransaction},
+            connection::DbConnection,
+            models::{
+                product_substitute::{product_substitute_batch_upsert, ProductSubstituteModel},
+                CanUpsertModel,
+            },
+        },
         InfrastructureError,
     },
     interface_adapters::mappers::{
@@ -11,7 +19,7 @@ use crate::{
     },
 };
 
-pub struct CsvProductRepository<T>
+pub(crate) struct CsvProductRepository<T>
 where
     T: CanReadCSV<CsvProductSubstituteDTO>,
 {
@@ -38,15 +46,16 @@ where
         let mut errors: Vec<Box<dyn Error>> = Vec::new();
         let mut products: Vec<Product> = Vec::new();
 
-        match self.csv_source_reader.find_all() {
-            Ok(substitute_associations_csv_dto) => {
+        if let Err(e) = self
+            .csv_source_reader
+            .find_all()
+            .map(|substitute_associations_csv_dto| {
                 substitute_associations_csv_dto
                     .into_iter()
                     .for_each(|csv| transform_csv_to_product(csv, &mut products, &mut errors));
-            }
-            Err(e) => {
-                errors.push(Box::new(e));
-            }
+            })
+        {
+            errors.push(Box::new(e));
         }
 
         (products, errors)
@@ -89,12 +98,98 @@ impl TryFrom<CsvProductSubstituteDTO> for ProductSubstituteDTO {
     }
 }
 
+pub(crate) struct TargetDbProductRepository<T>
+where
+    T: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
+    product_substitute_data_source: T,
+    use_batch: bool,
+    batch_size: Option<usize>,
+    connection: RefCell<DbConnection>,
+}
+
+impl<T> TargetDbProductRepository<T>
+where
+    T: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
+    pub fn new(
+        product_substitute_data_source: T,
+        use_batch: bool,
+        batch_size: Option<usize>,
+        connection: DbConnection,
+    ) -> Self {
+        Self {
+            product_substitute_data_source,
+            use_batch,
+            batch_size,
+            connection: RefCell::new(connection),
+        }
+    }
+}
+
+impl<T> ProductMutateRepository for TargetDbProductRepository<T>
+where
+    T: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
+    fn save_substitutes(&self, products: &[Product]) -> Option<Vec<Box<dyn std::error::Error>>> {
+        let mut errors: Vec<Box<dyn Error>> = Vec::new();
+        let mut models: Vec<ProductSubstituteModel> = Vec::new();
+        for product in products {
+            for substitute in product.substitutes() {
+                models.push(ProductSubstituteModel {
+                    id_product: product.id().value(),
+                    id_substitute: substitute.value(),
+                })
+            }
+        }
+
+        if self.use_batch {
+            let batch = self.product_substitute_data_source.make_batch(
+                models.as_slice(),
+                self.batch_size.map(BatchConfig::new),
+                product_substitute_batch_upsert,
+            );
+            let batch_errors = batch.run();
+            if let Some(batch_errors) = batch_errors {
+                errors.extend(
+                    batch_errors
+                        .into_iter()
+                        .map(|e| Box::new(e) as Box<dyn Error>),
+                );
+            }
+        } else {
+            let connection = &mut self.connection.borrow_mut();
+            for model in models {
+                if let Err(e) = model.upsert(connection) {
+                    errors.push(Box::new(e));
+                }
+            }
+        }
+
+        if errors.is_empty() {
+            None
+        } else {
+            Some(errors)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
     use crate::{
         domain::product::tests::product_fixtures,
-        infrastructure::csv_reader::product::tests::MockProductCsvDataSourceReader,
+        infrastructure::{
+            csv_reader::product::tests::MockProductCsvDataSourceReader,
+            database::{
+                connection::{tests::HasTestConnection, HasConnection},
+                models::{
+                    product_substitute::tests::product_substitute_model_fixture, CanSelectAllModel,
+                },
+            },
+        },
     };
 
     #[test]
@@ -120,5 +215,55 @@ mod tests {
         assert_eq!(products.len(), 2);
         assert_eq!(products, product_fixtures());
         assert!(errors.is_empty());
+    }
+
+    struct MockBatchTransaction;
+
+    impl CanMakeBatchTransaction<ProductSubstituteModel> for MockBatchTransaction {
+        type DbConnection = HasTestConnection;
+    }
+
+    #[test]
+    #[serial]
+    fn test_save_substitutes_with_batch() {
+        let mock_transaction = MockBatchTransaction;
+        let repo = TargetDbProductRepository::new(
+            mock_transaction,
+            true,
+            Some(100),
+            HasTestConnection::get_pooled_connection(),
+        );
+        let products = product_fixtures();
+
+        let errors = repo.save_substitutes(&products);
+
+        assert!(errors.is_none());
+        assert_eq!(
+            ProductSubstituteModel::select_all(&mut HasTestConnection::get_pooled_connection())
+                .expect("Failed to select all ProductSubstituteModel"),
+            product_substitute_model_fixture()
+        )
+    }
+
+    #[test]
+    #[serial]
+    fn test_save_substitutes_without_batch() {
+        let mock_transaction = MockBatchTransaction;
+        let repo = TargetDbProductRepository::new(
+            mock_transaction,
+            false,
+            None, // batch size
+            HasTestConnection::get_pooled_connection(),
+        );
+        let products = product_fixtures();
+
+        let errors = repo.save_substitutes(&products);
+
+        assert!(errors.is_none());
+        assert_eq!(
+            ProductSubstituteModel::select_all(&mut HasTestConnection::get_pooled_connection())
+                .expect("Failed to select all ProductSubstituteModel"),
+            product_substitute_model_fixture()
+        )
     }
 }

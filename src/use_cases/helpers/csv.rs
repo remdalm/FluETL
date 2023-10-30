@@ -1,7 +1,7 @@
 use crate::{
     domain::DomainEntity,
     infrastructure::{
-        csv_reader::{CanReadCSV, CsvDTO, CsvType},
+        csv_reader::{CanReadCSV, CsvDTO},
         database::models::CanUpsertModel,
     },
     interface_adapters::mappers::CsvEntityParser,

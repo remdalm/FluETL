@@ -3,7 +3,7 @@ use crate::{
     infrastructure::{
         csv_reader::{delivery_slip::CsvDeliverySlipDTO, CanReadCSV, CsvType},
         database::{
-            batch::{Batch, Config},
+            batch::{Batch, BatchConfig},
             connection::{HasConnection, HasTargetConnection},
             models::delivery_slip::{batch_upsert, DeliverySlipModel},
         },
@@ -52,7 +52,7 @@ impl CanPersistIntoDatabaseUseCase<DeliverySlip, DeliverySlipModel> for ImportDe
         if self.batch {
             Some(Batch::new(
                 models,
-                Some(Config::new(self.batch_size)),
+                Some(BatchConfig::new(self.batch_size)),
                 batch_upsert,
                 HasTargetConnection::get_pooled_connection(),
             ))

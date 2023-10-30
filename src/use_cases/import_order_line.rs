@@ -15,7 +15,7 @@ use crate::{
             CanReadCSV, CsvType,
         },
         database::{
-            batch::{Batch, Config},
+            batch::{Batch, BatchConfig},
             connection::{DbConnection, HasConnection, HasTargetConnection},
             models::{
                 order::OrderModel,
@@ -123,7 +123,7 @@ impl CanPersistIntoDatabaseUseCase<OrderLine, (OrderLineModel, Vec<OrderLineLang
         if self.batch {
             Some(Batch::new(
                 models,
-                Some(Config::new(self.batch_size)),
+                Some(BatchConfig::new(self.batch_size)),
                 batch_upsert,
                 HasTargetConnection::get_pooled_connection(),
             ))
