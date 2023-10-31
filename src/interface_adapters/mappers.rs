@@ -133,8 +133,14 @@ pub fn parse_string_to_u32(key: &str, value: &str) -> Result<u32, MappingError> 
     })
 }
 
+pub fn is_i32_castable_to_u32(value: i32) -> bool {
+    (0..=i32::MAX).contains(&value)
+}
+
 #[cfg(test)]
 mod tests {
+    use super::is_i32_castable_to_u32;
+
     #[test]
     fn test_convert_string_to_option_string() {
         let s = String::from("test");
@@ -145,5 +151,12 @@ mod tests {
         let s = String::new();
         let result = super::convert_string_to_option_string(s);
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_is_i32_castable_to_u32() {
+        assert!(is_i32_castable_to_u32(0));
+        assert!(is_i32_castable_to_u32(i32::MAX));
+        assert!(!is_i32_castable_to_u32(-1));
     }
 }

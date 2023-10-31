@@ -13,6 +13,7 @@ pub enum InfrastructureError {
     DatabaseError(diesel::result::Error),
     InconsistentDataError(String),
     NotImplementedError(String),
+    LookupError(String),
 }
 
 impl fmt::Display for InfrastructureError {

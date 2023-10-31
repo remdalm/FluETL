@@ -71,7 +71,7 @@ impl ProductDomainFactory {
     }
 }
 
-pub trait ProductReadRepository {
+pub trait ProductReadAllRepository {
     fn find_all(&self) -> (Vec<Product>, Vec<Box<dyn std::error::Error>>);
     fn find_all_substitutes(
         &self,

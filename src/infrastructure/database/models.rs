@@ -14,6 +14,7 @@ pub(crate) mod language;
 pub(crate) mod mapping_client;
 pub(crate) mod order;
 pub(crate) mod order_line;
+pub(crate) mod product;
 pub(crate) mod product_substitute;
 
 pub use order::OrderModel;

@@ -1,14 +1,23 @@
 use log::debug;
 
 use crate::{
-    domain::product::{ProductMutateRepository, ProductReadRepository},
+    domain::product::{ProductMutateRepository, ProductReadAllRepository},
     infrastructure::{
-        csv_reader::product::ProductCsvDataSourceReader,
-        database::{
-            connection::{HasConnection, HasTargetConnection},
-            models::product_substitute::ProductModelDataSource,
+        csv_reader::{
+            product::{CsvProductSubstituteDTO, ProductCsvDataSourceReader},
+            CanReadCSV,
         },
-        repository::product::{CsvProductRepository, TargetDbProductRepository},
+        database::{
+            batch::CanMakeBatchTransaction,
+            connection::{HasConnection, HasTargetConnection},
+            models::{
+                product::ProductLegacyStagingDataSourceImpl,
+                product_substitute::{ProductModelDataSource, ProductSubstituteModel},
+            },
+        },
+        repository::product::{
+            CsvProductRepository, IdLookupRepository, TargetDbProductRepository,
+        },
     },
 };
 
@@ -23,7 +32,22 @@ pub struct ImportProductUseCase {
 impl ImportProductUseCase {
     pub fn execute(&self) -> Option<Vec<UseCaseError>> {
         // Product Orchestration happens here
-        let substitute_importer = ImportProductSubstitutesUseCase::new(self.batch, self.batch_size);
+        let substitute_lookup = IdLookupRepository::new(ProductLegacyStagingDataSourceImpl)
+            .find_all()
+            .map_err(UseCaseError::Infrastructure);
+        if let Err(e) = substitute_lookup {
+            return Some(vec![e]);
+        }
+        let substitute_importer = ImportProductSubstitutesUseCase::new(
+            CsvProductRepository::new(ProductCsvDataSourceReader),
+            TargetDbProductRepository::new(
+                ProductModelDataSource,
+                substitute_lookup.ok(),
+                self.batch,
+                self.batch_size,
+                HasTargetConnection::get_pooled_connection(),
+            ),
+        );
 
         substitute_importer.execute()
     }
@@ -34,26 +58,36 @@ impl ImportProductUseCase {
     }
 }
 
-struct ImportProductSubstitutesUseCase {
-    csv_repository: CsvProductRepository<ProductCsvDataSourceReader>,
-    db_target_repository: TargetDbProductRepository<ProductModelDataSource>,
+struct ImportProductSubstitutesUseCase<T, U>
+where
+    T: CanReadCSV<CsvProductSubstituteDTO>,
+    U: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
+    csv_repository: CsvProductRepository<T>,
+    db_target_repository: TargetDbProductRepository<U>,
 }
 
-impl ImportProductSubstitutesUseCase {
-    pub fn new(use_batch: bool, batch_size: Option<usize>) -> Self {
+impl<T, U> ImportProductSubstitutesUseCase<T, U>
+where
+    T: CanReadCSV<CsvProductSubstituteDTO>,
+    U: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
+    pub fn new(
+        csv_repository: CsvProductRepository<T>,
+        db_target_repository: TargetDbProductRepository<U>,
+    ) -> Self {
         Self {
-            csv_repository: CsvProductRepository::new(ProductCsvDataSourceReader),
-            db_target_repository: TargetDbProductRepository::new(
-                ProductModelDataSource,
-                use_batch,
-                batch_size,
-                HasTargetConnection::get_pooled_connection(),
-            ),
+            csv_repository,
+            db_target_repository,
         }
     }
 }
 
-impl ExecutableUseCase for ImportProductSubstitutesUseCase {
+impl<T, U> ExecutableUseCase for ImportProductSubstitutesUseCase<T, U>
+where
+    T: CanReadCSV<CsvProductSubstituteDTO>,
+    U: CanMakeBatchTransaction<ProductSubstituteModel>,
+{
     fn execute(&self) -> Option<Vec<UseCaseError>> {
         debug!("Fetching products...");
         let (mut products, mut errors) = self.csv_repository.find_all();

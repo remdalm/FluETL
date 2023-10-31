@@ -1,13 +1,14 @@
 use std::{cell::RefCell, collections::HashMap, error::Error};
 
 use crate::{
-    domain::product::{Product, ProductId, ProductMutateRepository, ProductReadRepository},
+    domain::product::{Product, ProductId, ProductMutateRepository, ProductReadAllRepository},
     infrastructure::{
         csv_reader::{product::CsvProductSubstituteDTO, CanReadCSV},
         database::{
             batch::{BatchConfig, CanMakeBatchTransaction},
             connection::DbConnection,
             models::{
+                product::ProductLegacyStagingDataSource,
                 product_substitute::{product_substitute_batch_upsert, ProductSubstituteModel},
                 CanUpsertModel,
             },
@@ -15,7 +16,8 @@ use crate::{
         InfrastructureError,
     },
     interface_adapters::mappers::{
-        parse_string_to_u32, product::transform_csv_to_product, MappingError,
+        is_i32_castable_to_u32, parse_string_to_u32, product::transform_csv_to_product,
+        MappingError,
     },
 };
 
@@ -37,7 +39,7 @@ where
 
 impl<T> CsvProductRepository<T> where T: CanReadCSV<CsvProductSubstituteDTO> {}
 
-impl<T> ProductReadRepository for CsvProductRepository<T>
+impl<T> ProductReadAllRepository for CsvProductRepository<T>
 where
     T: CanReadCSV<CsvProductSubstituteDTO>,
 {
@@ -103,6 +105,7 @@ where
     T: CanMakeBatchTransaction<ProductSubstituteModel>,
 {
     product_substitute_data_source: T,
+    lookup_source: Option<HashMap<u32, u32>>,
     use_batch: bool,
     batch_size: Option<usize>,
     connection: RefCell<DbConnection>,
@@ -114,12 +117,14 @@ where
 {
     pub fn new(
         product_substitute_data_source: T,
+        lookup_source: Option<HashMap<u32, u32>>,
         use_batch: bool,
         batch_size: Option<usize>,
         connection: DbConnection,
     ) -> Self {
         Self {
             product_substitute_data_source,
+            lookup_source,
             use_batch,
             batch_size,
             connection: RefCell::new(connection),
@@ -140,6 +145,22 @@ where
                     id_product: product.id().value(),
                     id_substitute: substitute.value(),
                 })
+            }
+        }
+
+        if let Some(hm) = &self.lookup_source {
+            for model in models.iter_mut() {
+                if let (Some(id_product), Some(id_substitute)) =
+                    (hm.get(&model.id_product), hm.get(&model.id_substitute))
+                {
+                    model.id_product = *id_product;
+                    model.id_substitute = *id_substitute;
+                } else {
+                    errors.push(Box::new(InfrastructureError::LookupError(format!(
+                        "Failed to find id_product {} or id_substitute {} in lookup source",
+                        model.id_product, model.id_substitute
+                    ))));
+                }
             }
         }
 
@@ -174,6 +195,38 @@ where
     }
 }
 
+pub(crate) struct IdLookupRepository<T>
+where
+    T: ProductLegacyStagingDataSource,
+{
+    data_source: T,
+}
+
+impl<T> IdLookupRepository<T>
+where
+    T: ProductLegacyStagingDataSource,
+{
+    pub fn new(data_source: T) -> Self {
+        Self { data_source }
+    }
+
+    pub fn find_all(&self) -> Result<HashMap<u32, u32>, InfrastructureError> {
+        let mut hm: HashMap<u32, u32> = HashMap::new();
+        for model in self
+            .data_source
+            .find_all()
+            .map_err(InfrastructureError::DatabaseError)?
+        {
+            if let Some(id) = model.id {
+                if is_i32_castable_to_u32(id) && is_i32_castable_to_u32(model.id_source) {
+                    hm.insert(model.id_source as u32, id as u32);
+                }
+            }
+        }
+        Ok(hm)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serial_test::serial;
@@ -184,8 +237,12 @@ mod tests {
         infrastructure::{
             csv_reader::product::tests::MockProductCsvDataSourceReader,
             database::{
-                connection::{tests::HasTestConnection, HasConnection},
+                connection::{
+                    tests::{get_test_pooled_connection, reset_test_database, HasTestConnection},
+                    HasConnection,
+                },
                 models::{
+                    product::ProductLegacyStagingModel,
                     product_substitute::tests::product_substitute_model_fixture, CanSelectAllModel,
                 },
             },
@@ -217,6 +274,42 @@ mod tests {
         assert!(errors.is_empty());
     }
 
+    struct MockProductLegacyStagingDataSource;
+
+    impl ProductLegacyStagingDataSource for MockProductLegacyStagingDataSource {
+        type DbConnection = HasTestConnection;
+
+        fn find_all(&self) -> Result<Vec<ProductLegacyStagingModel>, diesel::result::Error> {
+            Ok(vec![
+                ProductLegacyStagingModel {
+                    id_source: 1,
+                    id: Some(11),
+                },
+                ProductLegacyStagingModel {
+                    id_source: 2,
+                    id: None,
+                },
+                ProductLegacyStagingModel {
+                    id_source: 3,
+                    id: Some(33),
+                },
+            ])
+        }
+    }
+
+    #[test]
+    fn test_id_lookup_repository_find_all() {
+        let repo = IdLookupRepository::new(MockProductLegacyStagingDataSource);
+
+        let result = repo.find_all().unwrap();
+
+        let mut expected: HashMap<u32, u32> = HashMap::new();
+        expected.insert(1, 11);
+        expected.insert(3, 33);
+
+        assert_eq!(result, expected);
+    }
+
     struct MockBatchTransaction;
 
     impl CanMakeBatchTransaction<ProductSubstituteModel> for MockBatchTransaction {
@@ -226,9 +319,12 @@ mod tests {
     #[test]
     #[serial]
     fn test_save_substitutes_with_batch() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
         let mock_transaction = MockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
+            None,
             true,
             Some(100),
             HasTestConnection::get_pooled_connection(),
@@ -239,7 +335,7 @@ mod tests {
 
         assert!(errors.is_none());
         assert_eq!(
-            ProductSubstituteModel::select_all(&mut HasTestConnection::get_pooled_connection())
+            ProductSubstituteModel::select_all(&mut connection)
                 .expect("Failed to select all ProductSubstituteModel"),
             product_substitute_model_fixture()
         )
@@ -248,9 +344,12 @@ mod tests {
     #[test]
     #[serial]
     fn test_save_substitutes_without_batch() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
         let mock_transaction = MockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
+            None,
             false,
             None, // batch size
             HasTestConnection::get_pooled_connection(),
@@ -261,9 +360,84 @@ mod tests {
 
         assert!(errors.is_none());
         assert_eq!(
-            ProductSubstituteModel::select_all(&mut HasTestConnection::get_pooled_connection())
+            ProductSubstituteModel::select_all(&mut connection)
                 .expect("Failed to select all ProductSubstituteModel"),
             product_substitute_model_fixture()
         )
+    }
+
+    #[test]
+    #[serial]
+    fn test_save_substitutes_with_successful_lookup() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+        let lookup_source = Some({
+            let mut hm = HashMap::new();
+            hm.insert(1, 11);
+            hm.insert(2, 22);
+            hm.insert(3, 33);
+            hm
+        });
+
+        let mock_transaction = MockBatchTransaction;
+        let repo = TargetDbProductRepository::new(
+            mock_transaction,
+            lookup_source,
+            false,
+            None,
+            HasTestConnection::get_pooled_connection(),
+        );
+
+        let products = product_fixtures();
+
+        let errors = repo.save_substitutes(&products);
+
+        assert!(errors.is_none());
+        assert_eq!(
+            ProductSubstituteModel::select_all(&mut connection)
+                .expect("Failed to select all ProductSubstituteModel with lookup"),
+            [
+                ProductSubstituteModel {
+                    id_product: 11,
+                    id_substitute: 22,
+                },
+                ProductSubstituteModel {
+                    id_product: 11,
+                    id_substitute: 33,
+                },
+                ProductSubstituteModel {
+                    id_product: 22,
+                    id_substitute: 11,
+                },
+            ]
+        )
+    }
+
+    #[test]
+    #[serial]
+    fn test_save_substitutes_with_failed_lookup() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+        let lookup_source = Some({
+            let mut hm = HashMap::new();
+            hm.insert(1, 11);
+            // Missing entry for product id 2 to induce failure
+            hm.insert(3, 33);
+            hm
+        });
+
+        let mock_transaction = MockBatchTransaction;
+        let repo = TargetDbProductRepository::new(
+            mock_transaction,
+            lookup_source,
+            false,
+            None,
+            connection,
+        );
+        let products = product_fixtures();
+
+        let errors = repo.save_substitutes(&products);
+
+        assert!(errors.is_some_and(|e| e.len() == 2));
     }
 }
