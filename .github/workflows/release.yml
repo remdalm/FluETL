@@ -22,8 +22,6 @@ jobs:
         with:
           # (optional) Path to changelog.
           # changelog: CHANGELOG.md
-          branch: "main"
-          ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
@@ -59,5 +57,4 @@ jobs:
           bin: "fluetl"
           target: ${{ matrix.target }}
           archive: $bin-${{ matrix.target }}
-          ref: refs/tags/v${{ needs.get-tag.outputs.pkg-version }}
           token: ${{ secrets.GITHUB_TOKEN }}
