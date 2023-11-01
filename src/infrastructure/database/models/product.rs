@@ -89,7 +89,7 @@ pub mod tests {
         let result =
             ProductLegacyStagingModel::select_all(&mut connection).expect("Error reading source");
 
-        assert_eq!(result.len(), 3);
+        assert_eq!(result.len(), 2);
         assert_eq!(
             result[0],
             ProductLegacyStagingModel {
@@ -98,14 +98,7 @@ pub mod tests {
             }
         );
         assert_eq!(
-            result[0],
-            ProductLegacyStagingModel {
-                id_source: 2,
-                id: None
-            }
-        );
-        assert_eq!(
-            result[0],
+            result[1],
             ProductLegacyStagingModel {
                 id_source: 3,
                 id: Some(33)

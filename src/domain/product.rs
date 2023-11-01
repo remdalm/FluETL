@@ -46,11 +46,11 @@ impl Product {
         Ok(())
     }
 
-    pub fn add_substitutes(&mut self, substitute_ids: &[ProductId]) -> Result<(), DomainError> {
-        for substitute_id in substitute_ids {
-            self.add_substitute(*substitute_id)?;
-        }
-        Ok(())
+    pub fn add_substitutes(&mut self, substitute_ids: &[ProductId]) -> Vec<DomainError> {
+        substitute_ids
+            .iter()
+            .filter_map(|substitute_id| self.add_substitute(*substitute_id).err())
+            .collect::<Vec<DomainError>>()
     }
 }
 
@@ -153,5 +153,47 @@ pub mod tests {
             ))
         );
         assert_eq!(product.substitutes(), &[ProductId::new(2)]);
+    }
+
+    #[test]
+    fn test_add_multiple_valid_substitutes() {
+        let mut product = Product {
+            id: ProductId::new(1),
+            substitutes: vec![],
+        };
+        let substitute_ids = vec![ProductId::new(2), ProductId::new(3)];
+        let errors = product.add_substitutes(&substitute_ids);
+
+        assert!(errors.is_empty());
+        assert_eq!(product.substitutes(), &substitute_ids);
+    }
+
+    #[test]
+    fn test_add_substitutes_with_errors() {
+        let mut product = Product {
+            id: ProductId::new(1),
+            substitutes: vec![ProductId::new(2)],
+        };
+        let substitute_ids = vec![
+            ProductId::new(2), // Duplicate
+            ProductId::new(3),
+            ProductId::new(1), // Self
+            ProductId::new(4),
+        ];
+        let errors = product.add_substitutes(&substitute_ids);
+
+        assert_eq!(errors.len(), 2);
+        assert_eq!(
+            errors[0],
+            DomainError::ValidationError(IDENTICAL_SUBSTITUTE_ERROR.to_string())
+        );
+        assert_eq!(
+            errors[1],
+            DomainError::ValidationError(SUBSTITUTE_OF_ITSELF_ERROR.to_string())
+        );
+        assert_eq!(
+            product.substitutes(),
+            &[ProductId::new(2), ProductId::new(3), ProductId::new(4)]
+        );
     }
 }

@@ -20,7 +20,7 @@ CREATE TABLE `product_substitute` (
 
 CREATE TABLE `staging_product` (
   `id_source` int(11) NOT NULL,
-  `id` int(11) DEFAULT NULL,
+  `id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `staging_product` (`id_source`, `id`) VALUES (1,11),(2),(3,33);
+INSERT INTO `staging_product` (`id_source`, `id`) VALUES (1,11),(2,NULL),(3,33);

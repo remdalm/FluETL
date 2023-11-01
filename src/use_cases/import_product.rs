@@ -99,9 +99,12 @@ where
         products.iter_mut().for_each(|product| {
             let substitutes = all_substitutes.get(product.id());
             if let Some(substitutes) = substitutes {
-                if let Err(e) = product.add_substitutes(substitutes) {
-                    errors.push(Box::new(e));
-                }
+                errors.extend(
+                    product
+                        .add_substitutes(substitutes)
+                        .into_iter()
+                        .map(|e| e.into()),
+                );
             }
         });
 
@@ -117,5 +120,75 @@ where
         } else {
             Some(errors.into_iter().map(UseCaseError::from).collect())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serial_test::serial;
+
+    use crate::infrastructure::{
+        csv_reader::product::tests::MockProductCsvDataSourceReader,
+        database::{
+            connection::tests::{
+                get_test_pooled_connection, reset_test_database, HasTestConnection,
+            },
+            models::{
+                product::{ProductLegacyStagingDataSource, ProductLegacyStagingModel},
+                CanSelectAllModel,
+            },
+        },
+        repository::product::tests::ProductMockBatchTransaction,
+    };
+
+    struct MockProductLegacyStagingDataSource;
+    impl ProductLegacyStagingDataSource for MockProductLegacyStagingDataSource {
+        type DbConnection = HasTestConnection;
+
+        fn find_all(&self) -> Result<Vec<ProductLegacyStagingModel>, diesel::result::Error> {
+            Ok(vec![
+                ProductLegacyStagingModel {
+                    id_source: 1,
+                    id: Some(11),
+                },
+                ProductLegacyStagingModel {
+                    id_source: 3,
+                    id: Some(33),
+                },
+            ])
+        }
+    }
+
+    use super::*;
+
+    #[test]
+    #[serial]
+    fn test_successful_product_substitute_import() {
+        let mut connection = get_test_pooled_connection();
+        reset_test_database(&mut connection);
+        let use_case = ImportProductSubstitutesUseCase {
+            csv_repository: CsvProductRepository::new(MockProductCsvDataSourceReader),
+            db_target_repository: TargetDbProductRepository::new(
+                ProductMockBatchTransaction,
+                IdLookupRepository::new(MockProductLegacyStagingDataSource)
+                    .find_all()
+                    .ok(),
+                false,
+                None,
+                HasTestConnection::get_pooled_connection(),
+            ),
+        };
+
+        let errors = use_case.execute();
+
+        assert_eq!(errors.unwrap().len(), 3); // Can't substitute itself and find product_id or substitute_id = 2 in lookup table
+        assert_eq!(
+            ProductSubstituteModel::select_all(&mut connection)
+                .expect("Failed to select all ProductSubstituteModel"),
+            [ProductSubstituteModel {
+                id_product: 11,
+                id_substitute: 33,
+            }]
+        );
     }
 }

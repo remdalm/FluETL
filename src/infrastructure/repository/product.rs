@@ -138,31 +138,39 @@ where
 {
     fn save_substitutes(&self, products: &[Product]) -> Option<Vec<Box<dyn std::error::Error>>> {
         let mut errors: Vec<Box<dyn Error>> = Vec::new();
-        let mut models: Vec<ProductSubstituteModel> = Vec::new();
+        let mut dirty_models: Vec<ProductSubstituteModel> = Vec::new();
         for product in products {
             for substitute in product.substitutes() {
-                models.push(ProductSubstituteModel {
+                dirty_models.push(ProductSubstituteModel {
                     id_product: product.id().value(),
                     id_substitute: substitute.value(),
                 })
             }
         }
 
-        if let Some(hm) = &self.lookup_source {
-            for model in models.iter_mut() {
-                if let (Some(id_product), Some(id_substitute)) =
-                    (hm.get(&model.id_product), hm.get(&model.id_substitute))
-                {
-                    model.id_product = *id_product;
-                    model.id_substitute = *id_substitute;
+        let models: Vec<ProductSubstituteModel> = dirty_models
+            .into_iter()
+            .filter_map(|m| {
+                if let Some(hm) = &self.lookup_source {
+                    if let (Some(id_product), Some(id_substitute)) =
+                        (hm.get(&m.id_product), hm.get(&m.id_substitute))
+                    {
+                        Some(ProductSubstituteModel {
+                            id_product: *id_product,
+                            id_substitute: *id_substitute,
+                        })
+                    } else {
+                        errors.push(Box::new(InfrastructureError::LookupError(format!(
+                            "Failed to find id_product {} or id_substitute {} in lookup source",
+                            m.id_product, m.id_substitute
+                        ))));
+                        None
+                    }
                 } else {
-                    errors.push(Box::new(InfrastructureError::LookupError(format!(
-                        "Failed to find id_product {} or id_substitute {} in lookup source",
-                        model.id_product, model.id_substitute
-                    ))));
+                    Some(m)
                 }
-            }
-        }
+            })
+            .collect();
 
         if self.use_batch {
             let batch = self.product_substitute_data_source.make_batch(
@@ -228,7 +236,7 @@ where
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use serial_test::serial;
 
     use super::*;
@@ -310,9 +318,9 @@ mod tests {
         assert_eq!(result, expected);
     }
 
-    struct MockBatchTransaction;
+    pub struct ProductMockBatchTransaction;
 
-    impl CanMakeBatchTransaction<ProductSubstituteModel> for MockBatchTransaction {
+    impl CanMakeBatchTransaction<ProductSubstituteModel> for ProductMockBatchTransaction {
         type DbConnection = HasTestConnection;
     }
 
@@ -321,7 +329,7 @@ mod tests {
     fn test_save_substitutes_with_batch() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
-        let mock_transaction = MockBatchTransaction;
+        let mock_transaction = ProductMockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
             None,
@@ -346,7 +354,7 @@ mod tests {
     fn test_save_substitutes_without_batch() {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
-        let mock_transaction = MockBatchTransaction;
+        let mock_transaction = ProductMockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
             None,
@@ -379,7 +387,7 @@ mod tests {
             hm
         });
 
-        let mock_transaction = MockBatchTransaction;
+        let mock_transaction = ProductMockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
             lookup_source,
@@ -426,18 +434,26 @@ mod tests {
             hm
         });
 
-        let mock_transaction = MockBatchTransaction;
+        let mock_transaction = ProductMockBatchTransaction;
         let repo = TargetDbProductRepository::new(
             mock_transaction,
             lookup_source,
             false,
             None,
-            connection,
+            HasTestConnection::get_pooled_connection(),
         );
         let products = product_fixtures();
 
         let errors = repo.save_substitutes(&products);
 
         assert!(errors.is_some_and(|e| e.len() == 2));
+        assert_eq!(
+            ProductSubstituteModel::select_all(&mut connection)
+                .expect("Failed to select all ProductSubstituteModel with lookup"),
+            [ProductSubstituteModel {
+                id_product: 11,
+                id_substitute: 33,
+            },]
+        )
     }
 }
