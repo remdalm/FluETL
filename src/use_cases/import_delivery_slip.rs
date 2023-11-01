@@ -1,7 +1,8 @@
 use crate::{
     domain::delivery_slip::{DeliverySlip, DeliverySlipDomainFactory},
     infrastructure::{
-        csv_reader::{delivery_slip::CsvDeliverySlipDTO, CanReadCSV, CsvType},
+        csv_reader::{delivery_slip::CsvDeliverySlipDTO, CsvType},
+        data_source::CanReadCSVDataSource,
         database::{
             batch::{Batch, BatchConfig},
             connection::{HasConnection, HasTargetConnection},
@@ -29,7 +30,7 @@ impl ImportDeliverySlipUseCase {
     }
 }
 
-impl CanReadCSV<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {
+impl CanReadCSVDataSource<CsvDeliverySlipDTO> for ImportDeliverySlipUseCase {
     fn find_all(&self) -> Result<Vec<CsvDeliverySlipDTO>, InfrastructureError> {
         self.read(CsvType::DeliverySlip)
     }
@@ -89,7 +90,7 @@ mod tests {
     pub struct ImportDeliverySlipUseCaseTest {
         pub use_batch: bool,
     }
-    impl CanReadCSV<CsvDeliverySlipDTO> for ImportDeliverySlipUseCaseTest {
+    impl CanReadCSVDataSource<CsvDeliverySlipDTO> for ImportDeliverySlipUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvDeliverySlipDTO>, InfrastructureError> {
             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
 

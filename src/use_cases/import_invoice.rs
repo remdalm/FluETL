@@ -8,8 +8,9 @@ use crate::{
     infrastructure::{
         csv_reader::{
             invoice::{CsvInvoiceDTO, CsvInvoiceLocalizedItemDTO},
-            CanReadCSV, CsvType,
+            CsvType,
         },
+        data_source::CanReadCSVDataSource,
         database::{
             batch::{Batch, BatchConfig},
             connection::{HasConnection, HasTargetConnection},
@@ -28,7 +29,7 @@ use super::{
 };
 
 struct ImportInvoiceTypesUseCase;
-impl CanReadCSV<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypesUseCase {
+impl CanReadCSVDataSource<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypesUseCase {
     fn find_all(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, InfrastructureError> {
         self.read(CsvType::InvoiceDocumentType)
     }
@@ -64,7 +65,7 @@ impl ImportInvoiceUseCase {
     }
 }
 
-impl CanReadCSV<CsvInvoiceDTO> for ImportInvoiceUseCase {
+impl CanReadCSVDataSource<CsvInvoiceDTO> for ImportInvoiceUseCase {
     fn find_all(&self) -> Result<Vec<CsvInvoiceDTO>, InfrastructureError> {
         self.read(CsvType::Invoice)
     }
@@ -137,7 +138,7 @@ mod tests {
     };
 
     struct ImportInvoiceTypeUseCaseTest;
-    impl CanReadCSV<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypeUseCaseTest {
+    impl CanReadCSVDataSource<CsvInvoiceLocalizedItemDTO> for ImportInvoiceTypeUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvInvoiceLocalizedItemDTO>, InfrastructureError> {
             let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             let csv_path = root_path
@@ -179,7 +180,7 @@ mod tests {
             })
         }
     }
-    impl CanReadCSV<CsvInvoiceDTO> for ImportInvoiceUseCaseTest {
+    impl CanReadCSVDataSource<CsvInvoiceDTO> for ImportInvoiceUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvInvoiceDTO>, InfrastructureError> {
             // NamedTempFile is automatically deleted when it goes out of scope (this function ends)
 

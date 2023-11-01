@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use crate::infrastructure::data_source::CanReadCSVDataSource;
+
 use super::*;
 
 #[derive(Debug, Deserialize, PartialEq, Clone)]
@@ -12,7 +14,7 @@ impl CsvDTO for CsvProductSubstituteDTO {}
 
 pub struct ProductCsvDataSourceReader;
 
-impl CanReadCSV<CsvProductSubstituteDTO> for ProductCsvDataSourceReader {
+impl CanReadCSVDataSource<CsvProductSubstituteDTO> for ProductCsvDataSourceReader {
     fn find_all(&self) -> Result<Vec<CsvProductSubstituteDTO>, InfrastructureError> {
         self.read(CsvType::ProductSubstitute)
     }
@@ -21,7 +23,6 @@ impl CanReadCSV<CsvProductSubstituteDTO> for ProductCsvDataSourceReader {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::infrastructure::csv_reader::CanReadCSV;
 
     fn csv_product_substitute_dto_fixtures() -> [CsvProductSubstituteDTO; 4] {
         [
@@ -46,7 +47,7 @@ pub mod tests {
 
     pub struct MockProductCsvDataSourceReader;
 
-    impl CanReadCSV<CsvProductSubstituteDTO> for MockProductCsvDataSourceReader {
+    impl CanReadCSVDataSource<CsvProductSubstituteDTO> for MockProductCsvDataSourceReader {
         fn find_all(&self) -> Result<Vec<CsvProductSubstituteDTO>, InfrastructureError> {
             Ok(csv_product_substitute_dto_fixtures().to_vec())
         }

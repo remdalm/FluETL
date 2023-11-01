@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::{
     infrastructure::logger,
     use_cases::{
+        clear_product::ClearProductUseCase,
         helpers::{csv::ImportFromSingleEntityBasedCsvUseCase, model::ImportModelUseCase},
         import_delivery_slip::ImportDeliverySlipUseCase,
         import_invoice::ImportInvoiceUseCase,
@@ -12,7 +13,7 @@ use crate::{
         import_order::ImportOrderUseCase,
         import_order_line::ImportOrderLineUseCase,
         import_product::ImportProductUseCase,
-        UseCaseError,
+        ExecutableUseCase, UseCaseError,
     },
 };
 
@@ -155,8 +156,11 @@ pub fn main_using_clap() {
             }
             EntitySubCommand::Product(arg) => {
                 init(arg.mandatory.env_file);
+                if arg.clear.clear {
+                    info!("Clearing product table...");
+                    error_logger(ClearProductUseCase.execute());
+                }
                 info!("Importing Product...");
-
                 let mut handler = ImportProductUseCase::default();
                 if arg.mandatory.batch {
                     info!(
@@ -165,12 +169,7 @@ pub fn main_using_clap() {
                     );
                     handler.set_batch(arg.mandatory.batch_size);
                 }
-                let mut errors = handler.execute();
-
-                if arg.clear.clear {
-                    info!("Clearing product table...");
-                }
-                error_logger(errors);
+                error_logger(handler.execute());
                 info!("Done");
             }
         },

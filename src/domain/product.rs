@@ -70,12 +70,14 @@ impl ProductDomainFactory {
         })
     }
 }
-
-pub trait ProductReadAllRepository {
-    fn find_all(&self) -> (Vec<Product>, Vec<Box<dyn std::error::Error>>);
+pub trait ProductSubstituteReadAllRepository {
     fn find_all_substitutes(
         &self,
     ) -> Result<HashMap<ProductId, Vec<ProductId>>, InfrastructureError>;
+}
+
+pub trait ProductReadAllRepository {
+    fn find_all(&self) -> (Vec<Product>, Vec<Box<dyn std::error::Error>>);
 }
 
 pub trait ProductMutateRepository {

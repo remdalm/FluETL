@@ -12,8 +12,9 @@ use crate::{
     infrastructure::{
         csv_reader::{
             order_line::{CsvOrderLineDTO, CsvOrderLineLocalizedItemDTO},
-            CanReadCSV, CsvType,
+            CsvType,
         },
+        data_source::CanReadCSVDataSource,
         database::{
             batch::{Batch, BatchConfig},
             connection::{DbConnection, HasConnection, HasTargetConnection},
@@ -36,7 +37,7 @@ use super::{
 };
 
 struct ImportOrderLineItemNamesUseCase;
-impl CanReadCSV<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCase {
+impl CanReadCSVDataSource<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCase {
     fn find_all(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, InfrastructureError> {
         self.read(CsvType::OrderLineItem)
     }
@@ -88,7 +89,7 @@ impl ImportOrderLineUseCase {
     }
 }
 
-impl CanReadCSV<CsvOrderLineDTO> for ImportOrderLineUseCase {
+impl CanReadCSVDataSource<CsvOrderLineDTO> for ImportOrderLineUseCase {
     fn find_all(&self) -> Result<Vec<CsvOrderLineDTO>, InfrastructureError> {
         self.read(CsvType::OrderLine)
     }
@@ -167,7 +168,7 @@ mod tests {
     };
 
     struct ImportOrderLineItemNamesUseCaseTest;
-    impl CanReadCSV<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCaseTest {
+    impl CanReadCSVDataSource<CsvOrderLineLocalizedItemDTO> for ImportOrderLineItemNamesUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvOrderLineLocalizedItemDTO>, InfrastructureError> {
             let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             let csv_path = root_path
@@ -229,7 +230,7 @@ mod tests {
         }
     }
 
-    impl CanReadCSV<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {
+    impl CanReadCSVDataSource<CsvOrderLineDTO> for ImportOrderLineUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvOrderLineDTO>, InfrastructureError> {
             let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             let csv_path = root_path

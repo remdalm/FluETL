@@ -1,6 +1,6 @@
 [package]
 name = "fluetl"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Remi d'Almeida<remi@geta.dev>"]
 description = "A command-line interface (CLI) for extracting CSV data from Idempiere entities and persisting it in another location."

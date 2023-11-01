@@ -1,8 +1,13 @@
+use std::collections::HashMap;
+
 use diesel::{prelude::*, result::Error as DieselError};
 
-use crate::infrastructure::database::{
-    connection::{DbConnection, HasConnection, HasLegacyStagingConnection},
-    schema,
+use crate::infrastructure::{
+    data_source::CanSelectAllDataSource,
+    database::{
+        connection::{DbConnection, HasLegacyStagingConnection},
+        schema,
+    },
 };
 
 use super::{CanSelectAllModel, Model};
@@ -59,17 +64,21 @@ impl CanSelectAllModel for ProductLegacyStagingModel {
             .load(connection)
     }
 }
-pub struct ProductLegacyStagingDataSourceImpl;
-impl ProductLegacyStagingDataSource for ProductLegacyStagingDataSourceImpl {
+pub struct ProductLegacyStagingDataSource;
+impl CanSelectAllDataSource for ProductLegacyStagingDataSource {
+    type Model = ProductLegacyStagingModel;
     type DbConnection = HasLegacyStagingConnection;
-
-    fn find_all(&self) -> Result<Vec<ProductLegacyStagingModel>, DieselError> {
-        ProductLegacyStagingModel::select_all(&mut Self::DbConnection::get_pooled_connection())
-    }
 }
-pub(crate) trait ProductLegacyStagingDataSource {
-    type DbConnection: HasConnection;
-    fn find_all(&self) -> Result<Vec<ProductLegacyStagingModel>, DieselError>;
+
+pub fn product_legacy_staging_model_to_lookup(
+    model: ProductLegacyStagingModel,
+    hm: &mut HashMap<u32, u32>,
+) {
+    if let Some(id) = model.id {
+        if u32::try_from(id).is_ok() && u32::try_from(model.id_source).is_ok() {
+            hm.insert(model.id_source as u32, id as u32);
+        }
+    }
 }
 
 #[cfg(test)]

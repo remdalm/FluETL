@@ -107,17 +107,3 @@ pub fn make_csv_file_reader(
 
     Ok(CsvFileReader::new(PathBuf::from(file_path), delimiter))
 }
-
-pub trait CanReadCSV<T>
-where
-    T: CsvDTO + for<'a> Deserialize<'a>,
-{
-    fn read(&self, csv_type: CsvType) -> Result<Vec<T>, InfrastructureError> {
-        let csv_reader = make_csv_file_reader(csv_type, b';')?;
-
-        let csv_data: Vec<T> = csv_reader.read().map_err(InfrastructureError::CsvError)?;
-        Ok(csv_data)
-    }
-
-    fn find_all(&self) -> Result<Vec<T>, InfrastructureError>;
-}

@@ -1,14 +1,17 @@
 use std::{cell::RefCell, collections::HashMap, error::Error};
 
 use crate::{
-    domain::product::{Product, ProductId, ProductMutateRepository, ProductReadAllRepository},
+    domain::product::{
+        Product, ProductId, ProductMutateRepository, ProductReadAllRepository,
+        ProductSubstituteReadAllRepository,
+    },
     infrastructure::{
-        csv_reader::{product::CsvProductSubstituteDTO, CanReadCSV},
+        csv_reader::product::CsvProductSubstituteDTO,
+        data_source::{CanReadCSVDataSource, CanSelectAllDataSource},
         database::{
             batch::{BatchConfig, CanMakeBatchTransaction},
             connection::DbConnection,
             models::{
-                product::ProductLegacyStagingDataSource,
                 product_substitute::{product_substitute_batch_upsert, ProductSubstituteModel},
                 CanUpsertModel,
             },
@@ -16,32 +19,32 @@ use crate::{
         InfrastructureError,
     },
     interface_adapters::mappers::{
-        is_i32_castable_to_u32, parse_string_to_u32, product::transform_csv_to_product,
-        MappingError,
+        parse_string_to_u32, product::transform_csv_to_product, MappingError,
     },
 };
 
+/** CSV DATA SOURCE REPOSITORIES */
 pub(crate) struct CsvProductRepository<T>
 where
-    T: CanReadCSV<CsvProductSubstituteDTO>,
+    T: CanReadCSVDataSource<CsvProductSubstituteDTO>,
 {
     csv_source_reader: T,
 }
 
 impl<T> CsvProductRepository<T>
 where
-    T: CanReadCSV<CsvProductSubstituteDTO>,
+    T: CanReadCSVDataSource<CsvProductSubstituteDTO>,
 {
     pub fn new(csv_source_reader: T) -> Self {
         Self { csv_source_reader }
     }
 }
 
-impl<T> CsvProductRepository<T> where T: CanReadCSV<CsvProductSubstituteDTO> {}
+impl<T> CsvProductRepository<T> where T: CanReadCSVDataSource<CsvProductSubstituteDTO> {}
 
 impl<T> ProductReadAllRepository for CsvProductRepository<T>
 where
-    T: CanReadCSV<CsvProductSubstituteDTO>,
+    T: CanReadCSVDataSource<CsvProductSubstituteDTO>,
 {
     fn find_all(&self) -> (Vec<Product>, Vec<Box<dyn Error>>) {
         // Products has no their own source yet so we use substitutes as a source
@@ -62,7 +65,12 @@ where
 
         (products, errors)
     }
+}
 
+impl<T> ProductSubstituteReadAllRepository for CsvProductRepository<T>
+where
+    T: CanReadCSVDataSource<CsvProductSubstituteDTO>,
+{
     fn find_all_substitutes(
         &self,
     ) -> Result<HashMap<ProductId, Vec<ProductId>>, InfrastructureError> {
@@ -100,7 +108,9 @@ impl TryFrom<CsvProductSubstituteDTO> for ProductSubstituteDTO {
     }
 }
 
-pub(crate) struct TargetDbProductRepository<T>
+/***/
+/** TARGET DB REPOSITORIES */
+pub(crate) struct TargetDProductSubstituteRepository<T>
 where
     T: CanMakeBatchTransaction<ProductSubstituteModel>,
 {
@@ -111,7 +121,7 @@ where
     connection: RefCell<DbConnection>,
 }
 
-impl<T> TargetDbProductRepository<T>
+impl<T> TargetDProductSubstituteRepository<T>
 where
     T: CanMakeBatchTransaction<ProductSubstituteModel>,
 {
@@ -132,7 +142,7 @@ where
     }
 }
 
-impl<T> ProductMutateRepository for TargetDbProductRepository<T>
+impl<T> ProductMutateRepository for TargetDProductSubstituteRepository<T>
 where
     T: CanMakeBatchTransaction<ProductSubstituteModel>,
 {
@@ -203,33 +213,34 @@ where
     }
 }
 
-pub(crate) struct IdLookupRepository<T>
+/***/
+/** ID LOOKUP */
+pub(crate) struct IdProductSubstituteLookupRepository<T>
 where
-    T: ProductLegacyStagingDataSource,
+    T: CanSelectAllDataSource,
 {
     data_source: T,
+    transform: fn(<T as CanSelectAllDataSource>::Model, hm: &mut HashMap<u32, u32>),
 }
 
-impl<T> IdLookupRepository<T>
+impl<T> IdProductSubstituteLookupRepository<T>
 where
-    T: ProductLegacyStagingDataSource,
+    T: CanSelectAllDataSource,
 {
-    pub fn new(data_source: T) -> Self {
-        Self { data_source }
+    pub fn new(
+        data_source: T,
+        f: fn(<T as CanSelectAllDataSource>::Model, hm: &mut HashMap<u32, u32>),
+    ) -> Self {
+        Self {
+            data_source,
+            transform: f,
+        }
     }
 
     pub fn find_all(&self) -> Result<HashMap<u32, u32>, InfrastructureError> {
         let mut hm: HashMap<u32, u32> = HashMap::new();
-        for model in self
-            .data_source
-            .find_all()
-            .map_err(InfrastructureError::DatabaseError)?
-        {
-            if let Some(id) = model.id {
-                if is_i32_castable_to_u32(id) && is_i32_castable_to_u32(model.id_source) {
-                    hm.insert(model.id_source as u32, id as u32);
-                }
-            }
+        for model in self.data_source.find_all()? {
+            (self.transform)(model, &mut hm);
         }
         Ok(hm)
     }
@@ -250,8 +261,9 @@ pub mod tests {
                     HasConnection,
                 },
                 models::{
-                    product::ProductLegacyStagingModel,
-                    product_substitute::tests::product_substitute_model_fixture, CanSelectAllModel,
+                    product::{product_legacy_staging_model_to_lookup, ProductLegacyStagingModel},
+                    product_substitute::tests::product_substitute_model_fixture,
+                    CanSelectAllModel,
                 },
             },
         },
@@ -284,10 +296,11 @@ pub mod tests {
 
     struct MockProductLegacyStagingDataSource;
 
-    impl ProductLegacyStagingDataSource for MockProductLegacyStagingDataSource {
+    impl CanSelectAllDataSource for MockProductLegacyStagingDataSource {
         type DbConnection = HasTestConnection;
+        type Model = ProductLegacyStagingModel;
 
-        fn find_all(&self) -> Result<Vec<ProductLegacyStagingModel>, diesel::result::Error> {
+        fn find_all(&self) -> Result<Vec<Self::Model>, InfrastructureError> {
             Ok(vec![
                 ProductLegacyStagingModel {
                     id_source: 1,
@@ -307,7 +320,10 @@ pub mod tests {
 
     #[test]
     fn test_id_lookup_repository_find_all() {
-        let repo = IdLookupRepository::new(MockProductLegacyStagingDataSource);
+        let repo = IdProductSubstituteLookupRepository::new(
+            MockProductLegacyStagingDataSource,
+            product_legacy_staging_model_to_lookup,
+        );
 
         let result = repo.find_all().unwrap();
 
@@ -330,7 +346,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
         let mock_transaction = ProductMockBatchTransaction;
-        let repo = TargetDbProductRepository::new(
+        let repo = TargetDProductSubstituteRepository::new(
             mock_transaction,
             None,
             true,
@@ -355,7 +371,7 @@ pub mod tests {
         let mut connection = get_test_pooled_connection();
         reset_test_database(&mut connection);
         let mock_transaction = ProductMockBatchTransaction;
-        let repo = TargetDbProductRepository::new(
+        let repo = TargetDProductSubstituteRepository::new(
             mock_transaction,
             None,
             false,
@@ -388,7 +404,7 @@ pub mod tests {
         });
 
         let mock_transaction = ProductMockBatchTransaction;
-        let repo = TargetDbProductRepository::new(
+        let repo = TargetDProductSubstituteRepository::new(
             mock_transaction,
             lookup_source,
             false,
@@ -435,7 +451,7 @@ pub mod tests {
         });
 
         let mock_transaction = ProductMockBatchTransaction;
-        let repo = TargetDbProductRepository::new(
+        let repo = TargetDProductSubstituteRepository::new(
             mock_transaction,
             lookup_source,
             false,

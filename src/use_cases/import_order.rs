@@ -1,7 +1,8 @@
 use crate::{
     domain::order::{Order, OrderDomainFactory},
     infrastructure::{
-        csv_reader::{order::CsvOrderDTO, CanReadCSV, CsvType},
+        csv_reader::{order::CsvOrderDTO, CsvType},
+        data_source::CanReadCSVDataSource,
         database::{connection::HasTargetConnection, models::order::OrderModel},
     },
     interface_adapters::mappers::CsvEntityParser,
@@ -13,7 +14,7 @@ use super::{
 };
 
 pub struct ImportOrderUseCase;
-impl CanReadCSV<CsvOrderDTO> for ImportOrderUseCase {
+impl CanReadCSVDataSource<CsvOrderDTO> for ImportOrderUseCase {
     fn find_all(&self) -> Result<Vec<CsvOrderDTO>, InfrastructureError> {
         self.read(CsvType::Order)
     }
@@ -51,7 +52,7 @@ mod tests {
     };
 
     pub struct ImportOrderUseCaseTest;
-    impl CanReadCSV<CsvOrderDTO> for ImportOrderUseCaseTest {
+    impl CanReadCSVDataSource<CsvOrderDTO> for ImportOrderUseCaseTest {
         fn find_all(&self) -> Result<Vec<CsvOrderDTO>, InfrastructureError> {
             let root_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
             let csv_path = root_path

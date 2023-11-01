@@ -75,11 +75,17 @@ pub fn product_substitute_batch_upsert(
     })
 }
 
-pub struct ProductModelDataSource;
+pub struct ProductSubstituteModelDataSource;
 
-impl CanMakeBatchTransaction<ProductSubstituteModel> for ProductModelDataSource {
+impl CanMakeBatchTransaction<ProductSubstituteModel> for ProductSubstituteModelDataSource {
     type DbConnection = HasTargetConnection;
 }
+
+// pub struct ProductSubstituteLegacyStagingDataSource;
+// impl CanSelectAllDataSource for ProductSubstituteModelDataSource {
+//     type Model = ProductSubstituteModel;
+//     type DbConnection = HasTargetConnection;
+// }
 
 #[cfg(test)]
 pub mod tests {

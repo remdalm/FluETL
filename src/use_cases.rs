@@ -5,6 +5,7 @@ use crate::{
     interface_adapters::mappers::MappingError,
 };
 
+pub(crate) mod clear_product;
 pub(crate) mod helpers;
 pub(crate) mod import_delivery_slip;
 pub(crate) mod import_invoice;
@@ -12,7 +13,6 @@ pub(crate) mod import_mapping_client;
 pub(crate) mod import_order;
 pub(crate) mod import_order_line;
 pub(crate) mod import_product;
-
 pub trait ExecutableUseCase {
     fn execute(&self) -> Option<Vec<UseCaseError>>;
 }

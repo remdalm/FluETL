@@ -1,6 +1,7 @@
 use std::{error::Error, fmt};
 
 pub(crate) mod csv_reader;
+pub(crate) mod data_source;
 pub mod database;
 pub(crate) mod logger;
 pub(crate) mod repository;
